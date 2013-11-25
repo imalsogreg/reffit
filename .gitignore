@@ -5,3 +5,8 @@ cabal-dev
 *.chi
 *.chs.h
 .virthualenv
+
+.cabal-sandbox
+.ghci
+cabal.sandbox.config
+*~

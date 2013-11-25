@@ -1,5 +1,0 @@
-127.0.0.1 - - [22/Nov/2013:00:17:15 -0500] "GET / HTTP/1.1" 200 - - "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:25.0) Gecko/20100101 Firefox/25.0"
-127.0.0.1 - - [22/Nov/2013:00:17:15 -0500] "GET /favicon.ico HTTP/1.1" 404 - - "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:25.0) Gecko/20100101 Firefox/25.0"
-127.0.0.1 - - [22/Nov/2013:00:17:15 -0500] "GET /favicon.ico HTTP/1.1" 404 - - "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:25.0) Gecko/20100101 Firefox/25.0"
-127.0.0.1 - - [22/Nov/2013:12:42:01 -0500] "GET /foo HTTP/1.1" 200 - - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/30.0.1599.114 Chrome/30.0.1599.114 Safari/537.36"
-127.0.0.1 - - [22/Nov/2013:12:42:01 -0500] "GET /favicon.ico HTTP/1.1" 404 - - "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/30.0.1599.114 Chrome/30.0.1599.114 Safari/537.36"
