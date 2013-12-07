@@ -1,8 +1,11 @@
+{-# LANGUAGE DeriveDataTypeable #-}
+
 module Reffit.Types where
 
 import           Data.Text
 import qualified Data.Map as Map
 import           GHC.Int
+import           Data.Typeable
 
 data DocClass = DocClass { docClassName :: Text
                          }
@@ -41,5 +44,5 @@ data Document = Document { docId        :: Int32
                          , docFieldTags :: [FieldTag]
                          , docSummaries :: [Summary]
                          , docCritiques :: Map.Map User Critique
-                         }
+                         } deriving (Typeable)
 

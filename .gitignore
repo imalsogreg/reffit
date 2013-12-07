@@ -10,3 +10,7 @@ cabal-dev
 .ghci
 cabal.sandbox.config
 *~
+
+site_key.txt
+users.json
+state

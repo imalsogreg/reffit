@@ -1,4 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
 
 ------------------------------------------------------------------------------
 -- | This module is where all the routes and handlers are defined for your
@@ -9,6 +11,15 @@ module Site
   ) where
 
 ------------------------------------------------------------------------------
+import           Reffit.Types
+import           Reffit.AcidTypes
+
+import           Control.Lens (view)
+import           Snap.Snaplet.AcidState (Update, Query, Acid,
+                                         HasAcid (getAcidStore),
+                                         makeAcidic,
+                                         update,query,acidInit)
+
 import           Control.Applicative
 import           Data.ByteString (ByteString)
 import qualified Data.Text as T
@@ -51,6 +62,7 @@ handleLogout :: Handler App (AuthManager App) ()
 handleLogout = logout >> redirect "/"
 
 
+
 ------------------------------------------------------------------------------
 -- | Handle new user form submit
 handleNewUser :: Handler App (AuthManager App) ()
@@ -59,13 +71,20 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
     handleForm = render "new_user"
     handleFormSubmit = registerUser "login" "password" >> redirect "/"
 
+------------------------------------------------------------------------------
+-- | Handles article submission
+handleNewArticle :: Handler App (AuthManager App) ()
+handleNewArticle = update (AddDocument "TestTitle" "TestLink")
 
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
-routes = [ ("/login",    with auth handleLoginSubmit)
-         , ("/logout",   with auth handleLogout)
-         , ("/new_user", with auth handleNewUser)
+routes = [ ("/login",         with auth handleLoginSubmit)
+         , ("/logout",        with auth handleLogout)
+         , ("/new_user",      with auth handleNewUser)
+         , ("/new_article",   with auth handleNewArticle)
+         , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
+         , ("/test", writeText "test")
          , ("",          serveDirectory "static")
          ]
 
@@ -83,7 +102,10 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     -- you'll probably want to change this to a more robust auth backend.
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
+
+    ac <- nestSnaplet "acid" acid $ acidInit (PersistentState [] [])
+           
     addRoutes routes
     addAuthSplices h auth
-    return $ App h s a
+    return $ App h s a ac
 
