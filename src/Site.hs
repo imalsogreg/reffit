@@ -11,6 +11,7 @@ module Site
   ) where
 
 ------------------------------------------------------------------------------
+
 import           Reffit.Types
 import           Reffit.AcidTypes
 
@@ -19,6 +20,9 @@ import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          HasAcid (getAcidStore),
                                          makeAcidic,
                                          update,query,acidInit)
+
+import           PaperRoll  
+
 
 import           Control.Applicative
 import           Data.ByteString (ByteString)
@@ -85,6 +89,7 @@ routes = [ ("/login",         with auth handleLoginSubmit)
          , ("/new_article",   with auth handleNewArticle)
          , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
          , ("/test", writeText "test")
+         , ("/paper_roll", with auth handlePaperRoll)
          , ("",          serveDirectory "static")
          ]
 
