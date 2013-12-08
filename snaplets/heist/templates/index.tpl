@@ -1,7 +1,7 @@
 <apply template="base">
 
-<apply template="header"/>
+<h2>Index</h2>
 
-<apply template="paper_roll"/>
+<testString/>
 
 </apply>

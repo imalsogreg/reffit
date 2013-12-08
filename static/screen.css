@@ -24,3 +24,11 @@ img {
 #info {
    font-size: 60%;
 }
+
+.pr_paper {
+  text-align:right;
+  background-color:#aaaaff;
+}
+.pr_paper#hover {
+  background-color:#ccccff;
+}

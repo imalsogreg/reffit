@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings #-} 
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -21,7 +21,8 @@ import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          makeAcidic,
                                          update,query,acidInit)
 
-import           PaperRoll  
+import           PaperRoll
+import           HandleIndex
 
 
 import           Control.Applicative
@@ -80,6 +81,7 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
 handleNewArticle :: Handler App (AuthManager App) ()
 handleNewArticle = update (AddDocument "TestTitle" "TestLink")
 
+
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
@@ -89,8 +91,10 @@ routes = [ ("/login",         with auth handleLoginSubmit)
          , ("/new_article",   with auth handleNewArticle)
          , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
          , ("/test", writeText "test")
-         , ("/paper_roll", with auth handlePaperRoll)
-         , ("",          serveDirectory "static")
+         , ("/paper_roll", handlePaperRoll)
+         , ("/a_test"    , handleIndex)
+--         , ("/",  handlePaperRoll)
+         , ("", handleIndex)   
          ]
 
 
@@ -98,7 +102,7 @@ routes = [ ("/login",         with auth handleLoginSubmit)
 -- | The application initializer.
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
-    h <- nestSnaplet "" heist $ heistInit "templates"
+
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
 
@@ -109,7 +113,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
            initJsonFileAuthManager defAuthSettings sess "users.json"
 
     ac <- nestSnaplet "acid" acid $ acidInit (PersistentState [] [])
-           
+    h <- nestSnaplet "" heist $ heistInit "templates"           
     addRoutes routes
     addAuthSplices h auth
     return $ App h s a ac

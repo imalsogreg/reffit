@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Reffit.Types where
 
@@ -68,3 +69,12 @@ data CritiqueClass = CritiqueClass { critiqueClassText :: Text
                                    , critiqueClassNick :: Text
                                    } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''CritiqueClass
+
+testUsers :: [User]
+testUsers = [User 0 "Greg", User 1 "Ping", User 2 "Hector"]
+
+testPapers :: [Document]
+testPapers = [Document 0 "The Earth is Round (p < .05)"
+              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" [] [] [] Map.empty
+             ,Document 1 "A cool paper about the hippocampus" "http://github.com" [] [] [] Map.empty
+             ] 
