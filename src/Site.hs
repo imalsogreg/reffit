@@ -102,7 +102,7 @@ routes = [ ("/login",         with auth handleLoginSubmit)
 -- | The application initializer.
 app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
-
+    addRoutes routes
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
 
@@ -114,7 +114,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
 
     ac <- nestSnaplet "acid" acid $ acidInit (PersistentState [] [])
     h <- nestSnaplet "" heist $ heistInit "templates"           
-    addRoutes routes
+
     addAuthSplices h auth
     return $ App h s a ac
 

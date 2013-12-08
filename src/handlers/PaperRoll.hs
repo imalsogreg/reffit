@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module PaperRoll (
-  handlePaperRoll
+  handlePaperRoll,
+  allPaperRollSplices
   )
        where
 
