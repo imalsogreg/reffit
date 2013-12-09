@@ -8,28 +8,36 @@ import           Reffit.Types
 import           Application 
 
 import           Snap.Snaplet(Handler)
+import           Snap.Snaplet.Auth
 import           Control.Applicative
-import           Data.Monoid   
+import           Data.Monoid
+import qualified Data.Map                     as Map
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Text.Digestive
 import           Heist 
-import qualified Heist.Interpreted             as I
+import qualified Heist.Interpreted            as I
 import           Application
 
 
 handleNewPaper :: Handler App App ()
 handleNewPaper = undefined
 
-documentForm :: Maybe User -> [DocClass] -> [FieldTag] -> Form Text m Document
+documentForm :: (Monad m) => Maybe User -> [DocClass] -> [FieldTag] -> Form Text m Document
 documentForm fromUser allDocClasses allDocTags =
   Document fromUser
-  <$> "title"    .: check "Not a valid title" (not T.empty) (text Nothing)
-  <*> "authors"  .: check "Invalid authors"  validateAuthors (text Nothing)
-  <*> "link"     .: check "Not a valid link" (not T.empty) (text Nothing)
-  <*> "docClass" .: choice allDocClasses Nothing
-  <*> "docTags"  .: check "Invalid tags" (validateTags allDocTags) (text Nothing)
+  <$> pure 1
+  <*> "title"    .: check "Not a valid title" (not . T.null) (text Nothing)
 
+  <*> "authors"  .: validate validateAuthors (text (Just "Abe Lincoln, Dr. Livingston"))
+  <*> "link"     .: check "Not a valid link" (not . T.null) (text Nothing)
+  <*> "docClass" .: choice classOpts Nothing
+  <*> "docTags"  .: validate (validateTags allDocTags) (text Nothing)
+  <*> pure []
+  <*> pure (Map.empty) 
+    where
+      classOpts = [(dc,T.pack . show $ dc) | dc <- allDocClasses]
+      
 validateAuthors :: Text -> Result Text [Text]
 validateAuthors authorsText
   | T.null authorsText = Error "Authors required"

@@ -79,7 +79,12 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
 ------------------------------------------------------------------------------
 -- | Handles article submission
 handleNewArticle :: Handler App (AuthManager App) ()
-handleNewArticle = update (AddDocument "TestTitle" "TestLink")
+handleNewArticle = method GET handleForm <|> method POST handleFormSubmit
+ where
+   handleForm = render "new_paper"
+   handleFormSubmit = update
+                   (AddDocument Nothing "TestTitle" ["Greg Hale", "Andy Bolton"]
+                    "http://www.github.com" (DocClass "Paper")) >> redirect "/" -- TODO redirect to new paper
 
 
 ------------------------------------------------------------------------------

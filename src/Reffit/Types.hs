@@ -15,7 +15,7 @@ import Data.SafeCopy (base, deriveSafeCopy)
 
 
 data DocClass = DocClass { docClassName :: Text
-                         } deriving (Show, Generic, Typeable)
+                         } deriving (Show, Generic, Typeable, Eq)
 deriveSafeCopy scv 'base ''DocClass
 
 data User = User { userId   :: Int32
