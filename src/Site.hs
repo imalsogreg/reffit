@@ -85,16 +85,17 @@ handleNewArticle = update (AddDocument "TestTitle" "TestLink")
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
-routes = [ ("/login",         with auth handleLoginSubmit)
-         , ("/logout",        with auth handleLogout)
-         , ("/new_user",      with auth handleNewUser)
-         , ("/new_article",   with auth handleNewArticle)
-         , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
-         , ("/test", writeText "test")
-         , ("/paper_roll", handlePaperRoll)
-         , ("", handleIndex)   
-         ]
-
+routes = [
+    ("/", handleIndex)   
+  , ("/login",         with auth handleLoginSubmit)
+  , ("/logout",        with auth handleLogout)
+  , ("/new_user",      with auth handleNewUser)
+  , ("/new_article",   with auth handleNewArticle)
+  , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
+  , ("/test", writeText "test")
+  , ("/paper_roll", handlePaperRoll)
+  , ("/static", serveDirectory "static")
+  ]
 
 ------------------------------------------------------------------------------
 -- | The application initializer.

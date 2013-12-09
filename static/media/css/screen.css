@@ -1,10 +1,10 @@
 html {
    padding: 0;
    margin: 0;
-   background-color: #ffffff;
    font-family: Verdana, Helvetica, sans-serif;
 }
 body {
+   background-color: #aaaacc;
    padding: 0;
    margin: 0;
 }
@@ -27,8 +27,16 @@ img {
 
 .pr_paper {
   text-align:right;
-  background-color:#aaaaff;
+  background-color:#bbbbcc;
+  border-style:solid;
+  border-width:0px;
+  border-color:#2222ff;
+  opacity:0.5;
+  margin:2px;
 }
-.pr_paper#hover {
-  background-color:#ccccff;
+.pr_paper:hover {
+  background-color:#bbbbcc;
+  border-color:#000000;
+  opacity:1;
+
 }
