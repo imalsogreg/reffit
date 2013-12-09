@@ -35,7 +35,7 @@ import Snap.Snaplet.AcidState (Update, Query, Acid,
                                 HasAcid (getAcidStore),
                                 makeAcidic, update,
                                 query, acidInit)
-
+ 
 data PersistentState = PersistentState {
     _documents :: [Document]
   , _users     :: [User]
@@ -46,12 +46,12 @@ makeLenses ''PersistentState
 deriveSafeCopy scv 'base ''PersistentState
 
 -- TODO: Check that document title isn't already taken
-addDocument :: T.Text -> T.Text ->
+addDocument :: Maybe User -> T.Text  -> [T.Text] -> T.Text -> DocClass -> 
                Update PersistentState ()
-addDocument dTitle dLink = do
+addDocument dUploader dTitle dAuthors dLink dClass = do
   oldDocs <- gets _documents
   let newDoc = Document
-               newId dTitle dLink [] [] [] Map.empty
+               dUploader newId dTitle dAuthors dLink dClass [] [] Map.empty
       newId = head $ filter (`notElem` (map docId oldDocs))
               [tHash, tLen, tNotTaken]
       tHash = fromIntegral . hash  $ dTitle :: Int32

@@ -2,6 +2,7 @@
   <head>
     <title>Snap web server</title>
     <link rel="stylesheet" type="text/css" href="/screen.css"/>
+    <link rel="stylesheet" type="text/css" href="test.css"/>
   </head>
   <body>
 

@@ -55,10 +55,12 @@ data FieldTag = FieldTag { fieldTagText :: Text
                          } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''FieldTag
                   
-data Document = Document { docId        :: Int32
+data Document = Document { docUploader  :: Maybe User
+                         , docId        :: Int32
                          , docTitle     :: Text
+                         , docAuthors   :: [Text]
                          , docLink      :: Text
-                         , docClasses   :: [DocClass]
+                         , docClasses   :: DocClass
                          , docFieldTags :: [FieldTag]
                          , docSummaries :: [Summary]
                          , docCritiques :: Map.Map User Critique
@@ -69,12 +71,12 @@ data CritiqueClass = CritiqueClass { critiqueClassText :: Text
                                    , critiqueClassNick :: Text
                                    } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''CritiqueClass
-
+ 
 testUsers :: [User]
 testUsers = [User 0 "Greg", User 1 "Ping", User 2 "Hector"]
 
 testPapers :: [Document]
-testPapers = [Document 0 "The Earth is Round (p < .05)"
-              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" [] [] [] Map.empty
-             ,Document 1 "A cool paper about the hippocampus" "http://github.com" [] [] [] Map.empty
+testPapers = [Document Nothing 0 "The Earth is Round (p < .05)" []
+              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] [] Map.empty
+             ,Document Nothing 1 "A cool paper about the hippocampus" [] "http://github.com" (DocClass "Paper") [] [] Map.empty
              ] 
