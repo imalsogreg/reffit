@@ -16,13 +16,4 @@ import qualified Heist.Interpreted as I
 import qualified Data.Text as T
 
 handleIndex :: Handler App App ()
-handleIndex = renderWithSplices "index" allPaperRollSplices
-  
-{-
-handleIndex :: Handler App App ()
-handleIndex = renderWithSplices "index" testSplices 
-
-testSplices :: (Monad n) => Splices (I.Splice n)
-testSplices = do
-  "testString" ## I.textSplice ("HELLO")
--}
+handleIndex = renderWithSplices "_index" allPaperRollSplices
