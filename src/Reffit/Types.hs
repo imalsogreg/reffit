@@ -18,8 +18,11 @@ data DocClass = DocClass { docClassName :: Text
                          } deriving (Show, Generic, Typeable, Eq)
 deriveSafeCopy scv 'base ''DocClass
 
-data User = User { userId   :: Int32
-                 , userName :: Text
+type UserName = Text
+
+data User = User { userName       :: UserName
+                 , userFollowing  :: [UserName]
+                 , userFollowedBy :: [UserName]
                  } deriving (Show, Eq, Ord, Generic,Typeable)
 deriveSafeCopy scv 'base ''User
 
@@ -55,7 +58,7 @@ data FieldTag = FieldTag { fieldTagText :: Text
                          } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''FieldTag
                   
-data Document = Document { docUploader  :: Maybe User
+data Document = Document { docUploader  :: Maybe Text
                          , docId        :: Int32
                          , docTitle     :: Text
                          , docAuthors   :: [Text]
@@ -71,9 +74,6 @@ data CritiqueClass = CritiqueClass { critiqueClassText :: Text
                                    , critiqueClassNick :: Text
                                    } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''CritiqueClass
- 
-testUsers :: [User]
-testUsers = [User 0 "Greg", User 1 "Ping", User 2 "Hector"]
 
 testPapers :: [Document]
 testPapers = [Document Nothing 0 "The Earth is Round (p < .05)" []

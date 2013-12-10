@@ -23,11 +23,13 @@ import           Snap.Snaplet.AcidState (Update, Query, Acid,
 
 import           PaperRoll
 import           HandleIndex
-
+import           HandleNewPaper
 
 import           Control.Applicative
+import qualified Data.Map as Map
 import           Data.ByteString (ByteString)
 import qualified Data.Text as T
+import           Snap (gets)
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
@@ -38,6 +40,15 @@ import           Snap.Snaplet.AcidState
 import           Snap.Util.FileServe
 import           Heist
 import qualified Heist.Interpreted as I
+import qualified Text.Blaze.Html5  as H
+import           Text.Digestive
+import           Text.Digestive.Snap (runForm)
+import           Text.Digestive.Heist  
+import           Text.Digestive.Blaze.Html5
+
+import           Control.Monad.CatchIO (throw)
+import           Control.Monad.State
+import           Data.Text.Encoding (decodeUtf8)
 ------------------------------------------------------------------------------
 import           Application
 
@@ -70,23 +81,54 @@ handleLogout = logout >> redirect "/"
 
 ------------------------------------------------------------------------------
 -- | Handle new user form submit
+-- TODO - make sure user by that name doesn't already exist!
 handleNewUser :: Handler App (AuthManager App) ()
 handleNewUser = method GET handleForm <|> method POST handleFormSubmit
   where
     handleForm = render "new_user"
-    handleFormSubmit = registerUser "login" "password" >> redirect "/"
+    handleFormSubmit = do
+      l <- fmap decodeUtf8 <$> getParam "login"
+      case l of
+        Nothing    -> redirect "/" -- TODO - Give a helpful error message
+        Just uname -> do
+          unameMap <- query QueryAllUsers
+          case Map.lookup uname unameMap of
+            Nothing -> do
+              _ <- registerUser "login" "password"
+              _ <- update $ AddUser uname 
+              redirect "/"
+            Just _ -> do
+              redirect "/" -- TODO - give a helpful error message: uname is taken
+
 
 ------------------------------------------------------------------------------
 -- | Handles article submission
 handleNewArticle :: Handler App (AuthManager App) ()
-handleNewArticle = method GET handleForm <|> method POST handleFormSubmit
- where
-   handleForm = render "new_paper"
-   handleFormSubmit = update
-                   (AddDocument Nothing "TestTitle" ["Greg Hale", "Andy Bolton"]
-                    "http://www.github.com" (DocClass "Paper")) >> redirect "/" -- TODO redirect to new paper
+--handleNewArticle = method GET handleForm <|> method POST handleFormSubmit
+handleNewArticle = handleForm 
+  where
+   handleForm = do
+     userMap <- query QueryAllUsers
+     authUser' <- currentUser
+     case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+       Nothing -> writeText "Error - authUser not in app user database"
+       Just Nothing -> writeText "Error - justNothing, I'm not sure how you'd get this."
+       Just (Just user)  -> do
+         (vw,rs) <- runForm "new_paper_form" $ documentForm user [] []
+         case rs of 
+           Just doc -> do --TODO add the actual paper, not this test paper.
+             _ <- update $
+                  AddDocument Nothing "TestTitle" ["Greg","Andy"] "http://www.github.com" (DocClass "Paper")
+--             redirect "/" -- TODO: redirect to the new page for that paper
+             writeText . (T.append "Got Document: " ) . T.pack . show $ doc
+           Nothing -> do
+--             let nodes = renderHtmlNodes $ showForm "/" "post" form
+             heistLocal (bindDigestiveSplices vw) $ render "new_paper"
+--   handleFormSubmit = update
+--                   (AddDocument Nothing "TestTitle" ["Greg Hale", "Andy Bolton"]
+--                    "http://www.github.com" (DocClass "Paper")) >> redirect "/" -- TODO redirect to new paper
 
-
+ 
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
@@ -116,7 +158,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
 
-    ac <- nestSnaplet "acid" acid $ acidInit (PersistentState [] [])
+    ac <- nestSnaplet "acid" acid $ acidInit (PersistentState [] Map.empty)
     h <- nestSnaplet "" heist $ heistInit "templates"           
     addRoutes routes
     addAuthSplices h auth
