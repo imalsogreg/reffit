@@ -35,6 +35,7 @@ Executable reffit
     blaze-html,
     digestive-functors-blaze,
     transformers,
+    safe,
     bytestring                >= 0.9.1   && < 0.11,
     heist                     >= 0.13    && < 0.14,
     snaplet-acid-state        >= 0.2.5   && < 0.3,

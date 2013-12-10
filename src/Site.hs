@@ -25,6 +25,7 @@ import           PaperRoll
 import           HandleIndex
 import           HandleNewPaper
 import           HandleNewDocClass
+import           HandleViewPaper
 
 import           Control.Applicative
 import qualified Data.Map as Map
@@ -115,11 +116,12 @@ handleDumpState = do
 routes :: [(ByteString, Handler App App ())]
 routes = [
     ("/", handleIndex)   
-  , ("/login",         with auth handleLoginSubmit)
-  , ("/logout",        with auth handleLogout)
-  , ("/new_user",      with auth handleNewUser) 
-  , ("/new_article",   with auth handleNewArticle)
-  , ("/paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
+  , ("login",         with auth handleLoginSubmit)
+  , ("logout",        with auth handleLogout)
+  , ("new_user",      with auth handleNewUser) 
+  , ("new_article",   with auth handleNewArticle)
+  , ("view_article/:paperid", handleViewPaper)
+  , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
   , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
   , ("/dump_state", handleDumpState)
   , ("/test", writeText "test")
