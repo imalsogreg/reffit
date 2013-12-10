@@ -7,8 +7,11 @@ module PaperRoll (
        where
 
 import Reffit.Types
+import Reffit.AcidTypes
+
 
 import Snap.Snaplet (Handler)
+import Snap.Snaplet.AcidState (query)
 import Snap.Snaplet.Heist
 import Application
 import Heist
@@ -16,10 +19,12 @@ import qualified Heist.Interpreted as I
 import qualified Data.Text as T
  
 handlePaperRoll :: Handler App App ()
-handlePaperRoll = renderWithSplices "paper_roll" allPaperRollSplices
+handlePaperRoll = do
+  docs <- query QueryAllDocs                
+  renderWithSplices "paper_roll" (allPaperRollSplices docs)
 
-allPaperRollSplices :: Splices (SnapletISplice App)
-allPaperRollSplices = "paper_roll_papers" ## (renderPaperRollPapers testPapers)
+allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
+allPaperRollSplices docs = "paper_roll_papers" ## (renderPaperRollPapers docs)
 
 renderPaperRollPapers :: [Document] -> SnapletISplice App
 renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument

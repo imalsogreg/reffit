@@ -15,6 +15,7 @@ module Reffit.AcidTypes where
 import Reffit.Types
 import Reffit.DataVersion
 
+import Control.Applicative ((<$>),(<*>),pure)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
 import Data.ByteString (ByteString)
@@ -48,22 +49,28 @@ makeLenses ''PersistentState
 
 deriveSafeCopy scv 'base ''PersistentState
 
-queryWholeState :: Query PersistentState PersistentState
-queryWholeState -- TODO COME BACK
+queryAllDocs :: Query PersistentState [Document]
+queryAllDocs = asks _documents
 
 -- TODO: Check that document title isn't already taken
-addDocument :: Maybe T.Text -> T.Text  -> [T.Text] -> T.Text -> DocClass -> 
-               Update PersistentState ()
-addDocument dUploader dTitle dAuthors dLink dClass = do
+--addDocument :: Maybe T.Text -> T.Text  -> [T.Text] -> T.Text -> DocClass -> 
+--               Update PersistentState ()
+--addDocument dUploader dTitle dAuthors dLink dClass = do
+addDocument :: Document -> Update PersistentState ()
+addDocument doc = do
   oldDocs <- gets _documents
-  let newDoc = Document
-               dUploader newId dTitle dAuthors dLink dClass [] [] Map.empty
+--  let newDoc = Document
+--               dUploader newId dTitle dAuthors dLink dClass [] [] Map.empty
+  let newDoc = doc { docId = newId }
       newId = head $ filter (`notElem` (map docId oldDocs))
               [tHash, tLen, tNotTaken]
-      tHash = fromIntegral . hash  $ dTitle :: Int32
+      tHash = fromIntegral . hash . docTitle $ doc:: Int32
       tLen  = fromIntegral (length oldDocs)  :: Int32
       tNotTaken = head $[0..maxBound] \\ (map docId oldDocs) :: Int32
   modify (over documents ( newDoc : ))
+
+queryAllUsers :: Query PersistentState (Map.Map T.Text User)
+queryAllUsers = asks _users
 
 -- TODO - how can I alert the caller that there's already
 -- a user by that name?
@@ -79,19 +86,20 @@ addUser uName = do
     Just _ -> do  -- This checks and refuses to overwrite, but silently
       modify (over users id)
 
+queryAllDocClasses :: Query PersistentState [DocClass]
+queryAllDocClasses = asks _docClasses
+
 addDocClass :: DocClass -> Update PersistentState ()
 addDocClass dc = do
   modify (over docClasses (dc:))
   
-queryAllDocClasses :: Query PersistentState [DocClass]
-queryAllDocClasses = asks _docClasses
-
-queryAllDocs :: Query PersistentState [Document]
-queryAllDocs = asks _documents
-
-queryAllUsers :: Query PersistentState (Map.Map T.Text User)
-queryAllUsers = asks _users
+queryAllFieldTags :: Query PersistentState [FieldTag]
+queryAllFieldTags = asks _fieldTags
+ 
+addFieldTag :: FieldTag -> Update PersistentState ()
+addFieldTag ft = modify (over fieldTags (ft:))
 
 makeAcidic ''PersistentState ['addDocument, 'queryAllDocs
                              , 'queryAllUsers, 'addUser
-                             , 'queryAllDocClasses, 'addDocClass]
+                             , 'queryAllDocClasses, 'addDocClass
+                             , 'queryAllFieldTags,  'addFieldTag]

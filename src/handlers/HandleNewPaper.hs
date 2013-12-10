@@ -98,16 +98,17 @@ handleNewArticle = handleForm
   where
    handleForm = do
      userMap <- query QueryAllUsers 
+     dc      <- query QueryAllDocClasses 
+     ft      <- query QueryAllFieldTags
      authUser' <- currentUser
      case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
        Nothing -> writeText "Error - authUser not in app user database"
        Just Nothing -> writeText "Error - justNothing, I'm not sure how you'd get this."
        Just (Just user)  -> do
-         (vw,rs) <- runForm "new_paper_form" $ documentForm user [] []
+         (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft
          case rs of 
            Just doc -> do --TODO add the actual paper, not this test paper.
-             _ <- update $
-                  AddDocument Nothing "TestTitle" ["Greg","Andy"] "http://www.github.com" (DocClass "Paper")
+             _ <- update $ AddDocument doc
              writeText . (T.append "Got Document: " ) . T.pack . show $ doc
            Nothing -> do
              heistLocal (bindDigestiveSplices vw) $ render "_new_paper"  -- TODO: which one?? 

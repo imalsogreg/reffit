@@ -55,7 +55,7 @@ deriveSafeCopy scv 'base ''Critique
 
 
 data FieldTag = FieldTag { fieldTagText :: Text
-                         } deriving (Show, Generic)
+                         } deriving (Show, Generic, Typeable)
 deriveSafeCopy scv 'base ''FieldTag
                   
 data Document = Document { docUploader  :: Maybe Text

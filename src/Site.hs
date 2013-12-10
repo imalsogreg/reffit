@@ -103,9 +103,11 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
 
 handleDumpState :: Handler App App ()
 handleDumpState = do
-  s <- query QueryWholeState -- TODO COME BACK
-
-
+  d <- query QueryAllDocs
+  u <- query QueryAllUsers
+  dc <- query QueryAllDocClasses
+  ft <- query QueryAllFieldTags
+  writeText . T.pack . show $ PersistentState d u dc ft
 
 
 ------------------------------------------------------------------------------
