@@ -52,7 +52,8 @@ data QualityDim = Novel | Solid | Cool
                 deriving (Show, Generic, Typeable)
 deriveSafeCopy scv 'base ''QualityDim
 
-data Critique = Critique { critiquePoster    :: Maybe UserName
+data Critique = Critique { critiqueProse     :: Text
+                         , critiquePoster    :: Maybe UserName
                          , critiqueDim       :: QualityDim
                          , critiqueVal       :: UpDownVote
                          , critiqueReactions :: [UpDownVote]

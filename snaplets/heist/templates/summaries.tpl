@@ -1,4 +1,4 @@
-<summaries>
+<proseResponses>
 
 <div class="summary">
 
@@ -9,4 +9,4 @@
 
 </div>
 
-</summaries>
+</prosePesponses>
