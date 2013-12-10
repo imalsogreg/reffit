@@ -123,7 +123,8 @@ handleNewArticle = handleForm
              writeText . (T.append "Got Document: " ) . T.pack . show $ doc
            Nothing -> do
 --             let nodes = renderHtmlNodes $ showForm "/" "post" form
-             heistLocal (bindDigestiveSplices vw) $ render "new_paper"
+             heistLocal (bindDigestiveSplices vw) $ render "new_paper"  -- TODO: which one??
+             renderWithSplices "new_paper" (digestiveSplices vw) 
 --   handleFormSubmit = update
 --                   (AddDocument Nothing "TestTitle" ["Greg Hale", "Andy Bolton"]
 --                    "http://www.github.com" (DocClass "Paper")) >> redirect "/" -- TODO redirect to new paper
