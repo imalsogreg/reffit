@@ -70,13 +70,13 @@ data Document = Document { docUploader  :: Maybe UserName
                          , docLink      :: Text
                          , docClasses   :: DocClass
                          , docFieldTags :: [FieldTag]
-                         , docSummaries :: [Summary]
+                         , docSummaries :: Map.Map SummaryId  Summary
                          , docCritiques :: Map.Map CritiqueId Critique
                          } deriving (Show, Generic, Typeable)
 deriveSafeCopy scv 'base ''Document
 
 testPapers :: [Document]
 testPapers = [Document Nothing 0 "The Earth is Round (p < .05)" []
-              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] [] Map.empty
-             ,Document Nothing 1 "A cool paper about the hippocampus" [] "http://github.com" (DocClass "Paper") [] [] Map.empty
+              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty
+             ,Document Nothing 1 "A cool paper about the hippocampus" [] "http://github.com" (DocClass "Paper") [] Map.empty Map.empty
              ] 

@@ -32,14 +32,12 @@ handleViewPaper = do
         [doc] -> renderWithSplices "_article_view" (allArticleViewSplices doc)        
         
 summarySummary :: Document -> T.Text
-summarySummary doc = T.unwords [T.pack (show nVotes)
-                                  ,"votes /"
-                                  , T.pack (show  nSummaries)
-                                  , "summaries"]
+summarySummary doc = 
+  T.unwords [T.pack (show nVotes),"votes /"
+            , T.pack (show  nSummaries), "summaries"]
   where nSummaries = length . docSummaries $ doc
         nVotes     = sum . map length . docSummaries $ doc
           
--- TODO: Need weighting parameter: democratic? Clout-based?
 critiqueSummary :: Document -> UpDownVote -> T.Text
 critiqueSummary doc critType = 
   T.concat [T.pack (show concensusPct),"% consensus on "
@@ -54,6 +52,17 @@ allArticleViewSplices doc = do
   "articleSummarySummary"   ## I.textSplice (summarySummary doc)
   "articlePraiseSummary"    ## I.textSplice (critiqueSummary  doc UpVote)
   "articleCriticismSummary" ## I.textSplice (critiqueSummary doc DownVote)
-  "articleSummaries"        ## (renderSummaries  doc)
+  "articleSummaries"        ## (allSummarySplices  (Map.elems $ docSummaries doc))
   "articlePraise"           ## (renderPraise     doc)
   "articleCriticisms"       ## (renderCriticisms doc)
+  
+allSummarySplices :: [Summary]  -> Splices (SnapletISplice App)
+allSummarySplices ss = renderWithSplices "summaries" (renderSummaries ss')
+  where ss' = sortBy (
+
+renderSummaries :: Map.Map SummaryId Summary -> SnapletISplice App
+renderSummaries ss = I.mapSplices $ I.runChildrenWith . splicesFromSummary
+                     
+splicesFromSummary :: Monad n => Summary -> Splices (I.Splice n)
+splicesFromSummary s = do
+  
