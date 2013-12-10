@@ -24,6 +24,7 @@ import           Snap.Snaplet.AcidState (Update, Query, Acid,
 import           PaperRoll
 import           HandleIndex
 import           HandleNewPaper
+import           HandleNewDocClass
 
 import           Control.Applicative
 import qualified Data.Map as Map
@@ -100,36 +101,13 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
             Just _ -> do
               redirect "/" -- TODO - give a helpful error message: uname is taken
 
+handleDumpState :: Handler App App ()
+handleDumpState = do
+  s <- query QueryWholeState -- TODO COME BACK
 
-------------------------------------------------------------------------------
--- | Handles article submission
-handleNewArticle :: Handler App (AuthManager App) ()
---handleNewArticle = method GET handleForm <|> method POST handleFormSubmit
-handleNewArticle = handleForm 
-  where
-   handleForm = do
-     userMap <- query QueryAllUsers
-     authUser' <- currentUser
-     case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
-       Nothing -> writeText "Error - authUser not in app user database"
-       Just Nothing -> writeText "Error - justNothing, I'm not sure how you'd get this."
-       Just (Just user)  -> do
-         (vw,rs) <- runForm "new_paper_form" $ documentForm user [] []
-         case rs of 
-           Just doc -> do --TODO add the actual paper, not this test paper.
-             _ <- update $
-                  AddDocument Nothing "TestTitle" ["Greg","Andy"] "http://www.github.com" (DocClass "Paper")
---             redirect "/" -- TODO: redirect to the new page for that paper
-             writeText . (T.append "Got Document: " ) . T.pack . show $ doc
-           Nothing -> do
---             let nodes = renderHtmlNodes $ showForm "/" "post" form
-             heistLocal (bindDigestiveSplices vw) $ render "new_paper"  -- TODO: which one??
-             renderWithSplices "new_paper" (digestiveSplices vw) 
---   handleFormSubmit = update
---                   (AddDocument Nothing "TestTitle" ["Greg Hale", "Andy Bolton"]
---                    "http://www.github.com" (DocClass "Paper")) >> redirect "/" -- TODO redirect to new paper
 
- 
+
+
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
@@ -137,12 +115,14 @@ routes = [
     ("/", handleIndex)   
   , ("/login",         with auth handleLoginSubmit)
   , ("/logout",        with auth handleLogout)
-  , ("/new_user",      with auth handleNewUser)
+  , ("/new_user",      with auth handleNewUser) 
   , ("/new_article",   with auth handleNewArticle)
+  , ("/paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
   , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
+  , ("/dump_state", handleDumpState)
   , ("/test", writeText "test")
-  , ("/paper_roll", handlePaperRoll)
-  , ("/static", serveDirectory "static")
+  , ("/new_doc_class", with auth handleNewDocClass)
+  , ("/static", serveDirectory "static") 
   ]
 
 ------------------------------------------------------------------------------
@@ -159,7 +139,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
 
-    ac <- nestSnaplet "acid" acid $ acidInit (PersistentState [] Map.empty)
+    ac <- nestSnaplet "acid" acid $ acidInit (PersistentState [] Map.empty [DocClass "Paper"] [FieldTag "taga", FieldTag "tagb"])
     h <- nestSnaplet "" heist $ heistInit "templates"           
     addRoutes routes
     addAuthSplices h auth

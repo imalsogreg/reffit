@@ -2,14 +2,21 @@
 
 module HandleNewPaper(
   documentView,
-  documentForm
+  documentForm,
+  handleNewArticle
   )
 where
 
 import           Reffit.Types
+import           Reffit.AcidTypes
 import           Application 
-
+import           Snap.Snaplet.AcidState (Update, Query, Acid,
+                                         HasAcid (getAcidStore),
+                                         makeAcidic,
+                                         update,query,acidInit)
+import           Snap.Core
 import           Snap.Snaplet(Handler)
+import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Auth
 import           Control.Applicative
 import           Data.Monoid
@@ -22,10 +29,8 @@ import           Heist
 import qualified Heist.Interpreted            as I
 import           Application
 import qualified Text.Blaze.Html5             as H
-
--- This is written in Site.hs.  Maybe move to here?
---handleNewPaper :: Handler App App ()
---handleNewPaper = undefined
+import           Text.Digestive.Snap (runForm)
+import           Text.Digestive.Heist  
 
 documentForm :: (Monad m) => User -> [DocClass] -> [FieldTag] -> Form Text m Document
 documentForm fromUser allDocClasses allDocTags =
@@ -33,7 +38,6 @@ documentForm fromUser allDocClasses allDocTags =
   <$> "poster"   .: choice posterOpts Nothing
   <*> pure 0
   <*> "title"    .: check "Not a valid title" (not . T.null) (text Nothing)
-
   <*> "authors"  .: validate validateAuthors (text (Just "Abe Lincoln, Dr. Livingston"))
   <*> "link"     .: check "Not a valid link" (not . T.null) (text Nothing)
   <*> "docClass" .: choice classOpts Nothing
@@ -47,7 +51,7 @@ documentForm fromUser allDocClasses allDocTags =
 
 documentView :: View H.Html -> H.Html
 documentView view = do
-
+ 
   label       "poster" view "Post as: "
   inputSelect "poster" view
   
@@ -85,3 +89,25 @@ validateTags allTags' formTags'
   where
     allTags  = map (\(FieldTag t) -> t) allTags' 
     formTags = T.words formTags'
+    
+------------------------------------------------------------------------------
+-- | Handles article submission
+handleNewArticle :: Handler App (AuthManager App) ()
+--handleNewArticle = method GET handleForm <|> method POST handleFormSubmit
+handleNewArticle = handleForm 
+  where
+   handleForm = do
+     userMap <- query QueryAllUsers 
+     authUser' <- currentUser
+     case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+       Nothing -> writeText "Error - authUser not in app user database"
+       Just Nothing -> writeText "Error - justNothing, I'm not sure how you'd get this."
+       Just (Just user)  -> do
+         (vw,rs) <- runForm "new_paper_form" $ documentForm user [] []
+         case rs of 
+           Just doc -> do --TODO add the actual paper, not this test paper.
+             _ <- update $
+                  AddDocument Nothing "TestTitle" ["Greg","Andy"] "http://www.github.com" (DocClass "Paper")
+             writeText . (T.append "Got Document: " ) . T.pack . show $ doc
+           Nothing -> do
+             heistLocal (bindDigestiveSplices vw) $ render "_new_paper"  -- TODO: which one?? 

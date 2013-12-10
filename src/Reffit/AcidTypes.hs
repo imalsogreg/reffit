@@ -38,13 +38,18 @@ import Snap.Snaplet.AcidState (Update, Query, Acid,
                                 query, acidInit)
 
 data PersistentState = PersistentState {
-    _documents :: [Document]
-  , _users     :: Map.Map T.Text User
+    _documents  :: [Document]
+  , _users      :: Map.Map UserName User
+  , _docClasses :: [DocClass]
+  , _fieldTags  :: [FieldTag]
   } deriving (Show, Generic, Typeable)
   
 makeLenses ''PersistentState
 
 deriveSafeCopy scv 'base ''PersistentState
+
+queryWholeState :: Query PersistentState PersistentState
+queryWholeState -- TODO COME BACK
 
 -- TODO: Check that document title isn't already taken
 addDocument :: Maybe T.Text -> T.Text  -> [T.Text] -> T.Text -> DocClass -> 
@@ -74,10 +79,19 @@ addUser uName = do
     Just _ -> do  -- This checks and refuses to overwrite, but silently
       modify (over users id)
 
+addDocClass :: DocClass -> Update PersistentState ()
+addDocClass dc = do
+  modify (over docClasses (dc:))
+  
+queryAllDocClasses :: Query PersistentState [DocClass]
+queryAllDocClasses = asks _docClasses
+
 queryAllDocs :: Query PersistentState [Document]
 queryAllDocs = asks _documents
 
 queryAllUsers :: Query PersistentState (Map.Map T.Text User)
 queryAllUsers = asks _users
 
-makeAcidic ''PersistentState ['addDocument, 'queryAllDocs, 'queryAllUsers, 'addUser]
+makeAcidic ''PersistentState ['addDocument, 'queryAllDocs
+                             , 'queryAllUsers, 'addUser
+                             , 'queryAllDocClasses, 'addDocClass]
