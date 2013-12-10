@@ -6,6 +6,8 @@ import Reffit.Types
 import Reffit.AcidTypes
 
 import Safe
+import qualified Data.List as List
+import qualified Data.Map as Map
 import Snap.Core (getParam)
 import Snap.Types (writeText)
 import Snap.Snaplet (Handler)
@@ -16,7 +18,8 @@ import Heist
 import qualified Heist.Interpreted as I
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
- 
+import Control.Lens
+  
 handleViewPaper :: Handler App App ()
 handleViewPaper = do
   pId' <- getParam "paperid"
@@ -37,19 +40,20 @@ summarySummary doc = T.unwords [T.pack (show nVotes)
         nVotes     = sum . map length . docSummaries $ doc
           
 -- TODO: Need weighting parameter: democratic? Clout-based?
-praiseSummary :: Document -> T.Text
-praiseSummary doc = T.concat [concensusPtc
-                             ,"% consensus on "
-                             , pack (show nPraise)
-                             , " points"]
-  where nVote ud cs = length . filter (==ud) . attrValue $ map critiqueAttrVote cs
-        nUp = nVote UpVote 
-                     
+critiqueSummary :: Document -> UpDownVote -> T.Text
+critiqueSummary doc critType = 
+  T.concat [T.pack (show concensusPct),"% consensus on "
+           , T.pack (show . length $ critiques), " points"] 
+  where 
+    critiques = filter ((==critType).critiqueVal) $ Map.elems docCritiques doc
+    (nUps,nDowns) = List.partition (==critType) critiques & over both length
+    concensusPct = floor (nUps/(nUps+nDowns) * 100)
+
 allArticleViewSplices :: Document -> Splices (SnapletISplice App)
 allArticleViewSplices doc = do
   "articleSummarySummary"   ## I.textSplice (summarySummary doc)
-  "articlePraiseSummary"    ## I.textSplice (praiseSummary  doc)
-  "articleCriticismSummary" ## I.textSplice (criticismSummary doc)
+  "articlePraiseSummary"    ## I.textSplice (critiqueSummary  doc UpVote)
+  "articleCriticismSummary" ## I.textSplice (critiqueSummary doc DownVote)
   "articleSummaries"        ## (renderSummaries  doc)
   "articlePraise"           ## (renderPraise     doc)
   "articleCriticisms"       ## (renderCriticisms doc)

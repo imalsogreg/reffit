@@ -82,7 +82,7 @@ addUser uName = do
   allUsers <- gets _users
   case Map.lookup uName allUsers of
     Nothing ->
-      modify (over users ( Map.insert uName $ User uName [] [] ))
+      modify (over users ( Map.insert uName $ User uName [] [] []))
     Just _ -> do  -- This checks and refuses to overwrite, but silently
       modify (over users id)
 

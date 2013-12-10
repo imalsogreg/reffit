@@ -42,8 +42,9 @@ data User = User { userName       :: UserName
                  } deriving (Show, Eq, Ord, Generic,Typeable)
 deriveSafeCopy scv 'base ''User
 
-data Summary = Summary { docSummaryProse :: Text
-                       , docSummaryVotes :: [UpDownVote]
+data Summary = Summary { summaryPoster :: Maybe UserName
+                       , summaryProse :: Text
+                       , summaryVotes :: [UpDownVote]
                        } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''Summary
 
@@ -51,7 +52,7 @@ data QualityDim = Novel | Solid | Cool
                 deriving (Show, Generic, Typeable)
 deriveSafeCopy scv 'base ''QualityDim
 
-data Critique = Critique { critiqueUser      :: Maybe UserName
+data Critique = Critique { critiquePoster    :: Maybe UserName
                          , critiqueDim       :: QualityDim
                          , critiqueVal       :: UpDownVote
                          , critiqueReactions :: [UpDownVote]
