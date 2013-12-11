@@ -149,3 +149,12 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     addAuthSplices h auth
     return $ App h s a ac
 
+
+factoryReset :: PersistentState
+factoryReset = PersistentState [] Map.empty [] []
+
+convenienceReset :: PersistentState
+convenienceReset = PersistentState [] Map.empty [DocClass "Paper"] []
+
+--testReset :: PersistentState
+--testReset = PersistentState 

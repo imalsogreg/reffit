@@ -24,10 +24,11 @@ handlePaperRoll = do
   renderWithSplices "paper_roll" (allPaperRollSplices docs)
 
 allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
-allPaperRollSplices docs = "paper_roll_papers" ## (renderPaperRollPapers docs)
+allPaperRollSplices docs = do
+  "paper_roll_papers" ## (renderPaperRollPapers docs)
 
 renderPaperRollPapers :: [Document] -> SnapletISplice App
-renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
+renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument 
 
 splicesFromDocument :: Monad n => Document -> Splices (I.Splice n)
 splicesFromDocument t = do

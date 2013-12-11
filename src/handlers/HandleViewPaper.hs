@@ -6,6 +6,7 @@ import Reffit.Types
 import Reffit.AcidTypes
 
 import Safe
+import Control.Applicative ((<$>),(<*>),pure)
 import qualified Data.List as List
 import qualified Data.Map as Map
 import Snap.Core (getParam)
@@ -18,27 +19,32 @@ import Heist
 import qualified Heist.Interpreted as I
 import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
+import GHC.Int
 import Control.Lens
   
 handleViewPaper :: Handler App App ()
 handleViewPaper = do
   pId' <- getParam "paperid"
-  case readMay pId' of
+  case readMay . T.unpack . decodeUtf8 <$> pId' of
     Nothing -> writeText "Need paperid parameter"
-    Just pId ->  do
+    Just (Just pId) ->  do  -- just just again!
+      let a = pId :: Int32
       docs <- query QueryAllDocs
       case ((==pId) . docId) `filter` docs of
-        []    -> writeText "Document wasn't found in the database."
+        []    -> writeText $ T.concat ["You entered: "
+                                       , T.pack (show pId) 
+                                       ," Document wasn't found in the database.  We have these ids:"
+                                       , T.concat (map (T.pack . show . docId) docs) ]
         [doc] -> renderWithSplices "_article_view" (allArticleViewSplices doc)        
 
 -- |Count positive and negative votes for a summary
 summaryUpsDowns :: Summary -> (Int,Int)
-summaryUpsDowns s =
-  List.partition ((==UpVote).summaryVotes) & over both length
+summaryUpsDowns s = over both length $
+  List.partition (==UpVote) . summaryVotes $ s
 
 critiqueUpsDowns :: Critique -> (Int,Int)
-critiqueUpsDowns c =
-  List.partition ((==UpVote).critiqueReactions) & over both length
+critiqueUpsDowns c = over both length $ 
+  List.partition (==UpVote) . critiqueReactions $ c
 
 compareSummaryNetVote :: Summary -> Summary -> Ordering
 compareSummaryNetVote a b = netA `compare` netB
@@ -50,54 +56,75 @@ compareSummaryNetVote a b = netA `compare` netB
 summarySummary :: Document -> T.Text
 summarySummary doc = 
   T.unwords [T.pack (show nVotes),"votes /"
-            , T.pack (show  nSummaries), "summaries"]
-  where nSummaries = Map.size . docSummaries $ doc 
-        nVotes     = sum . map length . Map.elems . docSummaries $ doc :: Int
+            , T.pack (show  nSummaries), "summaries"] 
+  where nSummaries = Map.size . docSummaries $ doc
+        nVotes     = sum . map length . map summaryVotes . Map.elems . docSummaries $ doc :: Int
 
-          
 critiqueSummary :: Document -> UpDownVote -> T.Text
 critiqueSummary doc critType = 
   T.concat [T.pack (show concensusPct),"% consensus on "
            , T.pack (show . length $ critiques), " points"] 
   where 
-    critiques = filter ((==critType).critiqueVal) $ Map.elems docCritiques doc
-    (nUps,nDowns) = List.partition (==critType) critiques & over both length
-    concensusPct = floor (nUps/(nUps+nDowns) * 100)
+    critiques = filter ((==critType).critiqueVal) . Map.elems . docCritiques $ doc :: [Critique]
+    (nUps,nDowns) = List.partition ((==critType).critiqueVal) critiques & over both length
+    concensusPct = floor (fI nUps/ fI (nUps+nDowns) * 100)
+
+fI :: (Integral a, Real b) => a -> b
+fI = fromIntegral
+
+a :: Document -> Splices (SnapletISplice App)
+a d = (allProseSplices "test" . summariesToProseData . docSummaries $ d)
+
+--b :: Document -> SnapletISplice App
+--b d = "articleSummaries" ## a d
+
+c :: (Monad m0, Monad n0) => Document -> HeistT m0 n0 Template 
+c d = I.textSplice (summarySummary d)
 
 allArticleViewSplices :: Document -> Splices (SnapletISplice App)
+--allArticleViewSplices :: Document -> Splices (I.Splice n)
 allArticleViewSplices doc = do
-  "articleSummarySummary"   ## I.textSplice (summarySummary doc)
-  "articlePraiseSummary"    ## I.textSplice (critiqueSummary  doc UpVote)
-  "articleCriticismSummary" ## I.textSplice (critiqueSummary doc DownVote)
-  "articleSummaries"        ## (allProseResponses . summariesToProseData . docSummaries $ doc )
-  "articlePraise"           ## (allProseResponses . critiquesToProseData UpVote . docCritiques $ doc)
-  "articleCriticisms"       ## (allProseResponses . critiquesToProseData DownVote . docCritiques $ doc) 
-
+  "articleSummarySummary"   ## I.textSplice (summarySummary doc) :: Splices (SnapletISplice App)
+  "articlePraiseSummary"    ## I.textSplice (critiqueSummary  doc UpVote) :: Splices (SnapletISplice App)
+  "articleCriticismSummary" ## I.textSplice (critiqueSummary doc DownVote) :: Splices (SnapletISplice App)
+  (allProseSplices "articleSummaries" . summariesToProseData . docSummaries $ doc)
+  (allProseSplices "articlePraise" . critiquesToProseData UpVote . docCritiques $ doc )
+  (allProseSplices "articleCriticisms" . critiquesToProseData DownVote . docCritiques $ doc )
+  {-
+  "articleSummaries"        ## (allProseSplices . summariesToProseData . docSummaries $ doc )
+  "articlePraise"           ## (allProseSplices . critiquesToProseData UpVote . docCritiques $ doc)
+  "articleCriticisms"       ## (allProseSplices . critiquesToProseData DownVote . docCritiques $ doc) 
+ -}
 summariesToProseData :: Map.Map SummaryId Summary -> [(T.Text,Int,Int)]
 summariesToProseData ss =
-  Map.map
+  Map.elems $ Map.map
   (\s -> let (u,d) = summaryUpsDowns s in (summaryProse s, u, d)) ss
 
 critiquesToProseData :: UpDownVote -> Map.Map CritiqueId Critique -> [(T.Text,Int,Int)]
-critiquesToProseData cs targetV =
-  let targets = filter ((==targetV).critiqueVal) cs in 
-  Map.map (\c -> let (u,d) = critiqueUpsDowns c in (critiqueProse c, u, d)) targets
+critiquesToProseData targetV cs =
+  let targets = filter ((==targetV).critiqueVal) (Map.elems cs) in  
+  map (\c -> let (u,d) = critiqueUpsDowns c in (critiqueProse c, u, d)) targets 
 
 compareProseData :: (T.Text,Int,Int) -> (T.Text,Int,Int) -> Ordering
 compareProseData (_,aUp,aDown) (_,bUp,bDown) = (aUp - bUp) `compare` (bUp - bDown)
 
-allProseResponses :: [(T.Text, Int, Int)] -> Splices (SnapletISplice App)
-allProseResponses ps = renderWithSplices "proseResponses" (renderProses ps')
+-- analogous to allPaperRollSplices
+allProseSplices :: T.Text -> [(T.Text, Int, Int)] -> Splices (SnapletISplice App)
+allProseSplices tag ps = tag ## (renderProses ps')
   where ps' = List.sortBy compareProseData ps
-
+ 
+-- analogous to renderPaperRollPapers
 renderProses :: [(T.Text,Int,Int)] -> SnapletISplice App
-renderProses ss = I.mapSplices $ I.runChildrenWith . spliceFromProse 
+renderProses = I.mapSplices $ I.runChildrenWith . splicesFromProse 
 
-spliceFromProse :: Monad n => (T.Text,Int,Int) -> Splices (I.Splice n)
-spliceFromProse (t,u,d) =  do
+-- this is analogous to splicesFromDoc
+splicesFromProse :: Monad n => (T.Text,Int,Int) -> Splices (I.Splice n) 
+splicesFromProse (t,u,d) =  do
   "upCount"     ## I.textSplice (T.pack . show $ u)
   "downCount"   ## I.textSplice (T.pack . show $ d)
   "summaryText" ## I.textSplice t
+
+
 
 {-
   --TODO : Sort by user's preference.

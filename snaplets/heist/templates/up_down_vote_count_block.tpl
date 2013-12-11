@@ -3,7 +3,7 @@
 <table>
 <tr><td> <a href="">Up</a> </td></tr>
 <tr><td> <upCount/> / <downCount/> </td></tr>
-<tr><tr> <a href="">Down</a> </td></tr>
+<tr><td> <a href="">Down</a> </td></tr>
 </table>
 
 </div>

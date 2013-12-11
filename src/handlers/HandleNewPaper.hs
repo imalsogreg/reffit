@@ -42,8 +42,8 @@ documentForm fromUser allDocClasses allDocTags =
   <*> "link"     .: check "Not a valid link" (not . T.null) (text Nothing)
   <*> "docClass" .: choice classOpts Nothing
   <*> "docTags"  .: validate (validateTags allDocTags) (text Nothing)
-  <*> pure []
-  <*> pure (Map.empty) 
+  <*> pure Map.empty
+  <*> pure Map.empty
     where
       posterOpts = [(Just (userName fromUser),userName fromUser)
                    ,(Nothing,"Anonymous")]  
@@ -78,7 +78,7 @@ validateAuthors :: Text -> Result Text [Text]
 validateAuthors authorsText
   | T.null authorsText = Error "Authors required"
   | otherwise          = Success $ T.splitOn "," authorsText
-
+ 
 validateTags :: [FieldTag] -> Text -> Result Text [FieldTag]
 validateTags allTags' formTags'
   | all (`elem` allTags) formTags =
