@@ -67,19 +67,12 @@ critiqueSummary doc critType =
   where 
     critiques = filter ((==critType).critiqueVal) . Map.elems . docCritiques $ doc :: [Critique]
     (nUps,nDowns) = List.partition ((==critType).critiqueVal) critiques & over both length
-    concensusPct = floor (fI nUps/ fI (nUps+nDowns) * 100)
+    concensusPct = if (nUps + nDowns > 0)
+                   then floor (fI nUps/ fI (nUps+nDowns) * (100::Double)) 
+                   else (0 :: Int)
 
 fI :: (Integral a, Real b) => a -> b
 fI = fromIntegral
-
-a :: Document -> Splices (SnapletISplice App)
-a d = (allProseSplices "test" . summariesToProseData . docSummaries $ d)
-
---b :: Document -> SnapletISplice App
---b d = "articleSummaries" ## a d
-
-c :: (Monad m0, Monad n0) => Document -> HeistT m0 n0 Template 
-c d = I.textSplice (summarySummary d)
 
 allArticleViewSplices :: Document -> Splices (SnapletISplice App)
 --allArticleViewSplices :: Document -> Splices (I.Splice n)
@@ -90,11 +83,7 @@ allArticleViewSplices doc = do
   (allProseSplices "articleSummaries" . summariesToProseData . docSummaries $ doc)
   (allProseSplices "articlePraise" . critiquesToProseData UpVote . docCritiques $ doc )
   (allProseSplices "articleCriticisms" . critiquesToProseData DownVote . docCritiques $ doc )
-  {-
-  "articleSummaries"        ## (allProseSplices . summariesToProseData . docSummaries $ doc )
-  "articlePraise"           ## (allProseSplices . critiquesToProseData UpVote . docCritiques $ doc)
-  "articleCriticisms"       ## (allProseSplices . critiquesToProseData DownVote . docCritiques $ doc) 
- -}
+
 summariesToProseData :: Map.Map SummaryId Summary -> [(T.Text,Int,Int)]
 summariesToProseData ss =
   Map.elems $ Map.map
@@ -125,23 +114,3 @@ splicesFromProse (t,u,d) =  do
   "summaryText" ## I.textSplice t
 
 
-
-{-
-  --TODO : Sort by user's preference.
-allSummarySplices :: [Summary]  -> Splices (SnapletISplice App)
-allSummarySplices ss = renderWithSplices "proseResponses" (renderSummaries ss')
-  where ss' = List.sortBy compareSummaryNetVote ss 
-
-renderSummaries :: Map.Map SummaryId Summary -> SnapletISplice App
-renderSummaries ss = I.mapSplices $ I.runChildrenWith . splicesFromSummary
-                     
-splicesFromSummary :: Monad n => Summary -> Splices (I.Splice n)
-splicesFromSummary s = do
-  let (nUp,nDown) = summaryUpsDowns s
-  "upCount"     ## I.textSplice (T.pack . show $ nUp)
-  "downCount"   ## I.textSplice (T.pack . show $ nDown)
-  "summaryText" ## I.textSplice (summaryProse s)
-
-allCritiques :: [Critique] -> Splices (SnapletISplice App)
-allCritiques cs = renderWithSplices "
--}
