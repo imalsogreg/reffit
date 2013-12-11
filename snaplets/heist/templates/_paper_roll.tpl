@@ -2,6 +2,7 @@
 
 <paper_roll_papers>
 
+<a href="/view_article/${idNum}">
 <div class="pr_paper">
 <table>
   <tr>
@@ -16,4 +17,5 @@
   </tr>
 </table>
 </div>
+</a>
 </paper_roll_papers>

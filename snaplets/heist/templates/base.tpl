@@ -1,18 +1,13 @@
 <html>
   <head>
-    <title>Snap web server</title>
-    <link rel="stylesheet" type="text/css" href="/static/media/css/screen.css"/>
+    <title>Reffit!</title>
+    <link rel="stylesheet" type="text/css" href="/static/media/css/screen.css"/>  <link rel="stylesheet" type="text/css" href="/static/media/css/nav.css"/>
     <script src="/static/media/js/jquery-1.10.2.js"></script>
   </head>
   <body>
 
-    <img src="/static/media/img/circle.png">
-    <img src="/static/media/img/circle.png">
-    <div id="header">
-    </div>
-
-    <div id="nav">
-      <apply template="nav"/>
+    <div class="navBar">
+    <apply template="nav"/>
     </div>
 
     <div id="content">

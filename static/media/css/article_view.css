@@ -1,0 +1,13 @@
+.article_view{
+  position:relative;
+}
+
+.article_view_nav{
+  background-color:#00aa00;
+  position:fixed;
+  left:0;
+  top:100;
+  width:200px;
+  height:400px;
+}
+

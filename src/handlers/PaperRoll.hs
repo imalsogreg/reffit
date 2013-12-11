@@ -32,6 +32,7 @@ renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
 
 splicesFromDocument :: Monad n => Document -> Splices (I.Splice n)
 splicesFromDocument t = do
+  "idNum"               ## I.textSplice (T.pack . show $ docId t)
   "paper_title"         ## I.textSplice (docTitle t)
   "paper_external_link" ## I.textSplice (docLink t)
   "impact_score"        ## I.textSplice (T.pack $ show (1 ::Int)) --TODO calculate scores

@@ -1,3 +1,5 @@
+<link rel="stylesheet" type="text/css" href="/static/media/css/article_view.css"/>
+
 <script>
 $(document).ready( function(){
  $("#article_summaries_button").click( function() {

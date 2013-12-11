@@ -1,10 +1,12 @@
-<table class="header_strip">
-<tr>
-<ifLoggedIn>
- <td><loggedInUser/></td><td><a href="/logout">Logout</a></td>
-</ifLoggedIn>
-<ifLoggedOut>
- <td><a href="login">Login</a></td>
-</ifLoggedOut>
-</tr>
-</table>
+<nav>
+<ul>
+  <li><a href="/">Home</a></li>
+  <ifLoggedIn>
+     <li><a><loggedInUser/></a></li>
+     <li><a href="/logout">Logout</a></li>
+  </ifLoggedIn>
+  <ifLoggedOut>
+     <li><a href="login">Login</a></li>
+  </ifLoggedOut>
+</ul>
+</nav>
