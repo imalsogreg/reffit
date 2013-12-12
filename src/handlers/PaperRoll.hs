@@ -36,6 +36,6 @@ splicesFromDocument t = do
   "paper_title"         ## I.textSplice (docTitle t)
   "paper_authors"       ## I.textSplice (T.intercalate ", " $ docAuthors t)  
   "paper_external_link" ## I.textSplice (docLink t)
-  "impact_score"        ## I.textSplice (T.pack $ show (1 ::Int)) --TODO calculate scores
-  "rigor_score"         ## I.textSplice (T.pack $ show (2 ::Int))
-  "polish_score"        ## I.textSplice (T.pack $ show (3 ::Int))
+  "noveltyScore"        ## I.textSplice (T.pack $ show (1 ::Int)) --TODO calculate scores
+  "rigorScore"          ## I.textSplice (T.pack $ show (2 ::Int))
+  "coolnessScore"       ## I.textSplice (T.pack $ show (3 ::Int))

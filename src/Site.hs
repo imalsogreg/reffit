@@ -170,8 +170,13 @@ stresstestReset = PersistentState docs Map.empty [DocClass "Paper"] []
            | i <- [1..1000]] 
              
 testDoc :: Int32 -> Document
-testDoc i = Document Nothing i "The Earth is Round (p < .05)" []
-            "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty
+testDoc i = Document Nothing i "The Earth is Round (p < .05)" ["Jacob Cohen","Hans Ruthorford Jr."]
+            "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] (Map.fromList [(0,testSummary)]) (Map.fromList [(0,testPraise)]) 
 
+testUsers = [ User "Arte Artimus" ["Santa","Rudolph"] [] [] ]
+
+testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Cool  UpVote [UpVote,DownVote,UpVote]
+
+testSummary = Summary Nothing "This paper talks about why H0 hypothesist testing isn't appropriate for describing effect size." [UpVote,UpVote]
 --testReset :: PersistentState
 --testReset = PersistentState 

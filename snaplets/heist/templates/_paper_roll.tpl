@@ -5,14 +5,18 @@
     <a href="/view_article/${idNum}">
       <div class="pr_paper">
 	
-	<div class="pr_score_block">
-	  <apply template="score_block"/>
-	</div>
+	<apply template="score_block"/>
+
 	
 	<div class="pr_paper_info">
-	  <h5><paper_title/> </h5>
-	  <h6><paper_authors/></h6>
+	  <div class="pr_title">
+	    <paper_title/>
+	  </div>
+	  <div class="pr_authors">
+	    <paper_authors/>
+	  </div>
 	</div>
+
       </div>
     </a>
     

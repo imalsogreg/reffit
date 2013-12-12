@@ -90,28 +90,68 @@ allArticleViewSplices doc = do
   "nPraise"                 ## I.textSplice (T.pack . show $ nCritique UpVote doc)
   "nCriticisms"             ## I.textSplice (T.pack . show $ nCritique DownVote doc)
   "docType"                 ## I.textSplice (docClassName . docClass $ doc)  
-  (allProseSplices "articleSummaries" . summariesToProseData . docSummaries $ doc)
-  (allProseSplices "articlePraise" . critiquesToProseData UpVote . docCritiques $ doc )
-  (allProseSplices "articleCriticisms" . critiquesToProseData DownVote . docCritiques $ doc )
-
-summariesToProseData :: Map.Map SummaryId Summary -> [(T.Text,Int,Int)]
-summariesToProseData ss =
-  Map.elems $ Map.map
-  (\s -> let (u,d) = summaryUpsDowns s in (summaryProse s, u, d)) ss
-
+  (allSummarySplices . Map.elems . docSummaries $ doc)
+  (allCritiqueSplices UpVote   "articlePraise"     . Map.elems . docCritiques $ doc )
+  (allCritiqueSplices DownVote "articleCriticisms" . Map.elems .  docCritiques $ doc )
+ 
 critiquesToProseData :: UpDownVote -> Map.Map CritiqueId Critique -> [(T.Text,Int,Int)]
 critiquesToProseData targetV cs =
   let targets = filter ((==targetV).critiqueVal) (Map.elems cs) in  
   map (\c -> let (u,d) = critiqueUpsDowns c in (critiqueProse c, u, d)) targets 
 
+compareSummaryPopularity :: Summary -> Summary -> Ordering
+compareSummaryPopularity a b = (aUp - aDown) `compare` (bUp - bDown)
+  where ((aUp,aDown),(bUp,bDown)) = (summaryUpsDowns a, summaryUpsDowns b)
+
+compareCritiquePopularity :: Critique -> Critique -> Ordering
+compareCritiquePopularity a b = (aUp - aDown) `compare` (bUp - bDown)
+  where
+    ((aUp,aDown),(bUp,bDown)) = (critiqueUpsDowns a, critiqueUpsDowns b)
+
+allSummarySplices :: [Summary] -> Splices (SnapletISplice App)
+allSummarySplices ss = "articleSummaries" ## renderSummaries ss
+
+renderSummaries :: [Summary] -> SnapletISplice App
+renderSummaries = I.mapSplices $ I.runChildrenWith . splicesFromSummary
+
+splicesFromSummary :: Monad n => Summary -> Splices (I.Splice n)
+splicesFromSummary s = do
+  "upCount"     ## I.textSplice (T.pack . show $ nUp) 
+  "downCount"   ## I.textSplice (T.pack . show $ nDown)
+  "summaryText" ## I.textSplice (T.pack . show $ summaryProse s)
+  where (nUp, nDown) = summaryUpsDowns s
+                  
+allCritiqueSplices :: UpDownVote -> T.Text -> [Critique] -> Splices (SnapletISplice App)
+allCritiqueSplices vTarg tag cs = tag ## renderCritiques cs'
+  where cs' = filter ( (==vTarg) . critiqueVal) cs 
+
+renderCritiques :: [Critique] -> SnapletISplice App
+renderCritiques = I.mapSplices $ I.runChildrenWith . splicesFromCritique
+
+splicesFromCritique :: Monad n => Critique -> Splices (I.Splice n)
+splicesFromCritique c = do
+  "upCount"      ## I.textSplice (T.pack . show $ nUp)
+  "downCount"    ## I.textSplice (T.pack . show $ nDown)
+  "critiqueText" ## I.textSplice (critiqueProse c)
+  where
+    (nUp,nDown) = critiqueUpsDowns c
+
+
+{-
+summariesToProseData :: Map.Map SummaryId Summary -> [(T.Text,Int,Int)]
+summariesToProseData ss =
+  Map.elems $ Map.map
+  (\s -> let (u,d) = summaryUpsDowns s in (summaryProse s, u, d)) ss
+
 compareProseData :: (T.Text,Int,Int) -> (T.Text,Int,Int) -> Ordering
-compareProseData (_,aUp,aDown) (_,bUp,bDown) = (aUp - bUp) `compare` (bUp - bDown)
+compareProseData (_,aUp,aDown) (_,bUp,bDown) = (aUp - aDown) `compare` (bUp - bDown)
 
 -- analogous to allPaperRollSplices
 allProseSplices :: T.Text -> [(T.Text, Int, Int)] -> Splices (SnapletISplice App)
 allProseSplices tag ps = tag ## (renderProses ps')
   where ps' = List.sortBy compareProseData ps
- 
+
+
 -- analogous to renderPaperRollPapers
 renderProses :: [(T.Text,Int,Int)] -> SnapletISplice App
 renderProses = I.mapSplices $ I.runChildrenWith . splicesFromProse 
@@ -122,5 +162,5 @@ splicesFromProse (t,u,d) =  do
   "upCount"     ## I.textSplice (T.pack . show $ u)
   "downCount"   ## I.textSplice (T.pack . show $ d)
   "summaryText" ## I.textSplice t
-
+-}
 

@@ -1,13 +1,13 @@
-<table>
-  
-  <tr>
-    <td><small>N</small></td> <td><small>R</small></td> <td><small>C</small></td>
-  </tr>
-  
-  <tr>
-    <td> <impact_score/> </td>
-    <td> <rigor_score/>  </td>
-    <td> <polish_score/> </td>
-  </tr>
-
-</table>
+<div class="score_block">
+  <ul class="score_block_ul">
+    <li class="novelty_score">
+     N <noveltyScore/> 
+   </li>		      
+   <li class="rigor_score">
+     R <rigorScore/>
+   </li>	
+   <li class="coolness_score">
+     C <coolnessScore/>
+   </li>
+  </ul>
+</div>
