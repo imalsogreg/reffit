@@ -30,7 +30,8 @@ allPaperRollSplices docs = do
 renderPaperRollPapers :: [Document] -> SnapletISplice App
 renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument 
 
-splicesFromDocument :: Monad n => Document -> Splices (I.Splice n)
+--splicesFromDocument :: Monad n => Document -> Splices (I.Splice n)
+splicesFromDocument :: Document -> Splices (SnapletISplice App) 
 splicesFromDocument t = do
   "idNum"               ## I.textSplice (T.pack . show $ docId t)
   "paper_title"         ## I.textSplice (docTitle t)
@@ -39,3 +40,16 @@ splicesFromDocument t = do
   "noveltyScore"        ## I.textSplice (T.pack $ show (1 ::Int)) --TODO calculate scores
   "rigorScore"          ## I.textSplice (T.pack $ show (2 ::Int))
   "coolnessScore"       ## I.textSplice (T.pack $ show (3 ::Int))
+  (allFieldTags $ docFieldTags t)
+ 
+allFieldTags :: [FieldTag] -> Splices (SnapletISplice App)
+allFieldTags tags = "fieldTags" ## renderFieldTags fLabels
+    where
+      fLabels = map fieldTagText tags
+
+renderFieldTags :: [T.Text] -> SnapletISplice App
+renderFieldTags = I.mapSplices $ I.runChildrenWith . splicesFromTag 
+
+splicesFromTag :: Monad n => T.Text -> Splices (I.Splice n)
+splicesFromTag t = do
+  "fieldTag" ## I.textSplice t

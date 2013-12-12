@@ -62,21 +62,21 @@
 
   <div class="row">
     
-    <div class="col-md-4" id="summaries-div">
+    <div class="col-sm-4" id="summaries-div">
     <div class="article_summaries">
       <h3>Summaries</h3>
       <articleSummaries/>
     </div>
     </div>
 
-    <div class="col-md-4" id="praise-div">
+    <div class="col-sm-4" id="praise-div">
     <div class="article_praise">
       <h3>Praise</h3>
       <articlePraise/>
     </div>
     </div>
 
-    <div class="col-md-4" id="criticisms-div">
+    <div class="col-sm-4" id="criticisms-div">
     <div class="article_criticisms">
       <h3>Criticism</h3>
       <articleCriticisms/>

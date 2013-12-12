@@ -4,8 +4,7 @@ html {
    font-family: Verdana, Helvetica, sans-serif;
 }
 body {
-   background-color: #aaaacc;
-   background-image:url('/static/media/img/metal3.jpg');
+   background-color: #ffffff;
    padding: 0;
    margin: 0;
    width:100%;
@@ -32,11 +31,37 @@ img {
 }
 
 .score_block{
+    display:fixed;
+    right:0px;
+    float:right;
+    clear:both;
     font-size:12;
-    margin:auto;
-    list-style-type:none;
-    right:0;
+    width:60px;
+    margin:0px auto;
+ 
 }
+.score_block ul{
+   padding:8px;
+   list-style-type:none;
+   border-style:solid;
+   border-color:black;
+   border-width:1px;
+   border-radius:0px 10px 0px 10px;
+   border-color:#ddddee;
+   background-color:#ddddff;
+}
+
+.field_tags_list{
+    text-align:right;
+}
+
+.field_tags_list li{
+    list-style-type:none;
+    display:inline-block;
+    zoom:1;
+    *display:inline;
+}
+
 .score_block li{
     margin-top:-6px;
     margin-bottom:-6px;
@@ -44,27 +69,35 @@ img {
 
 .pr_paper_info{
 
+    margin: 4px 4px;
+
 }
 
 .pr_title{
-    font-size:20;
+    font-size:16;
 }
 
 .pr_authors{
-    font-size:14;
+    font-size:12;
 }
 
 .pr_paper {
-    display: -webkit-flex;
-    display: flex;
+    text-align: left;
+    margin: 4px auto;
     background-color:white;
     border-style:solid;
     border-width:1px;
-    border-color:#000000;
+    border-color:#ddddee;
     border-radius:10px;
-    opacity:0.82;
+    opacity:1;
+    overflow:auto;
 }
 .pr_paper:hover {
-  border-color:#000000;
-  opacity:0.86;
+  opacity:0.9;
+  border-color:#ccccdd;
 }
+.paper_roll a:link{text-decoration:none;}
+.paper_roll a:link {color:#4f9fcf;}
+.paper_roll a:visited{color:#4f9fcf;}
+.paper_roll a:hover{color:#4f9fcf;}
+.paper_roll a:active{color:#2f6fcf;}
