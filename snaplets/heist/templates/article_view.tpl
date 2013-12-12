@@ -1,53 +1,88 @@
 <link rel="stylesheet" type="text/css" href="/static/media/css/article_view.css"/>
 
-<script>
-$(document).ready( function(){
- $("#article_summaries_button").click( function() {
-    $("#article_praise").hide();
-    $("#article_criticisms").hide();
-    $("#article_summaries").show();
-  });
+<nav class="navbar navbar-default" role="navigation">
+ <div class="navbar-header">
+   <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="navbar-collapse-2">
+     <span class="sr-only">Toggle Article Navigation</span>
+     <span class="icon-bar"></span>
+     <span class="icon-bar"></span>
+     <span class="inoc-bar"></span>
+   </button>
+   <a class="navbar-brand"><docType/></a>
+ </div>
+ 
+ <div class="collapse navbar-collapse" id="navbar-collapse-2">
+   <ul class="nav navbar-nav">
+     <li class="${overviewIsActive}" id="overviewButton"><a>Overview</a></li>
+     <li class="${summariesIsActive}" id="summariesButton">
+	 <a>Summaries <span class="badge"><nSummaries/></span></a></li>
+     <li class="${praiseIsActive}" id="praiseButton">
+	 <a>Praise <span class="badge"><nPraise/></span></a></li>
+     <li class="${criticismsIsActive}" id="criticismsButton">
+	 <a>Criticisms <span class="badge"><nCriticisms/></span></a></li>
+   </ul>
+ </div> <!-- navbar-collapse -->
+</nav>
 
-});
+<div class="article_content">
+
+  <script>
+    $(document).ready( function(){
+
+      $("#overviewButton").click( function() {
+        $("#summaries-div").attr('class','col-md-4');
+        $("#praise-div").attr('class','col-md-4');
+        $("#criticisms-div").attr('class','col-md-4');
+       });
+
+      $("#summariesButton").click( function() {
+        $("#summaries-div").attr('class','');
+        $("#praise-div").attr('class','hide');
+        $("#criticisms-div").attr('class','hide');
+      });
+
+      $("#praiseButton").click( function () {
+        $("#summaries-div").attr('class','hide');
+        $("#praise-div").attr('class','');
+        $("#criticisms-div").attr('class','hide');
+      });
+
+      $("#criticismsButton").click( function () {
+        $("#summaries-div").attr('class','hide');
+        $("#praise-div").attr('class','hide');
+        $("#criticisms-div").attr('class','');
+      });
+
+    });
 </script>
 
-<div class="article_view">
+    <div class="article_view_header">
+      Article Top (Title)
+    </div>
 
-<div class="article_view_header">
-</div>
+  <div class="row">
+    
+    <div class="col-md-4" id="summaries-div">
+    <div class="article_summaries">
+      <h3>Summaries</h3>
+      <articleSummaries/>
+    </div>
+    </div>
 
-<div class="article_view_nav">
+    <div class="col-md-4" id="praise-div">
+    <div class="article_praise">
+      <h3>Praise</h3>
+      <articlePraise/>
+    </div>
+    </div>
 
- <div id="article_summaries_button">
-SummariesB
-    <articleSummarySummary/>
- </div>
+    <div class="col-md-4" id="criticisms-div">
+    <div class="article_criticisms">
+      <h3>Criticism</h3>
+      <articleCriticisms/>
+    </div>
+    </div>
 
- <div id="article_praise_button">
-PraiseB
-   <articlePraiseSummary/>
- </div>
-
- <div id="article_criticism_button">
-CriticismsB
-   <articleCriticismSummary/>
- </div>
-
-</div>
-
-<div id="article_summaries">
-Summaries
- <articleSummaries/>
-</div>
-
-<div id="article_praise">
-Praise
- <articlePraise/>
-</div>
-
-<div id="article_criticism">
-Criticism
- <articleCriticisms/>
-</div>
+  </div>
 
 </div>

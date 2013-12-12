@@ -74,12 +74,22 @@ critiqueSummary doc critType =
 fI :: (Integral a, Real b) => a -> b
 fI = fromIntegral
 
+nSummaries :: Document -> Int
+nSummaries doc = Map.size $ docSummaries doc
+
+nCritique :: UpDownVote -> Document -> Int
+nCritique vDir doc = Map.size . Map.filter ((==vDir) . critiqueVal)
+                     $ docCritiques doc
+  
 allArticleViewSplices :: Document -> Splices (SnapletISplice App)
---allArticleViewSplices :: Document -> Splices (I.Splice n)
 allArticleViewSplices doc = do
   "articleSummarySummary"   ## I.textSplice (summarySummary doc) :: Splices (SnapletISplice App)
   "articlePraiseSummary"    ## I.textSplice (critiqueSummary  doc UpVote) :: Splices (SnapletISplice App)
   "articleCriticismSummary" ## I.textSplice (critiqueSummary doc DownVote) :: Splices (SnapletISplice App)
+  "nSummaries"              ## I.textSplice (T.pack . show $ nSummaries doc)
+  "nPraise"                 ## I.textSplice (T.pack . show $ nCritique UpVote doc)
+  "nCriticisms"             ## I.textSplice (T.pack . show $ nCritique DownVote doc)
+  "docType"                 ## I.textSplice (docClassName . docClass $ doc)  
   (allProseSplices "articleSummaries" . summariesToProseData . docSummaries $ doc)
   (allProseSplices "articlePraise" . critiquesToProseData UpVote . docCritiques $ doc )
   (allProseSplices "articleCriticisms" . critiquesToProseData DownVote . docCritiques $ doc )

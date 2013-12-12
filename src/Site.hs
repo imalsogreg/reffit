@@ -51,6 +51,7 @@ import           Text.Digestive.Blaze.Html5
 import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
 import           Data.Text.Encoding (decodeUtf8)
+import           GHC.Int  -- TODO for add1000 test
 ------------------------------------------------------------------------------
 import           Application
 
@@ -110,7 +111,11 @@ handleDumpState = do
   ft <- query QueryAllFieldTags
   writeText . T.pack . show $ PersistentState d u dc ft
 
-
+handleAdd1000 :: Handler App App ()
+handleAdd1000 = do
+  -- d <- query QueryAllDocs
+  forM_ [1..1000] $ \i -> update $ AddDocument (testDoc (fromIntegral i))
+ 
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
@@ -120,6 +125,7 @@ routes = [
   , ("logout",        with auth handleLogout)
   , ("new_user",      with auth handleNewUser) 
   , ("new_article",   with auth handleNewArticle)
+  , ("add_1000",      handleAdd1000) -- TODO just testing
   , ("view_article/:paperid", handleViewPaper)
   , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
   , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
@@ -155,6 +161,17 @@ factoryReset = PersistentState [] Map.empty [] []
 
 convenienceReset :: PersistentState
 convenienceReset = PersistentState [] Map.empty [DocClass "Paper"] []
+
+stresstestReset :: PersistentState
+stresstestReset = PersistentState docs Map.empty [DocClass "Paper"] []
+  where
+    docs = [Document Nothing i "The Earth is Round (p < .05)" []
+              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty
+           | i <- [1..1000]] 
+             
+testDoc :: Int32 -> Document
+testDoc i = Document Nothing i "The Earth is Round (p < .05)" []
+            "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty
 
 --testReset :: PersistentState
 --testReset = PersistentState 

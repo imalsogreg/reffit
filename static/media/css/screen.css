@@ -27,21 +27,37 @@ img {
    font-size: 60%;
 }
 
+.paper_roll{
+    
+}
+
+.pr_score_block{
+    position:absolute;
+    right:0px;
+    width:200px;
+    background-color:#eeeeee;
+
+}
+
+.pr_paper_info{
+    background-color:#ffeeee;
+}
+
 .pr_paper {
-  z-index:-1
-  text-align:right;
-  background-color:#aaaaaf;
-  border-style:solid;
-  border-width:0px;
-  border-color:#000000;
-  border-radius:15px;
-  opacity:0.7;
-  max-width:600px;
-  margin:0 auto 2 2;
+
+    background-color:white;
+    border-style:solid;
+    border-width:1px;
+    border-color:#000000;
+    border-radius:5px;
+    opacity:0.9;
+    max-width:600px;
+    margin:0 auto;
+    overflow:auto;
+    zoom:1;
 }
 .pr_paper:hover {
-  background-color:#aaaaaf;
+  background-color:#white;
   border-color:#000000;
-  opacity:0.77;
-
+  opacity:0.95;
 }

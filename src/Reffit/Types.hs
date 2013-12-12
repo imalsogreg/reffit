@@ -69,7 +69,7 @@ data Document = Document { docUploader  :: Maybe UserName
                          , docTitle     :: Text
                          , docAuthors   :: [Text]
                          , docLink      :: Text
-                         , docClasses   :: DocClass
+                         , docClass     :: DocClass
                          , docFieldTags :: [FieldTag]
                          , docSummaries :: Map.Map SummaryId  Summary
                          , docCritiques :: Map.Map CritiqueId Critique
