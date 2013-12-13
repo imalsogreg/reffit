@@ -26,6 +26,11 @@ img {
    font-size: 60%;
 }
 
+h3 .button{
+    display:inline-block;
+    background-color:black;
+}
+
 .paper_roll{
     
 }
@@ -118,3 +123,14 @@ img {
     border-top: 10px solid #4f9fcf;
 }
 
+.circle {
+  width:20px;
+  height:20px;
+  border-radius:50%;
+
+  background-color:#4f9fcf;
+  opacity:0.5;
+}
+.circle:hover{
+    opacity:0.9;
+}

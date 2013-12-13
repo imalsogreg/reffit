@@ -19,6 +19,7 @@ import           Snap.Snaplet(Handler)
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Auth
 import           Control.Applicative
+import qualified Data.ByteString.Char8        as BS
 import           Data.Monoid
 import qualified Data.Map                     as Map
 import           Data.Text                    (Text)
@@ -103,12 +104,12 @@ handleNewArticle = handleForm
      authUser' <- currentUser
      case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
        Nothing -> writeText "Error - authUser not in app user database"
-       Just Nothing -> writeText "Error - justNothing, I'm not sure how you'd get this."
+       Just Nothing -> writeText "Error - justNothing, I'm not sure how you'd get this."  -- TODO Send to please-login page
        Just (Just user)  -> do
          (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft
          case rs of 
-           Just doc -> do --TODO add the actual paper, not this test paper.
+           Just doc -> do
              _ <- update $ AddDocument doc
-             writeText . (T.append "Got Document: " ) . T.pack . show $ doc
+             redirect . BS.pack $ "view_article/" ++ (show . docId $ doc)
            Nothing -> do
-             heistLocal (bindDigestiveSplices vw) $ render "_new_paper"  -- TODO: which one?? 
+             heistLocal (bindDigestiveSplices vw) $ render "_new_paper"

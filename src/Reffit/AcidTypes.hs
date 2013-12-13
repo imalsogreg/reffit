@@ -53,14 +53,9 @@ queryAllDocs :: Query PersistentState [Document]
 queryAllDocs = asks _documents
 
 -- TODO: Check that document title isn't already taken
---addDocument :: Maybe T.Text -> T.Text  -> [T.Text] -> T.Text -> DocClass -> 
---               Update PersistentState ()
---addDocument dUploader dTitle dAuthors dLink dClass = do
 addDocument :: Document -> Update PersistentState ()
 addDocument doc = do
   oldDocs <- gets _documents
---  let newDoc = Document
---               dUploader newId dTitle dAuthors dLink dClass [] [] Map.empty
   let newDoc = doc { docId = newId }
       newId = head $ filter (`notElem` (map docId oldDocs))
               [tHash, tLen, tNotTaken]
@@ -68,6 +63,11 @@ addDocument doc = do
       tLen  = fromIntegral (length oldDocs)  :: Int32
       tNotTaken = head $[0..maxBound] \\ (map docId oldDocs) :: Int32
   modify (over documents ( newDoc : ))
+
+addComment :: DocumentId -> Summary -> Update PersistentState ()
+addComment dId summary = do
+  oldDocs <- gets _documents
+             
 
 queryAllUsers :: Query PersistentState (Map.Map T.Text User)
 queryAllUsers = asks _users

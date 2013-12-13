@@ -90,6 +90,7 @@ allArticleViewSplices doc = do
   "nPraise"                 ## I.textSplice (T.pack . show $ nCritique UpVote doc)
   "nCriticisms"             ## I.textSplice (T.pack . show $ nCritique DownVote doc)
   "docType"                 ## I.textSplice (docClassName . docClass $ doc)  
+  "docId"                   ## I.textSplice (T.pack . show $ docId doc)
   (allSummarySplices . Map.elems . docSummaries $ doc)
   (allCritiqueSplices UpVote   "articlePraise"     . Map.elems . docCritiques $ doc )
   (allCritiqueSplices DownVote "articleCriticisms" . Map.elems .  docCritiques $ doc )

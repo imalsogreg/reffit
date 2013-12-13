@@ -125,8 +125,10 @@ routes = [
   , ("logout",        with auth handleLogout)
   , ("new_user",      with auth handleNewUser) 
   , ("new_article",   with auth handleNewArticle)
-  , ("add_1000",      handleAdd1000) -- TODO just testing
+  , ("new_summary/:paperid", with auth handleNewSummary)
   , ("view_article/:paperid", handleViewPaper)
+    
+  , ("add_1000",      handleAdd1000) -- TODO just testing
   , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
   , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
   , ("/dump_state", handleDumpState)

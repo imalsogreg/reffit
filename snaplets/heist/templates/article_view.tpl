@@ -64,7 +64,10 @@
     
     <div class="col-sm-4" id="summaries-div">
       <div class="article_summaries">
-	<h3>Summaries</h3>
+	<h3>Summaries 
+          <a href="/new_summary/${docId}">
+            <button type="button" class="btn btn-primary btn-xs">New</button>
+        </a></h3>
 	<articleSummaries>
 	  <apply template="summary"/>
 	</articleSummaries>
@@ -73,7 +76,7 @@
 
     <div class="col-sm-4" id="praise-div">
       <div class="article_praise">
-	<h3>Praise</h3>
+	<h3>Praise  <button type="button" class="btn btn-success btn-xs">New</button></h3>
 	<articlePraise>
 	  <apply template="articlePraise"/>
 	</articlePraise>
@@ -82,7 +85,7 @@
 
     <div class="col-sm-4" id="criticisms-div">
       <div class="article_criticisms">
-	<h3>Criticism</h3>
+	<h3>Criticism <button type="button" class="btn btn-warning btn-xs">New</button></h3>
 	<articleCriticism>
 	  <apply template="articleCriticisms"/>
 	</articleCriticism>
