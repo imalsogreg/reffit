@@ -94,7 +94,7 @@ allArticleViewSplices doc = do
   "docId"                   ## I.textSplice (T.pack . show $ docId doc)
   (allSummarySplices . Map.elems . docSummaries $ doc)
   (allCritiqueSplices UpVote   "articlePraise"     . Map.elems . docCritiques $ doc )
-  (allCritiqueSplices DownVote "articleCriticisms" . Map.elems .  docCritiques $ doc )
+  (allCritiqueSplices DownVote "articleCriticisms" . Map.elems . docCritiques $ doc )
  
 critiquesToProseData :: UpDownVote -> Map.Map CritiqueId Critique -> [(T.Text,Int,Int)]
 critiquesToProseData targetV cs =

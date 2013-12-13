@@ -27,6 +27,7 @@ import           HandleNewPaper
 import           HandleNewDocClass
 import           HandleViewPaper
 import           HandleNewSummary
+import           HandleNewCritique
 
 import           Control.Applicative
 import qualified Data.Map as Map
@@ -127,6 +128,8 @@ routes = [
   , ("new_user",      with auth handleNewUser) 
   , ("new_article",   with auth handleNewArticle)
   , ("new_summary/:paperid", with auth handleNewSummary)
+  , ("new_praise/:paperid", with auth (handleNewCritique UpVote))
+  , ("new_criticism/:paperid", with auth (handleNewCritique DownVote))
   , ("view_article/:paperid", handleViewPaper)
     
   , ("add_1000",      handleAdd1000) -- TODO just testing
@@ -151,8 +154,8 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     -- you'll probably want to change this to a more robust auth backend.
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
-
-    ac <- nestSnaplet "acid" acid $ acidInit (PersistentState [] Map.empty [DocClass "Paper"] [FieldTag "taga", FieldTag "tagb"])
+    -- TODO: Why are we referencing an emptyist state here?
+    ac <- nestSnaplet "acid" acid $ acidInit (PersistentState Map.empty Map.empty [DocClass "Paper"] [FieldTag "taga", FieldTag "tagb"])
     h <- nestSnaplet "" heist $ heistInit "templates"           
     addRoutes routes
     addAuthSplices h auth
@@ -160,16 +163,16 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
 
 
 factoryReset :: PersistentState
-factoryReset = PersistentState [] Map.empty [] []
+factoryReset = PersistentState Map.empty Map.empty [] []
 
 convenienceReset :: PersistentState
-convenienceReset = PersistentState [] Map.empty [DocClass "Paper"] []
+convenienceReset = PersistentState Map.empty Map.empty [DocClass "Paper"] []
 
 stresstestReset :: PersistentState
 stresstestReset = PersistentState docs Map.empty [DocClass "Paper"] []
   where
-    docs = [Document Nothing i "The Earth is Round (p < .05)" []
-              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty
+    docs = Map.fromList [(i, Document Nothing i "The Earth is Round (p < .05)" []
+              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty)
            | i <- [1..1000]] 
              
 testDoc :: Int32 -> Document
@@ -178,7 +181,7 @@ testDoc i = Document Nothing i "The Earth is Round (p < .05)" ["Jacob Cohen","Ha
 
 testUsers = [ User "Arte Artimus" ["Santa","Rudolph"] [] [] ]
 
-testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Cool  UpVote [UpVote,DownVote,UpVote]
+testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Coolness  UpVote [UpVote,DownVote,UpVote]
 
 testSummary = Summary Nothing "This paper talks about why H0 hypothesist testing isn't appropriate for describing effect size." [UpVote,UpVote]
 --testReset :: PersistentState

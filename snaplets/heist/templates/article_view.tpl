@@ -76,7 +76,7 @@
 
     <div class="col-sm-4" id="praise-div">
       <div class="article_praise">
-	<h3>Praise  <button type="button" class="btn btn-success btn-xs">New</button></h3>
+	<h3>Praise  <a href="/new_praise/${docId}"><button type="button" class="btn btn-success btn-xs">New</button></a></h3>
 	<articlePraise>
 	  <apply template="articlePraise"/>
 	</articlePraise>
@@ -85,10 +85,10 @@
 
     <div class="col-sm-4" id="criticisms-div">
       <div class="article_criticisms">
-	<h3>Criticism <button type="button" class="btn btn-warning btn-xs">New</button></h3>
-	<articleCriticism>
+	<h3>Criticism <a href="/new_criticism/${docId}"><button type="button" class="btn btn-warning btn-xs">New</button></a></h3>
+	<articleCriticisms>
 	  <apply template="articleCriticisms"/>
-	</articleCriticism>
+	</articleCriticisms>
       </div>
     </div>
 

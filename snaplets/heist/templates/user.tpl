@@ -5,7 +5,7 @@
     <ul class="nav nav-tabs">
       <li><a href="user_activity"  data-toggle="tab">Activity</a></li>
       <li><a href="user_pinboard"  data-toggle="tab">
-	  Pinboard <span class="badge">
+	  Pinboard <span class="badge"><nPinboard/></span>
       </a></li>
       <li><a href="user_following" data-toggle="tab">Following</a></li>
       <li><a href="user_followers" data-toggle="tab">Followers</a></li>

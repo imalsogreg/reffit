@@ -93,6 +93,28 @@ addSummary pId summary = do
           sInd  = fromIntegral . Map.size $ docSummaries doc
           sAll  = [0..]
 
+addCritique :: DocumentId -> Critique 
+               -> Update PersistentState (Maybe SummaryId)
+addCritique pId critique = do
+  docs <- gets _documents
+  case Map.lookup pId docs of
+    Nothing -> modify (over documents id) >> return Nothing
+               -- TODO - how to signal an error?
+    Just doc -> do
+      modify (over documents $ \docs' ->
+               (Map.insert
+                (docId doc)
+                (doc { docCritiques = Map.insert cId critique
+                                      (docCritiques doc)})
+                docs'))
+      return (Just cId)
+        where
+          cId = head . filter (\k -> Map.notMember k (docCritiques doc)) $ 
+                (cHash:cInd:cAll)
+          cHash = fromIntegral . hash . critiqueProse $ critique
+          cInd  = fromIntegral . Map.size $ docCritiques doc
+          cAll  = [0..]
+
 queryAllUsers :: Query PersistentState (Map.Map T.Text User)
 queryAllUsers = asks _users
 
@@ -127,4 +149,4 @@ makeAcidic ''PersistentState ['addDocument, 'queryAllDocs
                              , 'queryAllUsers, 'addUser
                              , 'queryAllDocClasses, 'addDocClass
                              , 'queryAllFieldTags,  'addFieldTag
-                             , 'addComment]
+                             , 'addSummary, 'addCritique]

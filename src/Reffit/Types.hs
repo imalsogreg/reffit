@@ -48,8 +48,8 @@ data Summary = Summary { summaryPoster :: Maybe UserName
                        } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''Summary
 
-data QualityDim = Novel | Solid | Cool
-                deriving (Show, Generic, Typeable)
+data QualityDim = Novelty | Rigor | Coolness
+                deriving (Eq, Show, Generic, Typeable)
 deriveSafeCopy scv 'base ''QualityDim
 
 data Critique = Critique { critiqueProse     :: Text

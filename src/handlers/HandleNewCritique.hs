@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HandleNewSummary(
-  newSummaryView,
-  newSummaryForm,
-  handleNewSummary
+module HandleNewCritique(
+  newCritiqueView,
+  newCritiqueForm,
+  handleNewCritique
   )
 where
 
@@ -36,27 +36,34 @@ import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist  
 import qualified Data.ByteString.Char8        as BS
 
-newSummaryForm :: (Monad m) => User -> Form Text m Summary
-newSummaryForm formUser =
-  Summary
-  <$> "poster" .: choice posterOpts Nothing
-  <*> "prose"  .: check "Not a valid summary" (not . T.null) (text Nothing)
+newCritiqueForm :: (Monad m) => User -> UpDownVote -> Form Text m Critique
+newCritiqueForm formUser critValue =
+  Critique
+  <$> "prose"     .: check "Not a valid critique" (not . T.null) (text Nothing)
+  <*> "poster"    .: choice posterOpts Nothing
+  <*> "dimension" .: choice dimOpts Nothing
+  <*> pure critValue
   <*> pure [] 
   where 
     posterOpts = [(Just (userName formUser), userName formUser)
                  ,(Nothing,"Anonymous")]
-                 
-newSummaryView :: View H.Html -> H.Html
-newSummaryView view = do
+    dimOpts = [(Novelty,"Novelty"),(Rigor,"Rigor"),(Coolness,"Coolness")]
+
+
+newCritiqueView :: View H.Html -> H.Html
+newCritiqueView view = do
   label       "poster" view "Post as: "
   inputSelect "poster" view
   
+  label       "dimension" view "Critique dimension: "
+  inputSelect "dimension" view 
+  
   errorList "prose" view
-  label     "prose" view "Article Summary"
+  label     "prose" view "Article Critique"
   inputText "prose" view
   
-handleNewSummary :: Handler App (AuthManager App) ()  
-handleNewSummary = do 
+handleNewCritique :: UpDownVote -> Handler App (AuthManager App) ()  
+handleNewCritique critVal = do 
   userMap   <- query QueryAllUsers
   docs      <- query QueryAllDocs
   ft        <- query QueryAllFieldTags
@@ -67,13 +74,13 @@ handleNewSummary = do
     Just (Just pId) ->
       case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
         Just (Just user) -> do
-          (vw,rs) <- runForm "newSummaryForm" $ newSummaryForm user
+          (vw,rs) <- runForm "newCritiqueForm" $ newCritiqueForm user critVal
           case rs of
-            Just summary -> do
-              sId <- update $ AddSummary pId summary  
+            Just critique -> do
+              sId <- update $ AddCritique pId critique
               --let a = sId :: SummaryId  -- TODO: Must vote for
               -- Vote for own summary     -- user's summary automatically
               redirect . BS.pack $ "/view_article/" ++ show pId
               -- return $ Just sId --TODO: This doesn't work.
             Nothing -> do 
-              heistLocal (bindDigestiveSplices vw) $ render "new_summary"
+              heistLocal (bindDigestiveSplices vw) $ render "new_critique"
