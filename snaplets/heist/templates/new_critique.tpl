@@ -1,6 +1,7 @@
 <apply template="base">
 
-  <div class="new_comment_form">
+  <div class="new_critique_form">
+    
     <dfForm>
       
       <dfChildErrorList ref=""/>
@@ -9,14 +10,18 @@
       <dfInputSelect ref="poster"/>
       <br>
       
-      <dfLabel ref="prose">Comment: </dfLabel>
-      <dfInputText ref="prose" size="50"/>
+      <dfLabel ref="dimension">About: </dfLabel>
+      <dfInputSelect ref="dimension"/>
       <br>
       
-      <dfInputSubmit value="Submit"/>
+      <dfLabel ref="prose">Comment: </dfLabel>
+      <dfInputText ref="prose"/>
+      <br>
+      
+      <dfInputSubmit value="Enter"/>
       
     </dfForm>
+    
   </div>
-
+  
 </apply>
-
