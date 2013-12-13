@@ -53,13 +53,22 @@ newSummaryView view = do
   
 handleNewSummary :: Handler App (AuthManager App) ()  
 handleNewSummary = do 
-  userMap <- query QueryAllUsers
-  docs    <- query QueryAllDocs
-  ft      <- query QueryAllFieldTags
+  userMap   <- query QueryAllUsers
+  docs      <- query QueryAllDocs
+  ft        <- query QueryAllFieldTags
+  pId'      <- getParam "paperid"
   authUser' <- currentUser
-  case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
-    Just (Just user) -> do
-      (vw,rs) <- runForm "newSummaryForm" $ newSummaryForm user
-      case rs of
-        Just summary -> do
-          _ <- update $ AddSummary --TODO Come back here
+  case readMay . T.unpack . decodeUTF8 $ pId' of 
+    Nothing -> writeText "paperid error" --TODO proper error message
+    Just pId ->
+      case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+        Just (Just user) -> do
+          (vw,rs) <- runForm "newSummaryForm" $ newSummaryForm user
+          case rs of
+            Just summary -> do
+              sId <- update $ AddSummary summary  
+              let a = sId :: SummaryId
+              -- Vote for own summary
+              redirect $ T.concat ["/view_article/", pId]
+            Nothing -> do
+              heistLocal (bindDigestiveSplices vw) $ render "

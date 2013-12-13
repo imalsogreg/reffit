@@ -17,11 +17,12 @@ import Application
 import Heist
 import qualified Heist.Interpreted as I
 import qualified Data.Text as T
- 
+import qualified Data.Map as Map
+  
 handlePaperRoll :: Handler App App ()
 handlePaperRoll = do
   docs <- query QueryAllDocs                
-  renderWithSplices "paper_roll" (allPaperRollSplices docs)
+  renderWithSplices "paper_roll" (allPaperRollSplices (Map.elems docs)) 
 
 allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do

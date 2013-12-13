@@ -21,7 +21,7 @@ import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import GHC.Int
 import Control.Lens
-  
+   
 handleViewPaper :: Handler App App ()
 handleViewPaper = do
   pId' <- getParam "paperid"
@@ -30,12 +30,13 @@ handleViewPaper = do
     Just (Just pId) ->  do  -- just just again!
       let a = pId :: Int32
       docs <- query QueryAllDocs
-      case ((==pId) . docId) `filter` docs of
-        []    -> writeText $ T.concat ["You entered: "
-                                       , T.pack (show pId) 
-                                       ," Document wasn't found in the database.  We have these ids:"
-                                       , T.concat (map (T.pack . show . docId) docs) ]
-        [doc] -> renderWithSplices "_article_view" (allArticleViewSplices doc)        
+      case Map.lookup pId docs of
+--      case ((==pId) . docId) `filter` docs of 
+        Nothing   -> writeText $ 
+                     T.concat ["You entered: "
+                              , T.pack (show pId) 
+                              ," Document wasn't found in the database."]
+        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices doc)        
 
 -- |Count positive and negative votes for a summary
 summaryUpsDowns :: Summary -> (Int,Int)

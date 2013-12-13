@@ -71,20 +71,21 @@ addDocument doc = do
       tNotTaken = [0..maxBound] :: [Int32]
   modify (over documents (Map.insert newId newDoc))
 
-addComment :: DocumentId -> Summary -> Update PersistentState ()
-addComment dId summary = do
-  pId' <- getParam "paperid"
+addSummary :: DocumentId -> Summary 
+              -> Update PersistentState (Maybe SummaryId)
+addSummary pId summary = do  
   docs <- gets _documents
-  case readMay . T.unpack . decodeUtf8 <$> pId' of 
-    Nothing -> writeText $ "Invalid paper id"  --TODO Proper error page
-    Just (Just pId) -> case Map.lookup pId docs of
-      Nothing -> writeText $ "Paper id not found in database." --TODO error page
-      Just doc -> 
-        modify (over docs $ \docs' ->
+  case Map.lookup pId docs of
+    Nothing -> modify (over documents id) >> return Nothing 
+               -- TODO - how to signal error?
+    Just doc -> do
+        modify (over documents $ \docs' ->
                  (Map.insert
                   (docId doc)
-                  (doc { docSummaries = Map.insert sId summary docSummaries}) 
+                  (doc { docSummaries = Map.insert sId summary 
+                                        (docSummaries doc)}) 
                   docs')) 
+        return (Just sId)
         where
           sId = head . filter (\k -> Map.notMember k (docSummaries doc)) $
                 (sHash:sInd:sAll)
@@ -125,4 +126,5 @@ addFieldTag ft = modify (over fieldTags (ft:))
 makeAcidic ''PersistentState ['addDocument, 'queryAllDocs
                              , 'queryAllUsers, 'addUser
                              , 'queryAllDocClasses, 'addDocClass
-                             , 'queryAllFieldTags,  'addFieldTag]
+                             , 'queryAllFieldTags,  'addFieldTag
+                             , 'addComment]

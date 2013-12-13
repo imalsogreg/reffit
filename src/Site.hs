@@ -26,6 +26,7 @@ import           HandleIndex
 import           HandleNewPaper
 import           HandleNewDocClass
 import           HandleViewPaper
+import           HandleNewSummary
 
 import           Control.Applicative
 import qualified Data.Map as Map
