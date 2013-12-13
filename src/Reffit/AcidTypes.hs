@@ -15,6 +15,7 @@ module Reffit.AcidTypes where
 import Reffit.Types
 import Reffit.DataVersion
 
+import Safe
 import Control.Applicative ((<$>),(<*>),pure)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
@@ -22,12 +23,14 @@ import Data.ByteString (ByteString)
 import Control.Lens (makeLenses, view,over) 
 import Data.SafeCopy (base, deriveSafeCopy)
 import qualified Data.Text as T hiding (head)
+import Data.Text.Encoding (decodeUtf8)
 import GHC.Generics
 import Data.Typeable (Typeable)
 import Data.List
 import GHC.Int
 import Data.Hashable
 import qualified Data.Map as Map
+import Snap.Core (getParam)
 import Snap.Util.FileServe (serveDirectory)
 import Snap (SnapletInit, Snaplet, Handler,
              addRoutes, nestSnaplet, serveSnaplet,
@@ -39,7 +42,7 @@ import Snap.Snaplet.AcidState (Update, Query, Acid,
                                 query, acidInit)
 
 data PersistentState = PersistentState {
-    _documents  :: [Document]
+    _documents  :: Map.Map DocumentId Document
   , _users      :: Map.Map UserName User
   , _docClasses :: [DocClass]
   , _fieldTags  :: [FieldTag]
@@ -49,25 +52,45 @@ makeLenses ''PersistentState
 
 deriveSafeCopy scv 'base ''PersistentState
 
-queryAllDocs :: Query PersistentState [Document]
+queryAllDocs :: Query PersistentState (Map.Map DocumentId Document)
 queryAllDocs = asks _documents
+
+-- TODO: addDocument, addComment, and addCritique all have
+-- the newId t = hash t <|> length docs <|> firstNotTaken...
+-- Factor this out.
 
 -- TODO: Check that document title isn't already taken
 addDocument :: Document -> Update PersistentState ()
 addDocument doc = do
   oldDocs <- gets _documents
   let newDoc = doc { docId = newId }
-      newId = head $ filter (`notElem` (map docId oldDocs))
-              [tHash, tLen, tNotTaken]
+      newId = head . filter (\k -> Map.notMember k oldDocs)
+              $ (tHash: tLen: tNotTaken)
       tHash = fromIntegral . hash . docTitle $ doc:: Int32
-      tLen  = fromIntegral (length oldDocs)  :: Int32
-      tNotTaken = head $[0..maxBound] \\ (map docId oldDocs) :: Int32
-  modify (over documents ( newDoc : ))
+      tLen  = fromIntegral (Map.size oldDocs)  :: Int32
+      tNotTaken = [0..maxBound] :: [Int32]
+  modify (over documents (Map.insert newId newDoc))
 
 addComment :: DocumentId -> Summary -> Update PersistentState ()
 addComment dId summary = do
-  oldDocs <- gets _documents
-             
+  pId' <- getParam "paperid"
+  docs <- gets _documents
+  case readMay . T.unpack . decodeUtf8 <$> pId' of 
+    Nothing -> writeText $ "Invalid paper id"  --TODO Proper error page
+    Just (Just pId) -> case Map.lookup pId docs of
+      Nothing -> writeText $ "Paper id not found in database." --TODO error page
+      Just doc -> 
+        modify (over docs $ \docs' ->
+                 (Map.insert
+                  (docId doc)
+                  (doc { docSummaries = Map.insert sId summary docSummaries}) 
+                  docs')) 
+        where
+          sId = head . filter (\k -> Map.notMember k (docSummaries doc)) $
+                (sHash:sInd:sAll)
+          sHash = fromIntegral . hash . summaryProse $ summary
+          sInd  = fromIntegral . Map.size $ docSummaries doc
+          sAll  = [0..]
 
 queryAllUsers :: Query PersistentState (Map.Map T.Text User)
 queryAllUsers = asks _users

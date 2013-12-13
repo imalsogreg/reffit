@@ -26,7 +26,7 @@ handleViewPaper :: Handler App App ()
 handleViewPaper = do
   pId' <- getParam "paperid"
   case readMay . T.unpack . decodeUtf8 <$> pId' of
-    Nothing -> writeText "Need paperid parameter"
+    Nothing -> writeText "Need paperid parameter"  -- TODO: Proper error page
     Just (Just pId) ->  do  -- just just again!
       let a = pId :: Int32
       docs <- query QueryAllDocs
