@@ -20,3 +20,13 @@
     background-color:white;
     border-radius:2;
 }
+
+.up_down_vote_count{
+    float:left;
+    height:100%;
+}
+
+.prose_div{
+    border-bottom: 1px solid #4f9fcf;
+    overflow:auto;
+}

@@ -63,24 +63,30 @@
   <div class="row">
     
     <div class="col-sm-4" id="summaries-div">
-    <div class="article_summaries">
-      <h3>Summaries</h3>
-      <articleSummaries/>
-    </div>
+      <div class="article_summaries">
+	<h3>Summaries</h3>
+	<articleSummaries>
+	  <apply template="summary"/>
+	</articleSummaries>
+      </div>
     </div>
 
     <div class="col-sm-4" id="praise-div">
-    <div class="article_praise">
-      <h3>Praise</h3>
-      <articlePraise/>
-    </div>
+      <div class="article_praise">
+	<h3>Praise</h3>
+	<articlePraise>
+	  <apply template="articlePraise"/>
+	</articlePraise>
+      </div>
     </div>
 
     <div class="col-sm-4" id="criticisms-div">
-    <div class="article_criticisms">
-      <h3>Criticism</h3>
-      <articleCriticisms/>
-    </div>
+      <div class="article_criticisms">
+	<h3>Criticism</h3>
+	<articleCriticism>
+	  <apply template="articleCriticisms"/>
+	</articleCriticism>
+      </div>
     </div>
 
   </div>

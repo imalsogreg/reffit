@@ -116,9 +116,10 @@ renderSummaries = I.mapSplices $ I.runChildrenWith . splicesFromSummary
 
 splicesFromSummary :: Monad n => Summary -> Splices (I.Splice n)
 splicesFromSummary s = do
-  "upCount"     ## I.textSplice (T.pack . show $ nUp) 
-  "downCount"   ## I.textSplice (T.pack . show $ nDown)
-  "summaryText" ## I.textSplice (T.pack . show $ summaryProse s)
+  "upCount"       ## I.textSplice (T.pack . show $ nUp) 
+  "downCount"     ## I.textSplice (T.pack . show $ nDown)
+  "proseText"     ## I.textSplice (T.pack . show $ summaryProse s)
+  "prosePoster"   ## I.textSplice (T.pack . show $ summaryPoster s)
   where (nUp, nDown) = summaryUpsDowns s
                   
 allCritiqueSplices :: UpDownVote -> T.Text -> [Critique] -> Splices (SnapletISplice App)
@@ -132,7 +133,8 @@ splicesFromCritique :: Monad n => Critique -> Splices (I.Splice n)
 splicesFromCritique c = do
   "upCount"      ## I.textSplice (T.pack . show $ nUp)
   "downCount"    ## I.textSplice (T.pack . show $ nDown)
-  "critiqueText" ## I.textSplice (critiqueProse c)
+  "proseText"    ## I.textSplice (critiqueProse c)
+  "critiqueDim"  ## I.textSplice (T.pack . show $ critiqueDim c)
   where
     (nUp,nDown) = critiqueUpsDowns c
 
