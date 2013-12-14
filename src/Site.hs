@@ -131,6 +131,10 @@ routes = [
   , ("new_praise/:paperid", with auth (handleNewCritique UpVote))
   , ("new_criticism/:paperid", with auth (handleNewCritique DownVote))
   , ("view_article/:paperid", handleViewPaper)
+  , ("cast_summary_upvote/:paperid/:summaryid",    with auth $ handleCastSummaryVote  UpVote)
+  , ("cast_summary_downvote/:paperid/:summaryid",  with auth $ handleCastSummaryVote  DownVote)
+  , ("cast_critique_upvote/:paperid/:critiqueid",  with auth $ handleCastCritiqueVote UpVote)
+  , ("cast_critique_downvone/:paperid/:critiqueid",with auth $ handleCastCritiqueVote DownVote)
     
   , ("add_1000",      handleAdd1000) -- TODO just testing
   , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    

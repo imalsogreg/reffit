@@ -27,10 +27,10 @@ data UpDownVote = DownVote | UpVote
                 deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy scv 'base ''UpDownVote
 
-data UserEvent = WroteCritique   CritiqueId
-               | VotedOnCritique CritiqueId (Maybe UpDownVote)
-               | WroteSummary    SummaryId
-               | VotedOnSummary  SummaryId (Maybe UpDownVote)
+data UserEvent = WroteCritique   DocumentId CritiqueId
+               | VotedOnCritique DocumentId CritiqueId (Maybe UpDownVote)
+               | WroteSummary    DocumentId SummaryId
+               | VotedOnSummary  DocumentId SummaryId (Maybe UpDownVote)
                | PostedDocument  DocumentId
                deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy scv 'base ''UserEvent

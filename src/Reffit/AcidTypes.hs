@@ -93,6 +93,12 @@ addSummary pId summary = do
           sInd  = fromIntegral . Map.size $ docSummaries doc
           sAll  = [0..]
 
+castSummaryVote :: User -> Bool -> DocId -> CritiqueId -> UpDownVote -> Update PersistentState ()
+castSummaryVote user isAnon dId cId voteVal = do
+  users <- gets _users
+  docs  <- gets _documents
+  
+
 addCritique :: DocumentId -> Critique 
                -> Update PersistentState (Maybe SummaryId)
 addCritique pId critique = do
