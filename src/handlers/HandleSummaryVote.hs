@@ -1,7 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
-
+ -- TODO this module needs to be renamed, we do both types of vote casting here
 module HandleSummaryVote(
-  handleSummaryVote
+  handleSummaryVote,
+  handleCritiqueVote
   )
 where
 
@@ -34,6 +35,7 @@ import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist  
 import qualified Data.ByteString.Char8        as BS
 
+-- TODO handle anonymity of votes
 handleSummaryVote :: UpDownVote -> Handler App (AuthManager App) ()  
 handleSummaryVote voteDir = do 
   userMap   <- query QueryAllUsers
@@ -43,17 +45,43 @@ handleSummaryVote voteDir = do
   sId'      <- getParam "summaryid"
   authUser' <- currentUser
   -- TODO extremely deep nesting - should I be in ErrorT here?
-  case (,) ($) readMay . T.unpack . decodeUtf8 <*> pId' <*> sId' of  
-    Nothing -> writeText "paperid/summaryid formatting error" --TODO proper error message
-    Just (Just (pId,sId)) ->
-      case Map.lookup pId docs of
-        Nothing -> writeText "paperid not in database"
-        Just doc -> 
-          case Map.lookup sId (docSummaries doc) of
-            Nothing -> writeText "summaryId not in database"
-            Just summary ->
-              case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
-                Nothing -> writeText "Need to log in."
-                Just (Just user) -> do
-                  
-          
+  case  readMay . T.unpack . decodeUtf8 <$> pId' of   
+    Nothing -> writeText "paperid formatting error" --TODO proper error message
+    Just (Just pId) -> case readMay . T.unpack . decodeUtf8 <$> sId' of
+      Nothing -> writeText "summaryid formatting error"
+      Just (Just sId) -> 
+        case Map.lookup pId docs of
+          Nothing -> writeText "paperid not in database"
+          Just doc -> 
+            case Map.lookup sId (docSummaries doc) of
+              Nothing -> writeText "summaryId not in database"
+              Just summary ->
+                case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+                  Nothing -> writeText "Need to log in."
+                  Just (Just u) -> do
+                    update (CastSummaryVote (userName u) False pId sId voteDir)
+
+-- TODO: Handle anonymity of votes
+handleCritiqueVote :: UpDownVote -> Handler App (AuthManager App) ()
+handleCritiqueVote voteDir = do
+  userMap <- query QueryAllUsers
+  docs    <- query QueryAllDocs
+  ft      <- query QueryAllFieldTags
+  pId'    <- getParam "paperid"
+  cId'    <- getParam "summaryid"
+  authUser' <- currentUser
+  -- TODO so similar to handleSummaryVote - badly need a refactor
+  case readMay . T.unpack . decodeUtf8 <$> pId' of
+    Nothing -> writeText "paperid formatting error"
+    Just (Just pId) -> case readMay . T.unpack . decodeUtf8 <$> cId' of
+      Nothing -> writeText "critiqueId formatting error"
+      Just (Just cId) -> case Map.lookup pId docs of
+        Nothing -> writeText "Document isn't in database"
+        Just doc -> case Map.lookup cId (docCritiques doc) of
+          Nothing -> writeText "critique isn't in database"
+          Just critique ->
+            case Map.lookup <$> (userLogin <$> authUser') <*> pure userMap of
+              Nothing -> writeText "Need to log in"
+              Just (Just u) -> do
+                --TODO handle vote anonymity
+                update (CastCritiqueVote u False pId doc cId critique voteDir) 

@@ -76,7 +76,7 @@ addSummary :: DocumentId -> Summary
 addSummary pId summary = do  
   docs <- gets _documents
   case Map.lookup pId docs of
-    Nothing -> modify (over documents id) >> return Nothing 
+    Nothing -> return Nothing 
                -- TODO - how to signal error?
     Just doc -> do
         modify (over documents $ \docs' ->
@@ -93,11 +93,42 @@ addSummary pId summary = do
           sInd  = fromIntegral . Map.size $ docSummaries doc
           sAll  = [0..]
 
-castSummaryVote :: User -> Bool -> DocId -> CritiqueId -> UpDownVote -> Update PersistentState ()
-castSummaryVote user isAnon dId cId voteVal = do
-  users <- gets _users
+castSummaryVote :: UserName -> Bool -> DocumentId
+                   -> SummaryId -> UpDownVote
+                   -> Update PersistentState ()
+castSummaryVote uId isAnon dId sId voteVal = do
+  us <- gets _users
   docs  <- gets _documents
-  
+  case Map.lookup dId docs of
+    Nothing -> return () -- TODO Error page
+    Just doc -> case Map.lookup sId (docSummaries doc) of
+      Nothing -> return () --TODO error page
+      Just summary -> case Map.lookup uId us of
+        Nothing -> return () --TODO error page
+        Just u  -> do
+          modify (over users $ \us' ->
+                   let vRecord = if isAnon then Nothing else Just voteVal
+                       histItem = VotedOnSummary dId sId vRecord
+                       u' = u { userHistory = histItem : userHistory u } :: User
+                   in Map.insert uId u' us')
+          modify (over documents $ \ds ->
+                   let s' = summary { summaryVotes = voteVal : summaryVotes summary }
+                       d' = doc { docSummaries = Map.insert sId s' (docSummaries doc)}
+                   in Map.insert dId d' ds) 
+          
+castCritiqueVote :: User -> Bool -> DocumentId -> Document
+                 -> CritiqueId -> Critique -> UpDownVote
+                 -> Update PersistentState ()
+castCritiqueVote user isAnon dId doc cId critique voteVal = do
+  modify (over users $ \us' ->
+           let vRecord = if isAnon then Nothing else Just voteVal
+               histItem = VotedOnCritique dId cId vRecord
+               u' = user { userHistory = histItem : userHistory user }
+           in Map.insert (userName user) u' us')
+  modify (over documents $ \ds ->
+           let c' = critique { critiqueReactions = voteVal : critiqueReactions critique }
+               d' = doc { docCritiques = Map.insert cId c' (docCritiques doc) } 
+           in Map.insert dId d' ds)
 
 addCritique :: DocumentId -> Critique 
                -> Update PersistentState (Maybe SummaryId)
@@ -155,4 +186,5 @@ makeAcidic ''PersistentState ['addDocument, 'queryAllDocs
                              , 'queryAllUsers, 'addUser
                              , 'queryAllDocClasses, 'addDocClass
                              , 'queryAllFieldTags,  'addFieldTag
-                             , 'addSummary, 'addCritique]
+                             , 'addSummary, 'addCritique
+                             , 'castSummaryVote, 'castCritiqueVote]
