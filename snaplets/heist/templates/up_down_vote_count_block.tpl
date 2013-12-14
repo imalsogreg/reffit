@@ -1,3 +1,6 @@
+<!-- This isn't used.  Something like it is
+     built into prose.tpl -->
+
 <div class="up_down_vote_count_block">
 
 <table>

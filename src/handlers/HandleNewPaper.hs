@@ -21,6 +21,7 @@ import           Snap.Snaplet.Auth
 import           Control.Applicative
 import qualified Data.ByteString.Char8        as BS
 import           Data.Monoid
+import           Data.Hashable
 import qualified Data.Map                     as Map
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
@@ -31,7 +32,8 @@ import qualified Heist.Interpreted            as I
 import           Application
 import qualified Text.Blaze.Html5             as H
 import           Text.Digestive.Snap (runForm)
-import           Text.Digestive.Heist  
+import           Text.Digestive.Heist
+import           GHC.Int
 
 documentForm :: (Monad m) => User -> [DocClass] -> [FieldTag] -> Form Text m Document
 documentForm fromUser allDocClasses allDocTags =
@@ -98,7 +100,8 @@ handleNewArticle :: Handler App (AuthManager App) ()
 handleNewArticle = handleForm 
   where
    handleForm = do
-     userMap <- query QueryAllUsers 
+     userMap <- query QueryAllUsers
+     docs    <- query QueryAllDocs
      dc      <- query QueryAllDocClasses 
      ft      <- query QueryAllFieldTags
      authUser' <- currentUser
@@ -109,7 +112,15 @@ handleNewArticle = handleForm
          (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft
          case rs of 
            Just doc -> do
-             _ <- update $ AddDocument doc
-             redirect . BS.pack $ "view_article/" ++ (show . docId $ doc)
+             let doc' = doc {docId = newId}
+             _ <- update $ AddDocument doc'
+             redirect . BS.pack $ "view_article/" ++ (show . docId $ doc')
+             where
+               newId = head . filter (\k -> Map.notMember k docs)
+                       $ (tHash: tLen: tNotTaken)
+               tHash = fromIntegral . hash . docTitle $ doc:: Int32  
+               tLen  = fromIntegral (Map.size docs)  :: Int32
+               tNotTaken = [0..maxBound] :: [Int32]
+     
            Nothing -> do
              heistLocal (bindDigestiveSplices vw) $ render "_new_paper"

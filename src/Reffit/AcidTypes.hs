@@ -61,15 +61,8 @@ queryAllDocs = asks _documents
 
 -- TODO: Check that document title isn't already taken
 addDocument :: Document -> Update PersistentState ()
-addDocument doc = do
-  oldDocs <- gets _documents
-  let newDoc = doc { docId = newId }
-      newId = head . filter (\k -> Map.notMember k oldDocs)
-              $ (tHash: tLen: tNotTaken)
-      tHash = fromIntegral . hash . docTitle $ doc:: Int32
-      tLen  = fromIntegral (Map.size oldDocs)  :: Int32
-      tNotTaken = [0..maxBound] :: [Int32]
-  modify (over documents (Map.insert newId newDoc))
+addDocument doc = do  -- HandleNewPaper now finds a good Id
+  modify (over documents (Map.insert (docId doc) doc))
 
 addSummary :: DocumentId -> Summary 
               -> Update PersistentState (Maybe SummaryId)

@@ -34,6 +34,7 @@ import qualified Text.Blaze.Html5             as H
 import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist  
 import qualified Data.ByteString.Char8        as BS
+import           GHC.Int
 
 -- TODO handle anonymity of votes
 handleSummaryVote :: UpDownVote -> Handler App (AuthManager App) ()  
@@ -46,9 +47,9 @@ handleSummaryVote voteDir = do
   authUser' <- currentUser
   -- TODO extremely deep nesting - should I be in ErrorT here?
   case  readMay . T.unpack . decodeUtf8 <$> pId' of   
-    Nothing -> writeText "paperid formatting error" --TODO proper error message
+    Nothing -> writeText "handleSummaryVote paperid formatting error" --TODO proper error message
     Just (Just pId) -> case readMay . T.unpack . decodeUtf8 <$> sId' of
-      Nothing -> writeText "summaryid formatting error"
+      Nothing -> writeText $ T.concat ["summaryid formatting error. pId:", (T.pack . show $ pId')]
       Just (Just sId) -> 
         case Map.lookup pId docs of
           Nothing -> writeText "paperid not in database"
@@ -60,28 +61,37 @@ handleSummaryVote voteDir = do
                   Nothing -> writeText "Need to log in."
                   Just (Just u) -> do
                     update (CastSummaryVote (userName u) False pId sId voteDir)
+                    writeText "Done casting vote."
 
 -- TODO: Handle anonymity of votes
 handleCritiqueVote :: UpDownVote -> Handler App (AuthManager App) ()
 handleCritiqueVote voteDir = do
-  userMap <- query QueryAllUsers
-  docs    <- query QueryAllDocs
-  ft      <- query QueryAllFieldTags
-  pId'    <- getParam "paperid"
-  cId'    <- getParam "summaryid"
+  userMap  <- query QueryAllUsers
+  docs     <- query QueryAllDocs
+  idParam' <- getParam "idParam"
   authUser' <- currentUser
   -- TODO so similar to handleSummaryVote - badly need a refactor
-  case readMay . T.unpack . decodeUtf8 <$> pId' of
-    Nothing -> writeText "paperid formatting error"
-    Just (Just pId) -> case readMay . T.unpack . decodeUtf8 <$> cId' of
-      Nothing -> writeText "critiqueId formatting error"
-      Just (Just cId) -> case Map.lookup pId docs of
-        Nothing -> writeText "Document isn't in database"
-        Just doc -> case Map.lookup cId (docCritiques doc) of
-          Nothing -> writeText "critique isn't in database"
-          Just critique ->
-            case Map.lookup <$> (userLogin <$> authUser') <*> pure userMap of
-              Nothing -> writeText "Need to log in"
-              Just (Just u) -> do
+  case idParam' of
+    Nothing -> writeText "idParam not found"
+    Just idParam ->
+      let (pId',cId') = (T.breakOn "." . decodeUtf8) $ idParam
+          (pIdM,cIdM) = (readMay $ T.unpack pId', readMay .T.unpack . T.tail $ cId')
+      in 
+       case (pIdM, cIdM) of 
+        (Nothing,Nothing) -> writeText $ T.concat ["paperid formatting error"
+                                            ," idParam' :",  T.pack . show $ idParam'
+                                            ,"  pId' :", T.pack . show $ pId'
+                                            ,"  cId' IS :", T.pack . show $ T.tail cId'] 
+        (Nothing,_) -> writeText "paperid formatting error"
+        (_,Nothing) -> writeText "critiqueid formatting error here"
+        (Just pId, Just cId) -> case Map.lookup pId docs of
+            Nothing -> writeText "Document isn't in database"
+            Just doc -> case Map.lookup cId (docCritiques doc) of
+              Nothing -> writeText "critique isn't in database"
+              Just critique ->
+                case Map.lookup <$> (userLogin <$> authUser') <*> pure userMap of
+                  Nothing -> writeText "Need to log in"
+                  Just Nothing -> writeText "Just nothing - need to log in"
+                  Just (Just u) -> do
                 --TODO handle vote anonymity
-                update (CastCritiqueVote u False pId doc cId critique voteDir) 
+                    update (CastCritiqueVote u False pId doc cId critique voteDir) 
