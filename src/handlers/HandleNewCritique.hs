@@ -75,7 +75,7 @@ handleNewCritique critVal = do
       case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
         Just (Just user) -> do
           (vw,rs) <- runForm "newCritiqueForm" $ newCritiqueForm user critVal
-          case rs of
+          case rs of 
             Just critique -> do
               sId <- update $ AddCritique pId critique
               --let a = sId :: SummaryId  -- TODO: Must vote for
