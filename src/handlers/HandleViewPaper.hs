@@ -141,18 +141,18 @@ splicesFromCritique u doc (cId,c) = do
         (Just AnonVoted) -> do
           "upBtnUrl" ## I.textSplice "#"
           "downBtnUrl" ## I.textSplice "#"
-          "upButtonHighlight" ## I.textSplice   "triangle-anon"
-          "downButtonHighlight" ## I.textSplice "triangle-anon"
+          "upBtnHighlight" ## I.textSplice   "triangle-anon"
+          "downBtnHighlight" ## I.textSplice "triangle-anon"
         (Just UpVoted) -> do
           "upBtnUrl" ## I.textSplice "#"
           "downBtnUrl" ## I.textSplice "#"
-          "upButtonHighlight" ## I.textSplice "triangle-bright"
-          "downButtonHighlight" ## I.textSplice "triangle-dim"
+          "upBtnHighlight" ## I.textSplice "triangle-on"
+          "downBtnHighlight" ## I.textSplice "triangle-off"
         (Just DownVoted) -> do
           "upBtnUrl" ## I.textSplice "#"
           "downBtnUrl" ## I.textSplice "#"
-          "upButtonHighlight" ## I.textSplice "triangle-dim"
-          "downButtonHighlight" ## I.textSplice "triangle-bright"
+          "upBtnHighlight" ## I.textSplice "triangle-off"
+          "downBtnHighlight" ## I.textSplice "triangle-on"
         (Just NotVoted) -> do
           "upBtnUrl" ## I.textSplice (T.concat ["/cast_critique_upvote/"
                                                ,T.pack (show $ docId doc)
@@ -162,8 +162,8 @@ splicesFromCritique u doc (cId,c) = do
                                                  ,T.pack (show $ docId doc)
                                                  ,"."
                                                  ,T.pack (show $ cId)])
-          "upBtnHighlight" ## I.textSplice "triangle-dim"
-          "downBtnHighlight" ## I.textSplice "triangle-dim"
+          "upBtnHighlight" ## I.textSplice "triangle-togglable"
+          "downBtnHighlight" ## I.textSplice "triangle-togglable"
         Nothing -> return ()
   where
     (nUp,nDown) = critiqueUpsDowns c

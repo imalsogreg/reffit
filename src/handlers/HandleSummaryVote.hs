@@ -94,4 +94,5 @@ handleCritiqueVote voteDir = do
                   Just Nothing -> writeText "Just nothing - need to log in"
                   Just (Just u) -> do
                 --TODO handle vote anonymity
-                    update (CastCritiqueVote u False pId doc cId critique voteDir) 
+                    _ <- update (CastCritiqueVote u False pId doc cId critique voteDir)
+                    redirect $ BS.concat ["/view_article/",BS.pack . show $ pId]
