@@ -132,8 +132,8 @@ routes = [
   , ("new_praise/:paperid", with auth (handleNewCritique UpVote))
   , ("new_criticism/:paperid", with auth (handleNewCritique DownVote))
   , ("view_article/:paperid", with auth handleViewPaper) 
-  , ("cast_summary_upvote/:paperid/:summaryid",    with auth $ handleSummaryVote  UpVote)
-  , ("cast_summary_downvote/:paperid/:summaryid",  with auth $ handleSummaryVote  DownVote)
+  , ("cast_summary_upvote/:idParam",    with auth $ handleSummaryVote  UpVote)
+  , ("cast_summary_downvote/:idParam",  with auth $ handleSummaryVote  DownVote)
   , ("cast_critique_upvote/:idParam",  with auth $ handleCritiqueVote UpVote)
   , ("cast_critique_downvote/:idParam",with auth $ handleCritiqueVote DownVote)
     

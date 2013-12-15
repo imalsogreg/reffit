@@ -18,10 +18,19 @@
   </table>
 </div>
 
-<div class="proseText">
+<div class="prose-text">
   <p><proseText/></p>
-  <p><prosePoster/> <apply-content/></p>
-  <p><proseId/></p>
+</div>
+
+<apply-content/>
+
+<div class="prose-poster">
+  <p>
+    <a href="/user/${prosePoster}" class="${anonLinkFlag}">
+      <prosePoster/>
+    </a>
+
+  </p>
 </div>
 
 

@@ -114,8 +114,48 @@ splicesFromSummary u doc (sId,s) = do
   "upCount"       ## I.textSplice (T.pack . show $ nUp) 
   "downCount"     ## I.textSplice (T.pack . show $ nDown)
   "proseText"     ## I.textSplice (T.pack . show $ summaryProse s)
-  "prosePoster"   ## I.textSplice (T.pack . show $ summaryPoster s)
-  "proseId"       ## I.textSplice (T.pack . show $ sId) -- for debugging
+  case summaryPoster s of
+    Nothing -> do
+      "prosePoster"   ## I.textSplice "Anonymous"
+      "anonLinkFlag"  ## I.textSplice "inactive"
+    Just uName -> do
+      "prosePoster"  ## I.textSplice uName
+      "anonLinkFlag" ## I.textSplice "userLink"
+      
+  case u of
+    Nothing -> do
+      "upBtnUrl"   ## I.textSplice "/login"
+      "downBtnUrl" ## I.textSplice "/login"
+    Just user ->
+      case userSummaryRelation user doc sId of
+        (Just AnonVoted) -> do
+          "upBtnUrl" ## I.textSplice "#"
+          "downBtnURl" ## I.textSplice "#"
+          "upBtnHighlight" ## I.textSplice "triangle-anon"
+          "downBtnHighlight" ## I.textSplice "triangle-anon"
+        (Just UpVoted) -> do
+          "upBtnUrl" ## I.textSplice "#"
+          "downBtnUrl" ## I.textSplice "#"
+          "upBtnHighlight" ## I.textSplice "triangle-on"
+          "downBtnHighlight" ## I.textSplice "triangle-off"
+        (Just DownVoted) -> do
+          "upBtnUrl" ## I.textSplice "#"
+          "downBtnUrl" ## I.textSplice "#"
+          "upBtnHighlight" ## I.textSplice "triangle-off"
+          "downBtnHighlight" ## I.textSplice "triangle-on"
+        (Just NotVoted) -> do
+          "upBtnUrl" ## I.textSplice (T.concat ["/cast_summary_upvote/"
+                                               ,T.pack (show $ docId doc)
+                                               ,"."
+                                               ,T.pack (show $ sId)])
+          "downBtnUrl" ## I.textSplice (T.concat ["/cast_summary_downvote/"
+                                                 ,T.pack (show $ docId doc)
+                                                 ,"."
+                                                 ,T.pack (show $sId)])
+          "upBtnHighlight" ## I.textSplice "triangle-togglable"
+          "downBtnHighlight" ## I.textSplice "triangle-togglable"
+        Nothing -> return ()  -- TODO this is some kind of problem,
+                              -- couldn't find user -> summary rln
   where (nUp, nDown) = summaryUpsDowns s
                   
 allCritiqueSplices :: UpDownVote -> T.Text -> Maybe User -> Document -> [(CritiqueId,Critique)]-> Splices (SnapletISplice App)
@@ -131,7 +171,13 @@ splicesFromCritique u doc (cId,c) = do
   "downCount"    ## I.textSplice (T.pack . show $ nDown)
   "proseText"    ## I.textSplice (critiqueProse c)
   "critiqueDim"  ## I.textSplice (T.pack . show $ critiqueDim c)
-  "proseId"      ## I.textSplice (T.pack . show $ cId )
+  case critiquePoster c of
+    Nothing -> do
+      "prosePoster"   ## I.textSplice "Anonymous"
+      "anonLinkFlag"  ## I.textSplice "inactive"
+    Just uName -> do
+      "prosePoster"  ## I.textSplice uName
+      "anonLinkFlag" ## I.textSplice "userLink"
   case u of
     Nothing -> do
       "upBtnUrl"   ## I.textSplice "/login"
@@ -190,7 +236,7 @@ userCritiqueRelation u doc cId =
     [VotedOnCritique _ _ Nothing]         -> Just AnonVoted
     [VotedOnCritique _ _ (Just UpVote)]   -> Just UpVoted
     [VotedOnCritique _ _ (Just DownVote)] -> Just DownVoted
-    _ -> Nothing -- <- something went wrong with the filtering
+    _ -> Nothing -- <- multiple votes on the same critique!!
 
 {-
 summariesToProseData :: Map.Map SummaryId Summary -> [(T.Text,Int,Int)]

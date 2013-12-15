@@ -86,28 +86,19 @@ addSummary pId summary = do
           sInd  = fromIntegral . Map.size $ docSummaries doc
           sAll  = [0..]
 
-castSummaryVote :: UserName -> Bool -> DocumentId
-                   -> SummaryId -> UpDownVote
+castSummaryVote :: User -> Bool -> DocumentId -> Document
+                   -> SummaryId -> Summary -> UpDownVote
                    -> Update PersistentState ()
-castSummaryVote uId isAnon dId sId voteVal = do
-  us <- gets _users
-  docs  <- gets _documents
-  case Map.lookup dId docs of
-    Nothing -> return () -- TODO Error page
-    Just doc -> case Map.lookup sId (docSummaries doc) of
-      Nothing -> return () --TODO error page
-      Just summary -> case Map.lookup uId us of
-        Nothing -> return () --TODO error page
-        Just u  -> do
-          modify (over users $ \us' ->
-                   let vRecord = if isAnon then Nothing else Just voteVal
-                       histItem = VotedOnSummary dId sId vRecord
-                       u' = u { userHistory = histItem : userHistory u } :: User
-                   in Map.insert uId u' us')
-          modify (over documents $ \ds ->
-                   let s' = summary { summaryVotes = voteVal : summaryVotes summary }
-                       d' = doc { docSummaries = Map.insert sId s' (docSummaries doc)}
-                   in Map.insert dId d' ds) 
+castSummaryVote user isAnon dId doc sId summary voteVal = do
+  modify (over users $ \us' ->
+           let vRecord = if isAnon then Nothing else Just voteVal
+               histItem = VotedOnSummary dId sId vRecord
+               u' = user { userHistory = histItem : userHistory user }
+           in Map.insert (userName user) u' us')
+  modify (over documents $ \ds ->
+           let s' = summary { summaryVotes = voteVal : summaryVotes summary }
+               d' = doc { docSummaries = Map.insert sId s' (docSummaries doc)}
+           in Map.insert dId d' ds) 
           
 castCritiqueVote :: User -> Bool -> DocumentId -> Document
                  -> CritiqueId -> Critique -> UpDownVote
