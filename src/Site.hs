@@ -29,6 +29,7 @@ import           HandleViewPaper
 import           HandleNewSummary
 import           HandleNewCritique
 import           HandleSummaryVote
+import           HandleViewUser
 
 import           Control.Applicative
 import qualified Data.Map as Map
@@ -136,6 +137,7 @@ routes = [
   , ("cast_summary_downvote/:idParam",  with auth $ handleSummaryVote  DownVote)
   , ("cast_critique_upvote/:idParam",  with auth $ handleCritiqueVote UpVote)
   , ("cast_critique_downvote/:idParam",with auth $ handleCritiqueVote DownVote)
+  , ("user/:username", with auth $ handleViewUser)
     
   , ("add_1000",      handleAdd1000) -- TODO just testing
   , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    

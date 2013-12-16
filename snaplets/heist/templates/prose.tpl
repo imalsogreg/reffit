@@ -22,14 +22,14 @@
   <p><proseText/></p>
 </div>
 
-<apply-content/>
-
 <div class="prose-poster">
   <p>
     <a href="/user/${prosePoster}" class="${anonLinkFlag}">
       <prosePoster/>
     </a>
-
+  </p>
+  <p>
+    <apply-content/> <!-- This brings in the Re: dimension tag -->
   </p>
 </div>
 
