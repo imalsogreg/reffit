@@ -161,8 +161,8 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     -- you'll probably want to change this to a more robust auth backend.
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
-    -- TODO: Why are we referencing an emptyist state here?
-    ac <- nestSnaplet "acid" acid $ acidInit (PersistentState Map.empty Map.empty [DocClass "Paper"] [FieldTag "taga", FieldTag "tagb"])
+
+    ac <- nestSnaplet "acid" acid $ acidInit convenienceReset
     h <- nestSnaplet "" heist $ heistInit "templates"           
     addRoutes routes
     addAuthSplices h auth
@@ -173,10 +173,12 @@ factoryReset :: PersistentState
 factoryReset = PersistentState Map.empty Map.empty [] []
 
 convenienceReset :: PersistentState
-convenienceReset = PersistentState Map.empty Map.empty [DocClass "Paper"] []
+convenienceReset = PersistentState Map.empty Map.empty [DocClass "Paper", DocClass "Preprint"
+                                                       ,DocClass "Blog Post", DocClass "Video"
+                                                       ,DocClass "Book"] testTags 
 
 stresstestReset :: PersistentState
-stresstestReset = PersistentState docs Map.empty [DocClass "Paper"] []
+stresstestReset = PersistentState docs Map.empty [DocClass "Paper"] testTags
   where
     docs = Map.fromList [(i, Document Nothing i "The Earth is Round (p < .05)" []
               "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty)
@@ -191,5 +193,8 @@ testUsers = [ User "Arte Artimus" ["Santa","Rudolph"] [] [] ]
 testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Coolness  UpVote [UpVote,DownVote,UpVote]
 
 testSummary = Summary Nothing "This paper talks about why H0 hypothesist testing isn't appropriate for describing effect size." [UpVote,UpVote]
---testReset :: PersistentState
---testReset = PersistentState 
+
+testTags :: [FieldTag]
+testTags = map FieldTag ["Neuroscience","Hippocampus","PlaceCells","Thalamus","TetrodeRecording","ThetaRhythms"
+                        ,"FunctionalProgramming","ProgrammingLanguages","Compilers","Concurrency"
+                        ,"Algorithms","ProofAutomation","UserInterfaces","CSEducation"]
