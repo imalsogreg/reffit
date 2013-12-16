@@ -15,7 +15,7 @@
 	    </span>
 	  </button>
 	</a>
-      <h1>
+      </ifLoggedIn>
 
     </div>
 

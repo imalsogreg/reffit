@@ -26,18 +26,16 @@ import Control.Monad
 
 handleViewUser :: Handler App (AuthManager App) ()
 handleViewUser = do
-  users <- query QueryAllUsers
-  cAUserName' <- currentUser
-  let c = userLogin <$> cAUserName' :: Maybe T.Text
-  profileName' <- getParam "userid"
+  userMap <- query QueryAllUsers
+  cAUser' <- currentUser
+  profileName' <- getParam "username" 
   case decodeUtf8 <$> profileName' of 
-    Nothing -> writeText "Error decoding userid"  --TODO
-    Just profileName -> case Map.lookup profileName users of 
+    Nothing -> writeText "Error decoding username"  --TODO
+    Just profileName -> case Map.lookup profileName userMap of 
       Nothing -> writeText "User not in database."  -- TODO 
       Just profileUser -> do
-        let cUser' = (flip Map.lookup) users 
-                     <$> userLogin <$> cAUserName' :: Maybe User 
-        renderWithSplices "user" (profileSplices cUser' profileUser)
+        let cUser' = join $ Map.lookup <$> (userLogin <$> cAUser') <*> pure userMap :: Maybe User
+        renderWithSplices "user" (profileSplices cUser' profileUser) 
 
 profileSplices :: Maybe User -> User -> Splices (SnapletISplice App)
 profileSplices cUser' profileUser = do
