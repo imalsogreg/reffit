@@ -1,4 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+
 
 module Reffit.FieldTag where
 
@@ -12,9 +16,7 @@ import qualified Heist.Interpreted as I
 import Snap.Snaplet.Heist
 
 type FieldTag = T.Text
-
 type TagPath = [FieldTag]
-
 type FieldTags = Forest FieldTag
 
 testTags :: Forest FieldTag
@@ -41,6 +43,12 @@ testTags =
          Node "AppliedMath" [] 
        , Node "TheoreticalMath" []
        ]
+    , Node "Philosophy" [
+       Node "PhilosophyOfScience" []
+       , Node "PhilosophyOfMind" []
+       , Node "Epistemology" []
+       , Node "Ethics" []
+       ]
     , Node "Physics" [
        Node "TheoreticalPhysics" [] 
        , Node "HighEnergyPhysics" []
@@ -58,13 +66,19 @@ tagPathIsElem tp tagsTop = not (L.null tp) && aux tp tagsTop
     aux (t:ts) tags = case L.elemIndex t (topLabels tags) of
       Nothing -> False
       Just ix -> let (Node _ tags') = tags !! ix in
-          tagPathIsElem ts tags'
+          aux ts tags'
 
-{- This is wrong
-tagPaths :: FieldTags -> [TagPath]
-tagPaths [] = []
-tagPaths ((Node tagT subTags):xs) = [tagT] : map (tagT:) (tagPaths subTags)
--}
+insertTag :: TagPath -> FieldTags -> FieldTags
+insertTag [] tags = tags
+insertTag (x:xs) [] = [Node x (insertTag xs [])]
+insertTag (x:xs) tags = case L.elemIndex x (topLabels tags) of
+  Nothing -> (Node x (insertTag xs [])) : tags
+  Just ix ->
+    let (preList,((Node _ tags'):postList)) = splitAt ix tags in
+    preList ++ [Node x (insertTag xs tags')] ++ postList 
+
+showPath :: TagPath -> String
+showPath tp = T.unpack $ T.intercalate "." tp
 
 fieldTagsToStringForest :: FieldTags -> Forest String
 fieldTagsToStringForest [] = []

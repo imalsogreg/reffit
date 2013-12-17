@@ -14,6 +14,7 @@ module Reffit.AcidTypes where
 
 import Reffit.Types
 import Reffit.DataVersion
+import Reffit.FieldTag
 
 import Safe
 import Control.Applicative ((<$>),(<*>),pure)
@@ -45,7 +46,7 @@ data PersistentState = PersistentState {
     _documents  :: Map.Map DocumentId Document
   , _users      :: Map.Map UserName User
   , _docClasses :: [DocClass]
-  , _fieldTags  :: [FieldTag]
+  , _fieldTags  :: FieldTags
   } deriving (Show, Generic, Typeable)
   
 makeLenses ''PersistentState
@@ -160,11 +161,11 @@ addDocClass :: DocClass -> Update PersistentState ()
 addDocClass dc = do
   modify (over docClasses (dc:))
   
-queryAllFieldTags :: Query PersistentState [FieldTag]
+queryAllFieldTags :: Query PersistentState FieldTags
 queryAllFieldTags = asks _fieldTags
  
-addFieldTag :: FieldTag -> Update PersistentState ()
-addFieldTag ft = modify (over fieldTags (ft:))
+addFieldTag :: TagPath -> Update PersistentState ()
+addFieldTag tp = modify (over fieldTags (insertTag tp))
 
 makeAcidic ''PersistentState ['addDocument, 'queryAllDocs
                              , 'queryAllUsers, 'addUser

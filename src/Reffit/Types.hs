@@ -61,10 +61,12 @@ data Critique = Critique { critiqueProse     :: Text
                          } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''Critique
 
+{-
 data FieldTag = FieldTag { fieldTagText :: Text
                          } deriving (Show, Generic, Typeable)
 deriveSafeCopy scv 'base ''FieldTag
-                  
+-}                  
+
 data Document = Document { docUploader  :: Maybe UserName
                          , docId        :: DocumentId
                          , docTitle     :: Text

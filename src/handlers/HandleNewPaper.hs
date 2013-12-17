@@ -37,22 +37,22 @@ import           Text.Digestive.Heist
 import           GHC.Int
 import qualified Data.Tree                    as RT
 
-documentForm :: (Monad m) => User -> [DocClass] -> [FieldTag] -> Form Text m Document
-documentForm fromUser allDocClasses allDocTags =
+documentForm :: (Monad m) => User -> [DocClass] -> FieldTags -> Form Text m Document
+documentForm fromUser allDocClasses allFieldTags =
   Document
   <$> "poster"   .: choice posterOpts Nothing
   <*> pure 0
   <*> "title"    .: check "Not a valid title" (not . T.null) (text Nothing)
-  <*> "authors"  .: validate validateAuthors (text (Just "Abe Lincoln, Dr. Livingston"))
+  <*> "authors"  .: validate validateAuthors (text Nothing)
   <*> "link"     .: check "Not a valid link" (not . T.null) (text Nothing)
   <*> "docClass" .: choice classOpts Nothing
-  <*> "docTags"  .: validate (validateTags allDocTags) (text Nothing)
+  <*> "docTags"  .: validate (validateTags allFieldTags) (text Nothing)
   <*> pure Map.empty
   <*> pure Map.empty
     where
       posterOpts = [(Just (userName fromUser),userName fromUser)
                    ,(Nothing,"Anonymous")]  
-      classOpts = [(dc,T.pack . show $ dc) | dc <- allDocClasses]
+      classOpts = [(dc,docClassName dc) | dc <- allDocClasses]
 
 documentView :: View H.Html -> H.Html
 documentView view = do
@@ -84,16 +84,19 @@ validateAuthors authorsText
   | T.null authorsText = Error "Authors required"
   | otherwise          = Success $ T.splitOn "," authorsText
  
-validateTags :: [FieldTag] -> Text -> Result Text [FieldTag]
-validateTags allTags' formTags'
-  | all (`elem` allTags) formTags =
-    Success . map FieldTag $ formTags
+validateTags :: FieldTags -> Text -> Result Text [TagPath]
+validateTags allTags formTags
+  | all (\tp -> tagPathIsElem tp  allTags) allPaths =
+    Success $ allPaths
   | otherwise =
     Error $ T.concat ["Unrecognized tags: " ,
-    (T.unwords . filter (`notElem` allTags) $ formTags)]
+                      (T.unwords . map (T.pack . showPath) . 
+                       filter (\tp -> not $ tagPathIsElem tp allTags) 
+                       $ allPaths)    
+                     ] 
   where
-    allTags  = map (\(FieldTag t) -> t) allTags' 
-    formTags = T.words formTags'
+    allPathStrs = map T.strip . T.splitOn "," $ formTags
+    allPaths = map (T.splitOn ".") allPathStrs 
     
 ------------------------------------------------------------------------------
 -- | Handles article submission
@@ -109,7 +112,7 @@ handleNewArticle = handleForm
      case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
        Nothing -> writeText "Error - authUser not in app user database"
        Just Nothing -> writeText "Error - justNothing, I'm not sure how you'd get this."  -- TODO Send to please-login page
-       Just (Just user)  -> do
+       Just (Just user)  -> do 
          (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft
          case rs of 
            Just doc -> do
@@ -128,5 +131,5 @@ handleNewArticle = handleForm
              heistLocal (bindDigestiveSplices vw)
                $ renderWithSplices "_new_paper" ftSplices
                where ftSplices = do
-                       "fieldTags" ## I.textSplice . T.intercalate " | " . map (\(FieldTag2 t) -> t) $ tagList
-                     tagList = concat $ map RT.flatten testTags2 :: [FieldTag2]  
+                       "fieldTags" ## I.textSplice $ T.intercalate " | "  tagList 
+                     tagList = concat $ map RT.flatten testTags :: [FieldTag]  
