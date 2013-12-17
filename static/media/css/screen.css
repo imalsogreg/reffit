@@ -43,7 +43,7 @@ h3 .button{
     font-size:12;
     width:60px;
     margin:0px auto;
- 
+    text-color:black;
 }
 .score_block ul{
    padding:8px;
@@ -51,9 +51,9 @@ h3 .button{
    border-style:solid;
    border-color:black;
    border-width:1px;
-   border-radius:0px 10px 0px 10px;
-   border-color:#ddddee;
-   background-color:#ddddff;
+   border-radius:0px 8px 0px 10px;
+   border-color:#4f9fcf;
+   text-color:black;
 }
 
 .field_tags_list{
@@ -92,20 +92,21 @@ h3 .button{
     background-color:white;
     border-style:solid;
     border-width:1px;
-    border-color:#ddddee;
+    border-color:#4f9fcf;
     border-radius:10px;
     opacity:1;
     overflow:auto;
 }
 .pr_paper:hover {
   opacity:0.9;
-  border-color:#ccccdd;
+  border-color:#2f7faf;
 }
 .paper_roll a:link{text-decoration:none;}
 .paper_roll a:link {color:#4f9fcf;}
 .paper_roll a:visited{color:#4f9fcf;}
 .paper_roll a:hover{color:#4f9fcf;}
 .paper_roll a:active{color:#2f6fcf;}
+
 
 .arrow-up {
     width:0;

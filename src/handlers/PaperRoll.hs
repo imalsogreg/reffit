@@ -9,6 +9,7 @@ module PaperRoll (
 import Reffit.Types
 import Reffit.AcidTypes
 import Reffit.Scores
+import Reffit.FieldTag
 
 import qualified Data.List as L
 import Snap.Snaplet (Handler)
@@ -44,10 +45,10 @@ splicesFromDocument doc = do
   "coolnessScore"       ## I.textSplice (T.pack $ show (coolScore))
   (allFieldTags $ docFieldTags doc)
  
-allFieldTags :: [FieldTag] -> Splices (SnapletISplice App)
+allFieldTags :: [TagPath] -> Splices (SnapletISplice App)
 allFieldTags tags = "fieldTags" ## renderFieldTags fLabels
     where
-      fLabels = map fieldTagText tags
+      fLabels = map last tags
 
 renderFieldTags :: [T.Text] -> SnapletISplice App
 renderFieldTags = I.mapSplices $ I.runChildrenWith . splicesFromTag 

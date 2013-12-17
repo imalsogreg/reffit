@@ -194,8 +194,3 @@ testUsers = [ User "Arte Artimus" ["Santa","Rudolph"] [] [] ]
 testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Coolness  UpVote [UpVote,DownVote,UpVote]
 
 testSummary = Summary Nothing "This paper talks about why H0 hypothesist testing isn't appropriate for describing effect size." [UpVote,UpVote]
-
-testTags :: [FieldTag]
-testTags = map FieldTag ["Neuroscience","Hippocampus","PlaceCells","Thalamus","TetrodeRecording","ThetaRhythms"
-                        ,"FunctionalProgramming","ProgrammingLanguages","Compilers","Concurrency"
-                        ,"Algorithms","ProofAutomation","UserInterfaces","CSEducation"]
