@@ -2,7 +2,7 @@
 
 <h2>Submit a Paper</h2>
 
-<dfForm>
+<dfForm class="new_paper_form">
 
 <dfChildErrorList ref=""/>
 
@@ -33,5 +33,16 @@
 <dfInputSubmit value="Enter"/>
 
 </dfForm>
+
+<script>
+$(document).ready(function(){
+  $(".toggleFieldTags").click(function(){
+    $(".field_tags").toggle();
+  });
+});
+</script>
+
+<button class="toggleFieldTags">Available Field Tags</button>
+<p class="field_tags"><fieldTags/></p>
 
 </div>

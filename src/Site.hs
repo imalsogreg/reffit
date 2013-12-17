@@ -14,6 +14,7 @@ module Site
 
 import           Reffit.Types
 import           Reffit.AcidTypes
+import           Reffit.FieldTag
 
 import           Control.Lens (view)
 import           Snap.Snaplet.AcidState (Update, Query, Acid,
@@ -173,7 +174,7 @@ factoryReset :: PersistentState
 factoryReset = PersistentState Map.empty Map.empty [] []
 
 convenienceReset :: PersistentState
-convenienceReset = PersistentState Map.empty Map.empty [DocClass "Paper", DocClass "Preprint"
+convenienceReset = PersistentState Map.empty Map.empty [DocClass "PaperA", DocClass "Preprint"
                                                        ,DocClass "Blog Post", DocClass "Video"
                                                        ,DocClass "Book"] testTags 
 

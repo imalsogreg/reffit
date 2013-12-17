@@ -11,6 +11,7 @@ import           GHC.Int
 import           GHC.Generics
 import           Data.Typeable
 import           Reffit.DataVersion
+import           Reffit.FieldTag
 import Data.SafeCopy (base, deriveSafeCopy)
 
 
@@ -76,8 +77,3 @@ data Document = Document { docUploader  :: Maybe UserName
                          } deriving (Show, Generic, Typeable)
 deriveSafeCopy scv 'base ''Document
 
-testPapers :: [Document]
-testPapers = [Document Nothing 0 "The Earth is Round (p < .05)" []
-              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty
-             ,Document Nothing 1 "A cool paper about the hippocampus" [] "http://github.com" (DocClass "Paper") [] Map.empty Map.empty
-             ] 

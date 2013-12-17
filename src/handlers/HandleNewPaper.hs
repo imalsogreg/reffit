@@ -9,6 +9,7 @@ where
 
 import           Reffit.Types
 import           Reffit.AcidTypes
+import           Reffit.FieldTag
 import           Application 
 import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          HasAcid (getAcidStore),
@@ -34,6 +35,7 @@ import qualified Text.Blaze.Html5             as H
 import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist
 import           GHC.Int
+import qualified Data.Tree                    as RT
 
 documentForm :: (Monad m) => User -> [DocClass] -> [FieldTag] -> Form Text m Document
 documentForm fromUser allDocClasses allDocTags =
@@ -96,7 +98,6 @@ validateTags allTags' formTags'
 ------------------------------------------------------------------------------
 -- | Handles article submission
 handleNewArticle :: Handler App (AuthManager App) ()
---handleNewArticle = method GET handleForm <|> method POST handleFormSubmit
 handleNewArticle = handleForm 
   where
    handleForm = do
@@ -123,4 +124,9 @@ handleNewArticle = handleForm
                tNotTaken = [0..maxBound] :: [Int32]
      
            Nothing -> do
-             heistLocal (bindDigestiveSplices vw) $ render "_new_paper"
+             --heistLocal (bindDigestiveSplices vw) $ render "_new_paper"
+             heistLocal (bindDigestiveSplices vw)
+               $ renderWithSplices "_new_paper" ftSplices
+               where ftSplices = do
+                       "fieldTags" ## I.textSplice . T.intercalate " | " . map (\(FieldTag2 t) -> t) $ tagList
+                     tagList = concat $ map RT.flatten testTags2 :: [FieldTag2]  
