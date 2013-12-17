@@ -73,7 +73,7 @@ data Document = Document { docUploader  :: Maybe UserName
                          , docAuthors   :: [Text]
                          , docLink      :: Text
                          , docClass     :: DocClass
-                         , docFieldTags :: [FieldTag]
+                         , docFieldTags :: [TagPath]
                          , docSummaries :: Map.Map SummaryId  Summary
                          , docCritiques :: Map.Map CritiqueId Critique
                          } deriving (Show, Generic, Typeable)

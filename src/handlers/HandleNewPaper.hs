@@ -46,7 +46,7 @@ documentForm fromUser allDocClasses allFieldTags =
   <*> "authors"  .: validate validateAuthors (text Nothing)
   <*> "link"     .: check "Not a valid link" (not . T.null) (text Nothing)
   <*> "docClass" .: choice classOpts Nothing
-  <*> "docTags"  .: validate (validateTags allFieldTags) (text Nothing)
+  <*> "docTags"  .: validate (validateTags allFieldTags) (text Nothing) 
   <*> pure Map.empty
   <*> pure Map.empty
     where

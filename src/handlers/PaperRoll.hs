@@ -28,7 +28,7 @@ handlePaperRoll = do
 allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do
   "paper_roll_papers" ## (renderPaperRollPapers (take 100 docs))
- 
+  
 renderPaperRollPapers :: [Document] -> SnapletISplice App
 renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument 
 
