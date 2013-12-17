@@ -1,17 +1,21 @@
 <div id="new_paper">
 
+<div class="form-group">
+
 <h2>Submit a Paper</h2>
 
-<dfForm>
+
+
+<dfForm role="form-group">
 
 <dfChildErrorList ref=""/>
 
-<dfLabel ref="poster">Post as: </dfLabel>
-<dfInputSelect ref="poster"/>
+<label ref="poster" for="poster"">Post as: </label>
+<dfInputSelect ref="poster" class="form-control"/>
 <br>
 
-<dfLabel ref="title">Title: </dfLabel>
-<dfInputText ref="title" size="50"/>
+<label ref="title">Title: </label>
+<dfInputText ref="title" size="50" class="form-control"/>
 <br>
 
 <dfLabel ref="authors">Authors: </dfLabel>
@@ -33,5 +37,7 @@
 <dfInputSubmit value="Enter"/>
 
 </dfForm>
+
+</div>
 
 </div>

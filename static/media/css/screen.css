@@ -134,3 +134,9 @@ h3 .button{
 .circle:hover{
     opacity:0.9;
 }
+
+
+#new_paper{
+ margin:0 auto;
+ width: 60%;
+}
