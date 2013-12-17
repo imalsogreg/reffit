@@ -15,6 +15,8 @@
     border-radius:2;
 }
 
+
+
 .article_criticisms{
 
     background-color:white;
@@ -26,7 +28,33 @@
 
 }
 
+.triangle-on{
+    opacity:1
+}
+.triangle-togglable{
+    opacity:0.3;
+}
+.triangle-togglable:hover{
+    opacity:0.8;
+}
+.triangle-off{
+    opacity:0.3;
+}
+.triangle-anon{
+    opacity:0.3;
+}
+
+
+
 .prose_div{
     border-bottom: 1px solid #4f9fcf;
     overflow:auto;
+}
+
+.prose-text{
+    text-align:justify;
+}
+
+.prose-poster{
+    text-align:right;
 }

@@ -8,6 +8,7 @@ module PaperRoll (
 
 import Reffit.Types
 import Reffit.AcidTypes
+import Reffit.Scores
 
 import qualified Data.List as L
 import Snap.Snaplet (Handler)
@@ -31,17 +32,17 @@ allPaperRollSplices docs = do
 renderPaperRollPapers :: [Document] -> SnapletISplice App
 renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument 
 
---splicesFromDocument :: Monad n => Document -> Splices (I.Splice n)
 splicesFromDocument :: Document -> Splices (SnapletISplice App) 
-splicesFromDocument t = do
-  "idNum"               ## I.textSplice (T.pack . show $ docId t)
-  "paper_title"         ## I.textSplice (docTitle t)
-  "paper_authors"       ## I.textSplice (T.intercalate ", " $ docAuthors t)  
-  "paper_external_link" ## I.textSplice (docLink t)
-  "noveltyScore"        ## I.textSplice (T.pack $ show (1 ::Int)) --TODO calculate scores
-  "rigorScore"          ## I.textSplice (T.pack $ show (2 ::Int))
-  "coolnessScore"       ## I.textSplice (T.pack $ show (3 ::Int))
-  (allFieldTags $ docFieldTags t)
+splicesFromDocument doc = do
+  let (novScore, rigScore, coolScore) = documentScores doc 
+  "idNum"               ## I.textSplice (T.pack . show $ docId doc)
+  "paper_title"         ## I.textSplice (docTitle doc)
+  "paper_authors"       ## I.textSplice (T.intercalate ", " $ docAuthors doc)  
+  "paper_external_link" ## I.textSplice (docLink doc)
+  "noveltyScore"        ## I.textSplice (T.pack $ show (novScore))
+  "rigorScore"          ## I.textSplice (T.pack $ show (rigScore))
+  "coolnessScore"       ## I.textSplice (T.pack $ show (coolScore))
+  (allFieldTags $ docFieldTags doc)
  
 allFieldTags :: [FieldTag] -> Splices (SnapletISplice App)
 allFieldTags tags = "fieldTags" ## renderFieldTags fLabels

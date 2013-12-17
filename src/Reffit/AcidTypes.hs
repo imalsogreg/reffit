@@ -61,22 +61,15 @@ queryAllDocs = asks _documents
 
 -- TODO: Check that document title isn't already taken
 addDocument :: Document -> Update PersistentState ()
-addDocument doc = do
-  oldDocs <- gets _documents
-  let newDoc = doc { docId = newId }
-      newId = head . filter (\k -> Map.notMember k oldDocs)
-              $ (tHash: tLen: tNotTaken)
-      tHash = fromIntegral . hash . docTitle $ doc:: Int32
-      tLen  = fromIntegral (Map.size oldDocs)  :: Int32
-      tNotTaken = [0..maxBound] :: [Int32]
-  modify (over documents (Map.insert newId newDoc))
+addDocument doc = do  -- HandleNewPaper now finds a good Id
+  modify (over documents (Map.insert (docId doc) doc))
 
 addSummary :: DocumentId -> Summary 
               -> Update PersistentState (Maybe SummaryId)
 addSummary pId summary = do  
   docs <- gets _documents
   case Map.lookup pId docs of
-    Nothing -> modify (over documents id) >> return Nothing 
+    Nothing -> return Nothing 
                -- TODO - how to signal error?
     Just doc -> do
         modify (over documents $ \docs' ->
@@ -93,11 +86,33 @@ addSummary pId summary = do
           sInd  = fromIntegral . Map.size $ docSummaries doc
           sAll  = [0..]
 
-castSummaryVote :: User -> Bool -> DocId -> CritiqueId -> UpDownVote -> Update PersistentState ()
-castSummaryVote user isAnon dId cId voteVal = do
-  users <- gets _users
-  docs  <- gets _documents
-  
+castSummaryVote :: User -> Bool -> DocumentId -> Document
+                   -> SummaryId -> Summary -> UpDownVote
+                   -> Update PersistentState ()
+castSummaryVote user isAnon dId doc sId summary voteVal = do
+  modify (over users $ \us' ->
+           let vRecord = if isAnon then Nothing else Just voteVal
+               histItem = VotedOnSummary dId sId vRecord
+               u' = user { userHistory = histItem : userHistory user }
+           in Map.insert (userName user) u' us')
+  modify (over documents $ \ds ->
+           let s' = summary { summaryVotes = voteVal : summaryVotes summary }
+               d' = doc { docSummaries = Map.insert sId s' (docSummaries doc)}
+           in Map.insert dId d' ds) 
+          
+castCritiqueVote :: User -> Bool -> DocumentId -> Document
+                 -> CritiqueId -> Critique -> UpDownVote
+                 -> Update PersistentState ()
+castCritiqueVote user isAnon dId doc cId critique voteVal = do
+  modify (over users $ \us' ->
+           let vRecord = if isAnon then Nothing else Just voteVal
+               histItem = VotedOnCritique dId cId vRecord
+               u' = user { userHistory = histItem : userHistory user }
+           in Map.insert (userName user) u' us')
+  modify (over documents $ \ds ->
+           let c' = critique { critiqueReactions = voteVal : critiqueReactions critique }
+               d' = doc { docCritiques = Map.insert cId c' (docCritiques doc) } 
+           in Map.insert dId d' ds)
 
 addCritique :: DocumentId -> Critique 
                -> Update PersistentState (Maybe SummaryId)
@@ -155,4 +170,5 @@ makeAcidic ''PersistentState ['addDocument, 'queryAllDocs
                              , 'queryAllUsers, 'addUser
                              , 'queryAllDocClasses, 'addDocClass
                              , 'queryAllFieldTags,  'addFieldTag
-                             , 'addSummary, 'addCritique]
+                             , 'addSummary, 'addCritique
+                             , 'castSummaryVote, 'castCritiqueVote]
