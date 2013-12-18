@@ -10,7 +10,7 @@ import Control.Applicative ((<$>),(<*>),pure)
 import qualified Data.List as List
 import qualified Data.Map as Map
 import Snap.Core (getParam)
-import Snap.Types (writeText)
+import Snap.Core (writeText)
 import Snap.Snaplet (Handler)
 import Snap.Snaplet.AcidState (query)
 import Snap.Snaplet.Heist
@@ -21,30 +21,29 @@ import qualified Heist.Interpreted as I
 import qualified Data.Text as T
 import qualified Data.Set as Set
 import Data.Text.Encoding (decodeUtf8)
-import GHC.Int
 import Control.Lens
 import Control.Monad
    
 handleViewPaper :: Handler App (AuthManager App) ()
 handleViewPaper = do
-  users <- query QueryAllUsers
+  us <- query QueryAllUsers
   pId'  <- getParam "paperid"
   aUser <- currentUser
-  let u = join $ (flip Map.lookup) users <$> userLogin <$> aUser  :: Maybe User
+  let u = join $ (flip Map.lookup) us <$> userLogin <$> aUser  :: Maybe User
   case readMay . T.unpack . decodeUtf8 <$> pId' of  
     Nothing -> writeText "Need paperid parameter"  -- TODO: Proper error page
-    Just Nothing -> writeText "Just Nothing!  Odd."
+    Just Nothing -> writeText "Just Nothing!  Odd." 
     Just (Just pId) ->  do  -- just just again!
-      let a = pId :: Int32
       docs <- query QueryAllDocs
-      case Map.lookup pId docs of
---      case ((==pId) . docId) `filter` docs of 
+      case Map.lookup pId docs of 
         Nothing   -> writeText $ 
                      T.concat ["You entered: "
                               , T.pack (show pId) 
                               ," Document wasn't found in the database."]
         Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u doc)        
- 
+
+--TODO Move all this score stuff into the Scores module
+  
 -- |Count positive and negative votes for a summary
 summaryUpsDowns :: Summary -> (Int,Int)
 summaryUpsDowns s = over both length $
@@ -100,15 +99,18 @@ allArticleViewSplices u doc = do
   "docType"                 ## I.textSplice (docClassName . docClass $ doc)  
   "docId"                   ## I.textSplice (T.pack . show $ docId doc)
   "docTitle"                ## I.textSplice (docTitle doc)
-  "pinUrl"                  ## I.textSplice (pinUrl u)
+  let (pinUrl, pinBtn) = pinText u
+  "pinUrl"                  ## I.textSplice pinUrl
+  "pinboardBtnTxt"          ## I.textSplice pinBtn
   (allSummarySplices u doc . Map.toList . docSummaries $ doc)
   (allCritiqueSplices UpVote   "articlePraise"     u doc . Map.toList . docCritiques $ doc )
   (allCritiqueSplices DownVote "articleCriticisms" u doc . Map.toList . docCritiques $ doc )
    where
-     pinUrl Nothing = ""
-     pinUrl (Just user)
-          | Set.member (docId doc) (userPinboard user) = "unpin"
-          | otherwise                                  = "pin"
+     pinText :: Maybe User -> (T.Text, T.Text)
+     pinText Nothing = ("","")
+     pinText (Just user)
+          | Set.member (docId doc) (userPinboard user) = ("unpin", "Unpin")
+          | otherwise                                  = ("pin",   "Pinboard")
                          
 allSummarySplices :: Maybe User -> Document -> [(SummaryId,Summary)] -> Splices (SnapletISplice App)
 allSummarySplices u doc ss = "articleSummaries" ## renderSummaries u doc ss
@@ -123,11 +125,11 @@ splicesFromSummary u doc (sId,s) = do
   "proseText"     ## I.textSplice (T.pack . show $ summaryProse s)
   case summaryPoster s of
     Nothing -> do
-      "prosePoster"   ## I.textSplice "Anonymous"
-      "anonLinkFlag"  ## I.textSplice "inactive"
+      "prosePoster"             ## I.textSplice "Anonymous"
+      "prosePosterDestination"  ## I.textSplice "#"
     Just uName -> do
       "prosePoster"  ## I.textSplice uName
-      "anonLinkFlag" ## I.textSplice "userLink"
+      "prosePosterDestination" ## I.textSplice $ T.append "/user/" uName
       
   case u of
     Nothing -> do
@@ -180,11 +182,11 @@ splicesFromCritique u doc (cId,c) = do
   "critiqueDim"  ## I.textSplice (T.pack . show $ critiqueDim c)
   case critiquePoster c of
     Nothing -> do
-      "prosePoster"   ## I.textSplice "Anonymous"
-      "anonLinkFlag"  ## I.textSplice "inactive"
+      "prosePoster"            ## I.textSplice "Anonymous"
+      "prosePosterDestination" ## I.textSplice "#"
     Just uName -> do
-      "prosePoster"  ## I.textSplice uName
-      "anonLinkFlag" ## I.textSplice "userLink"
+      "prosePoster"            ## I.textSplice uName
+      "prosePosterDestination" ## I.textSplice $ T.append "/user/" uName
   case u of
     Nothing -> do
       "upBtnUrl"   ## I.textSplice "/login"

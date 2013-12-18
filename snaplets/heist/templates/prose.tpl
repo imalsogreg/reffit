@@ -24,7 +24,7 @@
 
 <div class="prose-poster">
   <p>
-    <a href="/user/${prosePoster}" class="${anonLinkFlag}">
+    <a href="${prosePosterDestination}">
       <prosePoster/>
     </a>
   </p>

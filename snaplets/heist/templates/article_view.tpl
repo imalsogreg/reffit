@@ -60,11 +60,13 @@
       <h2>
 	<docTitle/>
 	<ifLoggedIn>
-	  <span> 
-	    <a href="/${pinUrl}/${docId}">
-	      <button class="btn btn-primary">(: Pinboard)</button>
-	    </a>
-	  </span>
+	  <pinBoardBtn>
+	    <span> 
+	      <a href="/${pinUrl}/${docId}">
+		<button class="btn btn-primary"><pinboardBtnTxt/></button>
+	      </a>
+	    </span>
+	  </pinBoardBtn>
 	</ifLoggedIn>
       </h2>
     </div>
