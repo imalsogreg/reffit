@@ -127,7 +127,7 @@ handleAdd1000 = do
 routes :: [(ByteString, Handler App App ())]
 routes = [
     ("/", handleIndex)
-    , ("/search/:params", handleIndex)
+    , ("search/:params",handleIndex)
     , ("login",         with auth handleLoginSubmit)
     , ("logout",        with auth handleLogout)
     , ("new_user",      with auth handleNewUser) 
