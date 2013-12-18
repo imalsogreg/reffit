@@ -9,22 +9,32 @@ module PaperRoll (
 import Reffit.Types
 import Reffit.AcidTypes
 import Reffit.Scores
+import Reffit.Search
 import Reffit.FieldTag
 
 import qualified Data.List as L
 import Snap.Snaplet (Handler)
+import Snap.Core (getParam, writeBS)
 import Snap.Snaplet.AcidState (query)
 import Snap.Snaplet.Heist
 import Application
 import Heist
 import qualified Heist.Interpreted as I
 import qualified Data.Text as T
+import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Map as Map
   
 handlePaperRoll :: Handler App App ()
 handlePaperRoll = do
-  docs <- query QueryAllDocs                
-  renderWithSplices "paper_roll" (allPaperRollSplices (Map.elems docs)) 
+  docs      <- query QueryAllDocs
+  searchFor <- getParam "searchquery"
+  let docsToShow = case searchFor of
+        Nothing         -> Map.elems docs
+        Just searchTerm -> searchDocs 1 docs $ decodeUtf8 searchTerm
+  case searchFor of
+    Nothing -> writeBS "paper_roll"
+    _ -> render "paper_roll_found_search"
+      --renderWithSplices "paper_roll" (allPaperRollSplices docsToShow) 
 
 allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do
@@ -35,7 +45,7 @@ renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
 
 splicesFromDocument :: Document -> Splices (SnapletISplice App) 
 splicesFromDocument doc = do
-  let (novScore, rigScore, coolScore) = documentScores doc 
+  let (novScore, rigScore, coolScore) = documentDimScores doc 
   "idNum"               ## I.textSplice (T.pack . show $ docId doc)
   "paper_title"         ## I.textSplice (docTitle doc)
   "paper_authors"       ## I.textSplice (T.intercalate ", " $ docAuthors doc)  

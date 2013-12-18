@@ -77,6 +77,19 @@ insertTag (x:xs) tags = case L.elemIndex x (topLabels tags) of
     let (preList,((Node _ tags'):postList)) = splitAt ix tags in
     preList ++ [Node x (insertTag xs tags')] ++ postList 
 
+-- |Determine whether a reference path 'includes' a query path
+--  e.g. a document with "Biology"."Neuroscience" should be
+--  included in a query for "Biology"
+tagIncludes :: TagPath -> TagPath -> Bool
+_  `tagIncludes` []     = True                     -- Query is general
+[] `tagIncludes` (_:_)  = False                    -- Query is specific
+referenceTag `tagIncludes` queryTag
+  | length queryTag > length referenceTag = False  -- Query is specific
+(refTag:rps) `tagIncludes` (qurTag:qrs)
+  | refTag == qurTag  = rps `tagIncludes` qrs
+  | otherwise          = False
+
+
 showPath :: TagPath -> String
 showPath tp = T.unpack $ T.intercalate "." tp
 

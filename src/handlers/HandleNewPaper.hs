@@ -36,6 +36,7 @@ import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist
 import           GHC.Int
 import qualified Data.Tree                    as RT
+import           Data.Time
 
 documentForm :: (Monad m) => User -> [DocClass] -> FieldTags -> Form Text m Document
 documentForm fromUser allDocClasses allFieldTags =
@@ -49,10 +50,12 @@ documentForm fromUser allDocClasses allFieldTags =
   <*> "docTags"  .: validate (validateTags allFieldTags) (text Nothing) 
   <*> pure Map.empty
   <*> pure Map.empty
+  <*> pure tempTime
     where
       posterOpts = [(Just (userName fromUser),userName fromUser)
                    ,(Nothing,"Anonymous")]  
-      classOpts = [(dc,docClassName dc) | dc <- allDocClasses]
+      classOpts  = [(dc,docClassName dc) | dc <- allDocClasses]
+      tempTime   = UTCTime (ModifiedJulianDay 0) (fromIntegral (0::Int))
 
 documentView :: View H.Html -> H.Html
 documentView view = do

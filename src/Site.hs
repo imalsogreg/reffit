@@ -57,6 +57,7 @@ import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
 import           Data.Text.Encoding (decodeUtf8)
 import           GHC.Int  -- TODO for add1000 test
+import           Data.Time
 ------------------------------------------------------------------------------
 import           Application
 
@@ -125,29 +126,30 @@ handleAdd1000 = do
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes = [
-    ("/", handleIndex)   
-  , ("login",         with auth handleLoginSubmit)
-  , ("logout",        with auth handleLogout)
-  , ("new_user",      with auth handleNewUser) 
-  , ("new_article",   with auth handleNewArticle)
-  , ("new_summary/:paperid", with auth handleNewSummary)
-  , ("new_praise/:paperid", with auth (handleNewCritique UpVote))
-  , ("new_criticism/:paperid", with auth (handleNewCritique DownVote))
-  , ("view_article/:paperid", with auth handleViewPaper) 
-  , ("cast_summary_upvote/:idParam",    with auth $ handleSummaryVote  UpVote)
-  , ("cast_summary_downvote/:idParam",  with auth $ handleSummaryVote  DownVote)
-  , ("cast_critique_upvote/:idParam",  with auth $ handleCritiqueVote UpVote)
-  , ("cast_critique_downvote/:idParam",with auth $ handleCritiqueVote DownVote)
-  , ("user/:username", with auth $ handleViewUser)
+    ("/", handleIndex)
+    , ("/search/:params", handleIndex)
+    , ("login",         with auth handleLoginSubmit)
+    , ("logout",        with auth handleLogout)
+    , ("new_user",      with auth handleNewUser) 
+    , ("new_article",   with auth handleNewArticle)
+    , ("new_summary/:paperid", with auth handleNewSummary)
+    , ("new_praise/:paperid", with auth (handleNewCritique UpVote))
+    , ("new_criticism/:paperid", with auth (handleNewCritique DownVote))
+    , ("view_article/:paperid", with auth handleViewPaper) 
+    , ("cast_summary_upvote/:idParam",    with auth $ handleSummaryVote  UpVote)
+    , ("cast_summary_downvote/:idParam",  with auth $ handleSummaryVote  DownVote)
+    , ("cast_critique_upvote/:idParam",  with auth $ handleCritiqueVote UpVote)
+    , ("cast_critique_downvote/:idParam",with auth $ handleCritiqueVote DownVote)
+    , ("user/:username", with auth $ handleViewUser)
     
-  , ("add_1000",      handleAdd1000) -- TODO just testing
-  , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
-  , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
-  , ("/dump_state", handleDumpState)
-  , ("/test", writeText "test")
-  , ("/new_doc_class", with auth handleNewDocClass)
-  , ("/static", serveDirectory "static") 
-  ]
+    , ("add_1000",      handleAdd1000) -- TODO just testing
+    , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
+    , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
+    , ("/dump_state", handleDumpState)
+    , ("/test", writeText "test")
+    , ("/new_doc_class", with auth handleNewDocClass)
+    , ("/static", serveDirectory "static") 
+    ]
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
@@ -182,15 +184,18 @@ stresstestReset :: PersistentState
 stresstestReset = PersistentState docs Map.empty [DocClass "Paper"] testTags
   where
     docs = Map.fromList [(i, Document Nothing i "The Earth is Round (p < .05)" []
-              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty)
+              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty (testDate (fromIntegral i)))
            | i <- [1..1000]] 
              
 testDoc :: Int32 -> Document
 testDoc i = Document Nothing i "The Earth is Round (p < .05)" ["Jacob Cohen","Hans Ruthorford Jr."]
-            "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] (Map.fromList [(0,testSummary)]) (Map.fromList [(0,testPraise)]) 
+            "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] (Map.fromList [(0,testSummary)]) (Map.fromList [(0,testPraise)]) (testDate 0)
 
 testUsers = [ User "Arte Artimus" ["Santa","Rudolph"] [] [] ]
 
 testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Coolness  UpVote [UpVote,DownVote,UpVote]
 
 testSummary = Summary Nothing "This paper talks about why H0 hypothesist testing isn't appropriate for describing effect size." [UpVote,UpVote]
+
+testDate :: Integer -> UTCTime
+testDate d = UTCTime (ModifiedJulianDay d) (fromIntegral (0::Int)) 

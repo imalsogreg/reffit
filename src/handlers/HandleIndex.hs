@@ -19,6 +19,6 @@ import qualified Data.Text as T
 import qualified Data.Map as Map 
 
 handleIndex :: Handler App App ()
-handleIndex = do
-  docs <- query QueryAllDocs             
-  renderWithSplices "_index" (allPaperRollSplices (Map.elems docs)) 
+handleIndex = handlePaperRoll
+--  docs <- query QueryAllDocs             
+--  renderWithSplices "_index" (allPaperRollSplices (Map.elems docs)) 

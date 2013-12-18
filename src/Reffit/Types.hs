@@ -12,6 +12,7 @@ import           GHC.Generics
 import           Data.Typeable
 import           Reffit.DataVersion
 import           Reffit.FieldTag
+import           Data.Time.Clock
 import Data.SafeCopy (base, deriveSafeCopy)
 
 
@@ -76,6 +77,7 @@ data Document = Document { docUploader  :: Maybe UserName
                          , docFieldTags :: [TagPath]
                          , docSummaries :: Map.Map SummaryId  Summary
                          , docCritiques :: Map.Map CritiqueId Critique
+                         , docPostTime  :: UTCTime
                          } deriving (Show, Generic, Typeable)
 deriveSafeCopy scv 'base ''Document
 
