@@ -34,6 +34,7 @@ import           HandleViewUser
 
 import           Control.Applicative
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import           Data.ByteString (ByteString)
 import qualified Data.Text as T
 import           Snap (gets)
@@ -140,6 +141,10 @@ routes = [
     , ("cast_critique_upvote/:idParam",  with auth $ handleCritiqueVote UpVote)
     , ("cast_critique_downvote/:idParam",with auth $ handleCritiqueVote DownVote)
     , ("user/:username", with auth $ handleViewUser)
+    , ("follow/:username", with auth   $ handleFollow True)
+    , ("unfollow/:username", with auth $ handleFollow False)
+    , ("pin/:paperid",   with auth $ handlePin True) 
+    , ("unpin/:paperid", with auth $ handlePin False)
     , ("/", handleIndex)
     , ("add_1000",      handleAdd1000) -- TODO just testing
     , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
@@ -190,7 +195,7 @@ testDoc :: Int32 -> Document
 testDoc i = Document Nothing i "The Earth is Round (p < .05)" ["Jacob Cohen","Hans Ruthorford Jr."]
             "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] (Map.fromList [(0,testSummary)]) (Map.fromList [(0,testPraise)]) (testDate 0)
 
-testUsers = [ User "Arte Artimus" ["Santa","Rudolph"] [] [] ]
+testUsers = [ User "Arte Artimus" (Set.fromList ["Santa","Rudolph"]) Set.empty [] Set.empty ]
 
 testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Coolness  UpVote [UpVote,DownVote,UpVote]
 

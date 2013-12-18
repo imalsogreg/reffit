@@ -28,6 +28,7 @@ import Data.Text.Encoding (decodeUtf8)
 import GHC.Generics
 import Data.Typeable (Typeable)
 import Data.List
+import qualified Data.Set as Set
 import GHC.Int
 import Data.Hashable
 import qualified Data.Map as Map
@@ -150,9 +151,35 @@ addUser uName = do
   allUsers <- gets _users
   case Map.lookup uName allUsers of
     Nothing ->
-      modify (over users ( Map.insert uName $ User uName [] [] []))
+      modify (over users ( Map.insert uName $ User uName Set.empty Set.empty [] Set.empty))
     Just _ -> do  -- This checks and refuses to overwrite, but silently
       modify (over users id)
+
+userFollow :: User -> User -> Update PersistentState ()
+userFollow a b  = do
+  let a' = a { userFollowing  = Set.insert (userName b) (userFollowing a)  }
+      b' = b { userFollowedBy = Set.insert (userName a) (userFollowedBy b) }
+  modify (over users $
+          \u0 ->  Map.insert (userName a') a' $
+                  Map.insert (userName b') b' u0)
+
+userUnfollow :: User -> User -> Update PersistentState ()
+userUnfollow a b = do
+  let a' = a { userFollowing  = Set.delete (userName b) (userFollowing a) }
+      b' = b { userFollowedBy = Set.delete (userName a) (userFollowedBy b)}
+  modify (over users $
+          \u0 -> Map.insert (userName a') a' $
+                 Map.insert (userName b') b' u0) 
+
+pin :: User -> DocumentId -> Bool -> Update PersistentState ()
+pin user dId doPin = do
+  let board' board0 = case doPin of
+        True  -> Set.insert dId board0
+        False -> Set.delete dId board0
+  modify (over users $
+          \u0 -> Map.insert (userName user)
+                 (user { userPinboard = board' (userPinboard user) })
+                 u0)
 
 queryAllDocClasses :: Query PersistentState [DocClass]
 queryAllDocClasses = asks _docClasses
@@ -167,9 +194,11 @@ queryAllFieldTags = asks _fieldTags
 addFieldTag :: TagPath -> Update PersistentState ()
 addFieldTag tp = modify (over fieldTags (insertTag tp))
 
-makeAcidic ''PersistentState ['addDocument, 'queryAllDocs
-                             , 'queryAllUsers, 'addUser
+makeAcidic ''PersistentState ['addDocument,         'queryAllDocs
+                             , 'queryAllUsers,      'addUser
+                             , 'userFollow,         'userUnfollow
+                             , 'pin
                              , 'queryAllDocClasses, 'addDocClass
                              , 'queryAllFieldTags,  'addFieldTag
-                             , 'addSummary, 'addCritique
-                             , 'castSummaryVote, 'castCritiqueVote]
+                             , 'addSummary,         'addCritique
+                             , 'castSummaryVote,    'castCritiqueVote]

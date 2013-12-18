@@ -57,7 +57,16 @@
 </script>
 
     <div class="article_view_header">
-      Article Top (Title)
+      <h2>
+	<docTitle/>
+	<ifLoggedIn>
+	  <span> 
+	    <a href="/${pinUrl}/${docId}">
+	      <button class="btn btn-primary">(: Pinboard)</button>
+	    </a>
+	  </span>
+	</ifLoggedIn>
+      </h2>
     </div>
 
   <div class="row">

@@ -7,13 +7,11 @@
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
-    <a class="navbar-brand">Reffit</a>
+    <a class="navbar-brand" href="/">Reffit</a>
   </div>
 
   <div class="collapse navbar-collapse" id="navbar-collapse-1">
     <ul class="nav navbar-nav">
-      <li><a href="/" class="${homeIsActive}">Home
-      </a></li>
       <ifLoggedIn>
 	<li><a href="/new_article" class="${newArticleIsActive}">New Article
 	</a></li>

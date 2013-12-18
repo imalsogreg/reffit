@@ -4,6 +4,7 @@
     <script src="/static/media/js/jquery-1.10.2.js"></script>
     <link rel="stylesheet" type="text/css" href="/static/media/css/screen.css"/>    
     <link rel="stylesheet" type="text/css" href="/static/media/css/prose.css"/>    
+    <script src="/static/media/bootstrap/dist/js/bootstrap.js"/>
     <link rel="stylesheet" type="text/css" href="/static/media/bootstrap/dist/css/bootstrap.css"/>
     <link rel="icon" type="image/png" href="/static/media/img/flavCircle.png"/>
 

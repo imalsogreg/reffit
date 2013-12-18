@@ -14,6 +14,7 @@ import           Reffit.DataVersion
 import           Reffit.FieldTag
 import           Data.Time.Clock
 import Data.SafeCopy (base, deriveSafeCopy)
+import qualified Data.Set as Set
 
 
 data DocClass = DocClass { docClassName :: Text
@@ -38,9 +39,10 @@ data UserEvent = WroteCritique   DocumentId CritiqueId
 deriveSafeCopy scv 'base ''UserEvent
 
 data User = User { userName       :: UserName
-                 , userFollowing  :: [UserName]
-                 , userFollowedBy :: [UserName]
+                 , userFollowing  :: Set.Set UserName
+                 , userFollowedBy :: Set.Set UserName
                  , userHistory    :: [UserEvent]
+                 , userPinboard   :: Set.Set DocumentId
                  } deriving (Show, Eq, Ord, Generic,Typeable)
 deriveSafeCopy scv 'base ''User
 

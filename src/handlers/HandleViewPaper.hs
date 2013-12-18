@@ -19,6 +19,7 @@ import Application
 import Heist
 import qualified Heist.Interpreted as I
 import qualified Data.Text as T
+import qualified Data.Set as Set
 import Data.Text.Encoding (decodeUtf8)
 import GHC.Int
 import Control.Lens
@@ -98,11 +99,17 @@ allArticleViewSplices u doc = do
   "nCriticisms"             ## I.textSplice (T.pack . show $ nCritique DownVote doc)
   "docType"                 ## I.textSplice (docClassName . docClass $ doc)  
   "docId"                   ## I.textSplice (T.pack . show $ docId doc)
+  "docTitle"                ## I.textSplice (docTitle doc)
+  "pinUrl"                  ## I.textSplice (pinUrl u)
   (allSummarySplices u doc . Map.toList . docSummaries $ doc)
   (allCritiqueSplices UpVote   "articlePraise"     u doc . Map.toList . docCritiques $ doc )
   (allCritiqueSplices DownVote "articleCriticisms" u doc . Map.toList . docCritiques $ doc )
- 
-
+   where
+     pinUrl Nothing = ""
+     pinUrl (Just user)
+          | Set.member (docId doc) (userPinboard user) = "unpin"
+          | otherwise                                  = "pin"
+                         
 allSummarySplices :: Maybe User -> Document -> [(SummaryId,Summary)] -> Splices (SnapletISplice App)
 allSummarySplices u doc ss = "articleSummaries" ## renderSummaries u doc ss
 
@@ -237,48 +244,3 @@ userCritiqueRelation u doc cId =
     [VotedOnCritique _ _ (Just UpVote)]   -> Just UpVoted
     [VotedOnCritique _ _ (Just DownVote)] -> Just DownVoted
     _ -> Nothing -- <- multiple votes on the same critique!!
-
-{-
-summariesToProseData :: Map.Map SummaryId Summary -> [(T.Text,Int,Int)]
-summariesToProseData ss =
-  Map.elems $ Map.map
-  (\s -> let (u,d) = summaryUpsDowns s in (summaryProse s, u, d)) ss
-
-compareProseData :: (T.Text,Int,Int) -> (T.Text,Int,Int) -> Ordering
-compareProseData (_,aUp,aDown) (_,bUp,bDown) = (aUp - aDown) `compare` (bUp - bDown)
-
--- analogous to allPaperRollSplices
-allProseSplices :: T.Text -> [(T.Text, Int, Int)] -> Splices (SnapletISplice App)
-allProseSplices tag ps = tag ## (renderProses ps')
-  where ps' = List.sortBy compareProseData ps
-
-
--- analogous to renderPaperRollPapers
-renderProses :: [(T.Text,Int,Int)] -> SnapletISplice App
-renderProses = I.mapSplices $ I.runChildrenWith . splicesFromProse 
-
--- this is analogous to splicesFromDoc
-splicesFromProse :: Monad n => (T.Text,Int,Int) -> Splices (I.Splice n) 
-splicesFromProse (t,u,d) =  do
-  "upCount"     ## I.textSplice (T.pack . show $ u)
-  "downCount"   ## I.textSplice (T.pack . show $ d)
-  "summaryText" ## I.textSplice t
-
-
-critiquesToProseData :: UpDownVote -> Map.Map CritiqueId Critique -> [(T.Text,Int,Int)]
-critiquesToProseData targetV cs =
-  let targets = filter ((==targetV).critiqueVal) (Map.elems cs) in  
-  map (\c -> let (u,d) = critiqueUpsDowns c in (critiqueProse c, u, d)) targets 
-
-compareSummaryPopularity :: Summary -> Summary -> Ordering
-compareSummaryPopularity a b = (aUp - aDown) `compare` (bUp - bDown)
-  where ((aUp,aDown),(bUp,bDown)) = (summaryUpsDowns a, summaryUpsDowns b)
-
-compareCritiquePopularity :: Critique -> Critique -> Ordering
-compareCritiquePopularity a b = (aUp - aDown) `compare` (bUp - bDown)
-  where
-    ((aUp,aDown),(bUp,bDown)) = (critiqueUpsDowns a, critiqueUpsDowns b)
-
-
--}
-
