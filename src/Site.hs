@@ -7,7 +7,7 @@
 -- site. The 'app' function is the initializer that combines everything
 -- together and is exported by this module.
 module Site
-  ( app
+  ( app, testDoc -- TODO debugging
   ) where
 
 ------------------------------------------------------------------------------
@@ -175,7 +175,7 @@ factoryReset :: PersistentState
 factoryReset = PersistentState Map.empty Map.empty [] []
 
 convenienceReset :: PersistentState
-convenienceReset = PersistentState Map.empty Map.empty [DocClass "PaperA", DocClass "Preprint"
+convenienceReset = PersistentState Map.empty Map.empty [DocClass "Paper", DocClass "Preprint"
                                                        ,DocClass "Blog Post", DocClass "Video"
                                                        ,DocClass "Book"] testTags 
 

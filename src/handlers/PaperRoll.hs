@@ -32,14 +32,11 @@ handlePaperRoll = method GET handleNotGet
       do
         docs      <- query QueryAllDocs
         searchFor <- getParams
-        let docsToShow = case Map.lookup "searchquery" searchFor of
+        let docsToShow = case Map.lookup "q" searchFor of
               Nothing         -> Map.elems docs
-              Just searchTerms -> searchDocs 1 docs $ decodeUtf8 (head searchTerms)
---        case Map.lookup "searchquery" searchFor of
---          Nothing -> renderWithSplices "paper_roll" (allPaperRollSplices docsToShow)
---          _ -> renderWithSplices "paper_roll" (allP
+              Just searchTerms -> searchDocs 10 docs $ decodeUtf8 (head searchTerms)
         renderWithSplices "paper_roll" (allPaperRollSplices docsToShow)
-        writeText . T.pack . show $ docs
+
 
 allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do

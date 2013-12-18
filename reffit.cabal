@@ -36,6 +36,7 @@ Executable reffit
     digestive-functors-blaze,
     transformers,
     safe,
+    text-icu,
     bytestring                >= 0.9.1   && < 0.11,
     heist                     >= 0.13    && < 0.14,
     snaplet-acid-state        >= 0.2.5   && < 0.3,
@@ -57,6 +58,12 @@ Executable reffit
     build-depends:
       base                      >= 4.4      && < 5,
       lens                      >= 3.7.6    && < 3.11
+
+  extra-libraries: icuuc
+  if os(mingw32)
+    extra-libraries: icuin icudt
+  else
+    extra-libraries: icui18n icudata
 
   if flag(development)
     build-depends:
