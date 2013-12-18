@@ -126,8 +126,7 @@ handleAdd1000 = do
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes = [
-    ("/", handleIndex)
-    , ("search/:params",handleIndex)
+      ("search",     handlePaperRoll)
     , ("login",         with auth handleLoginSubmit)
     , ("logout",        with auth handleLogout)
     , ("new_user",      with auth handleNewUser) 
@@ -141,7 +140,7 @@ routes = [
     , ("cast_critique_upvote/:idParam",  with auth $ handleCritiqueVote UpVote)
     , ("cast_critique_downvote/:idParam",with auth $ handleCritiqueVote DownVote)
     , ("user/:username", with auth $ handleViewUser)
-    
+    , ("/", handleIndex)
     , ("add_1000",      handleAdd1000) -- TODO just testing
     , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
     , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)

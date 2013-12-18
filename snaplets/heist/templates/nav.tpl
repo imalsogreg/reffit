@@ -19,7 +19,7 @@
 	</a></li>
       </ifLoggedIn>
     </ul>
-    <form class="navbar-form navbar-left" role="search" action="/search" method="GET">
+    <form class="navbar-form navbar-left" role="search" action="/search/" method="GET">
       <div class="form-group">
 	<input type="text" class="form-control" placeholder="Search" name="searchquery"/>
       </div>
