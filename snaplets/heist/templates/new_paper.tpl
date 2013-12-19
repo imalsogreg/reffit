@@ -3,60 +3,65 @@
   <div class="form-group">
     
     <h2>Submit a Paper</h2>
+
+    <ul class="nav nav-tabs">
+      <li><a href="#manual" data-toggle="tab">Manual</a></li>
+      <li><a href="#bydoi"  data-toggle="tab">By DOI</a></li>
+    </ul>
     
-    <dfForm class="form-horizontal" role="form-group">
-      
-      <dfChildErrorList ref=""/>
-      
-      <div class="form-group">
-        <label ref="poster" for="poster" class="col-sm-2 control-label">Post as</label>
-        <div class="col-sm-10">
-          <dfInputSelect ref="poster" class="form-control"/>
-        </div>
+    <div class="tab-content">
+
+      <div class="tab-pane" id="manual">
+	<dfForm class="form-horizontal" role="form-group">
+	  <dfChildErrorList ref=""/>
+	  <div class="form-group">
+            <label ref="poster" for="poster" class="col-sm-2 control-label">Post as</label>
+            <div class="col-sm-10">
+              <dfInputSelect ref="poster" class="form-control"/>
+            </div>
+	  </div>
+	  <div class="form-group">
+            <label ref="title" for="title" class="col-sm-2 control-label">Title</label>
+            <div class="col-sm-10">
+              <dfInputText ref="title" size="50" class="form-control" placeholder="The Earth is Round (p < .05)"/>
+            </div>
+	  </div>
+	  <div class="form-group">
+            <label ref="authors" for="authors" class="col-sm-2 control-label">Authors</label>
+            <div class="col-sm-10">
+              <dfInputText ref="authors" size="50" class="form-control" placeholder="Jacob Cohen"/>
+            </div>
+	  </div>
+	  <div class="form-group">
+            <label ref="link" for="link" class="col-sm-2 control-label">Link to Article</label>
+            <div class="col-sm-10">
+              <dfInputText ref="link" size="50" class="form-control" placeholder="http://www.unt.edu/rss/class/mike/5030/articles/Cohen1994.pdf‎"/>
+            </div>
+	  </div>
+	  <div class="form-group">
+            <label ref="docClass" for="docClass" class="col-sm-2 control-label">Article Type</label>
+            <div class="col-sm-10">
+              <dfInputSelect ref="docClass" class="form-control"/>
+            </div>
+	  </div>
+	  <div class="form-group">
+            <label ref="docTags" for="docTags" class="col-sm-2 control-label">Field Tags</label>
+            <div class="col-sm-10">
+              <dfInputText ref="docTags" size="80" class="form-control" placeholder="Math.Statistics, Philosophy.PhilosophyOfScience"/>
+            </div>
+	  </div>
+	  <div class="form-group">
+            <div class="col-sm-offset-2 col-sm-10">
+              <dfInputSubmit value="Enter" class="btn btn-default"/>
+            </div>
+	  </div>
+	</dfForm>
       </div>
-      
-      <div class="form-group">
-        <label ref="title" for="title" class="col-sm-2 control-label">Title</label>
-        <div class="col-sm-10">
-        <dfInputText ref="title" size="50" class="form-control" placeholder="The Earth is Round (p < .05)"/>
-        </div>
+
+      <div class="tab-pane" id="bydoi">
+	
       </div>
-      
-      <div class="form-group">
-        <label ref="authors" for="authors" class="col-sm-2 control-label">Authors</label>
-        <div class="col-sm-10">
-          <dfInputText ref="authors" size="50" class="form-control" placeholder="Jacob Cohen"/>
-        </div>
-      </div>
-        
-      <div class="form-group">
-        <label ref="link" for="link" class="col-sm-2 control-label">Link to Article</label>
-        <div class="col-sm-10">
-          <dfInputText ref="link" size="50" class="form-control" placeholder="http://www.unt.edu/rss/class/mike/5030/articles/Cohen1994.pdf‎"/>
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <label ref="docClass" for="docClass" class="col-sm-2 control-label">Article Type</label>
-        <div class="col-sm-10">
-          <dfInputSelect ref="docClass" class="form-control"/>
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <label ref="docTags" for="docTags" class="col-sm-2 control-label">Field Tags</label>
-        <div class="col-sm-10">
-          <dfInputText ref="docTags" size="80" class="form-control" placeholder="Math.Statistics, Philosophy.PhilosophyOfScience"/>
-        </div>
-      </div>
-      
-      <div class="form-group">
-        <div class="col-sm-offset-2 col-sm-10">
-          <dfInputSubmit value="Enter" class="btn btn-default"/>
-        </div>
-      </div>
-      
-    </dfForm>
+    </div> <!-- Tab panes -->
     
   </div>
   
