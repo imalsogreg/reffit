@@ -15,6 +15,7 @@ module Site
 import           Reffit.Types
 import           Reffit.AcidTypes
 import           Reffit.FieldTag
+import           Reffit.CrossRef
 
 import           Control.Lens (view)
 import           Snap.Snaplet.AcidState (Update, Query, Acid,

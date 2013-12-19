@@ -18,14 +18,17 @@ apiUrl = "http://dx.doi.org/"
 
 
 jsonFromDOI doi = do
-  (_,rsp) <- browse $ do
+  (_,rsp) <- Network.Browser.browse $ do
     setAllowRedirects True
-    let r  = getRequest $ T.unpack apiUrl ++ doi
+    let r  = H.getRequest $ T.unpack apiUrl ++ doi
         r' = H.setHeaders r
              [H.Header H.HdrAccept "application/citeproc+json"]
     request $ r'
-  fmap (take 100) (H.rspBody rsp)
-  
+--    request $ H.getRequest "http://www.haskell.org" 
+  return (H.rspBody rsp) 
+
+
+
 -- TODO maybe has to be method GET?
 handleAddPaperByDOI :: Handler App (AuthManager App) ()
 handleAddPaperByDOI = do
