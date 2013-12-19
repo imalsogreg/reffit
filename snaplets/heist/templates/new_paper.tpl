@@ -4,14 +4,27 @@
     
     <h2>Submit a Paper</h2>
 
-    <ul class="nav nav-tabs">
-      <li><a href="#manual" data-toggle="tab">Manual</a></li>
-      <li><a href="#bydoi"  data-toggle="tab">By DOI</a></li>
-    </ul>
-    
-    <div class="tab-content">
 
-      <div class="tab-pane" id="manual">
+	<div class="row form-horizontal">
+	    <label ref="doi" for="doi" class="col-sm-2 control-label">DOI</label>
+
+	    <div class="col-sm-8">
+	      <input type="text" size="20" class="form-control doiText" placeholder="10.1037/0003-066X.49.12.997"/>
+	    </div>
+
+	    <div class="col-sm-2">
+	      <button class="btn btn-default form-control doiButton">Apply</button>
+	    </div>
+	</div>
+	<br/>
+
+	<div class="alert alert-danger doiError" style="display:none;">
+	  <p>There was a problem with the DOI search.</p>
+	</div>
+	<div class="alert alert-success doiSuccess" style="display:none;">
+	  <p>Found your paper</p>
+	</div>
+
 	<dfForm class="form-horizontal" role="form-group">
 	  <dfChildErrorList ref=""/>
 	  <div class="form-group">
@@ -56,24 +69,67 @@
             </div>
 	  </div>
 	</dfForm>
-      </div>
+ 
 
-      <div class="tab-pane" id="bydoi">
+ 
+
+ 
+	<a class="testButton">Test</a> <input type="text" size="50" class="testText"/>
 	
-      </div>
-    </div> <!-- Tab panes -->
+
     
   </div>
+
+  <button class="toggleFieldTags btn btn-default">Available Field Tags</button>
+  <p class="field_tags"><fieldTags/></p>
   
   <script>
+
+  function opensearch(data) { 
+    if (data && typeof data === 'object'){
+      console.log( "data is ok." );
+      $(".doiSuccess").show();
+      return 0;
+    };
+    $(".doiError").show();
+  };
+
   $(document).ready(function(){
+
     $(".toggleFieldTags").click(function(){
       $(".field_tags").toggle();
     });
+
+    $(".testButton").click(function(){
+      $(".testText").val("Hi");
+    });
+
+    var r = $(".doiButton").click(function(){
+
+      $.ajax({
+
+        crossDomain: true,
+
+
+        dataType: 'jsonp',
+        url: "http://nurture.nature.com/cgi-bin/opensearch?db=crossref&out=jsonp&q=" + "10.1159/000072442",
+
+
+        success: function(data){
+           console.log( "Success" );
+        },
+        failure: function(data){
+           console.log( "Failure" );
+        }
+
+      });
+
+    });
+
   });
+
+
   </script>
 
-  <button class="btn btn-default">Available Field Tags</button>
-  <p class="field_tags"><fieldTags/></p>
 
 </div>
