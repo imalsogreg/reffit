@@ -7,7 +7,8 @@ import Reffit.AcidTypes
 import PaperRoll
 import Reffit.Sort
 
-import Text.Blaze.Html
+import Text.Blaze.Html5
+import Text.Blaze.Html5.Attributes
 import Safe
 import Control.Applicative ((<$>),(<*>),pure)
 import Control.Monad.Trans
@@ -34,7 +35,7 @@ import Data.Maybe
 
 userPinboardDocs :: Map.Map DocumentId Document -> User -> [Document]
 userPinboardDocs docs =
-  catMaybes . map (\dId -> Map.lookup dId docs) . Set.toList . userPinboard
+  catMaybes . Prelude.map (\dId -> Map.lookup dId docs) . Set.toList . userPinboard
 
 handleFollow :: Bool -> Handler App (AuthManager App) ()
 handleFollow doFollow = do
@@ -88,7 +89,7 @@ profileSplices t cUser' profileUser docs = do
   "userName"         ## I.textSplice $ userName profileUser
   "followBtnText" ## I.textSplice followBtnText
   "followBtnLink" ## I.textSplice followBtnLink
-  (allEventSplices  t (userHistory profileUser))
+  (allEventSplices  t docs (userHistory profileUser))
   "nPinboard"     ## I.textSplice . T.pack . show . 
     length $ userPinboardDocs docs profileUser
   "nFollowing"    ## I.textSplice . T.pack . show . Set.size . userFollowing
@@ -114,6 +115,15 @@ renderEvents t docs = I.mapSplices $ I.runChildrenWith . splicesFromEvent t docs
 splicesFromEvent :: UTCTime -> Map.Map DocumentId Document 
                     ->UserEvent -> Splices (I.Splice n)
 splicesFromEvent t docs event = case event of
-  (WroteCritique dId _) -> docLink
-  where
-    docLink
+  (WroteCritique dId _) -> toHtml "Hi"
+    where
+      docTitle d = maybe "error" docTitle (Map.lookup (docId d) docs)
+      docLink    = a ! href (T.append "/view_article/" dId) $ docTitle dId 
+      
+dTitleUtil :: DocumentId -> Map.Map DocumentId Document -> T.Text
+dTitleUtil dId docs = maybe "error" docTitle (Map.lookup dId docs)
+
+sTimeUtil :: UTCTime -> DocumentId -> SummaryId -> Map.Map DocumentId Document -> T.Text
+sTimeUtil t dId sId docs = (sayTimeDiff t . summaryPostTime) 
+                           <$> Map.lookup sId 
+                           <$> (Map.lookup dId docs)
