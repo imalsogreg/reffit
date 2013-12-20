@@ -22,9 +22,11 @@ import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Auth
 import           Control.Applicative
 import           Data.Monoid
+import           Control.Monad.Trans
 import qualified Data.Map                     as Map
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
+import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)
 import           Text.Digestive
 import           Text.Digestive.Blaze.Html5
@@ -36,14 +38,15 @@ import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist  
 import qualified Data.ByteString.Char8        as BS
 
-newCritiqueForm :: (Monad m) => User -> UpDownVote -> Form Text m Critique
-newCritiqueForm formUser critValue =
+newCritiqueForm :: (Monad m) => User -> UpDownVote -> UTCTime -> Form Text m Critique
+newCritiqueForm formUser critValue t =
   Critique
   <$> "prose"     .: check "Not a valid critique" (not . T.null) (text Nothing)
   <*> "poster"    .: choice posterOpts Nothing
   <*> "dimension" .: choice dimOpts Nothing
   <*> pure critValue
-  <*> pure [] 
+  <*> pure []
+  <*> pure t
   where 
     posterOpts = [(Just (userName formUser), userName formUser)
                  ,(Nothing,"Anonymous")]
@@ -61,7 +64,7 @@ newCritiqueView view = do
   errorList "prose" view
   label     "prose" view "Article Critique"
   inputText "prose" view
-  
+   
 handleNewCritique :: UpDownVote -> Handler App (AuthManager App) ()  
 handleNewCritique critVal = do 
   userMap   <- query QueryAllUsers
@@ -69,12 +72,13 @@ handleNewCritique critVal = do
   ft        <- query QueryAllFieldTags
   pId'      <- getParam "paperid"
   authUser' <- currentUser
+  t         <- liftIO $ getCurrentTime
   case readMay . T.unpack . decodeUtf8 <$> pId' of  
     Nothing -> writeText "paperid error" --TODO proper error message
     Just (Just pId) ->
       case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
         Just (Just user) -> do
-          (vw,rs) <- runForm "newCritiqueForm" $ newCritiqueForm user critVal
+          (vw,rs) <- runForm "newCritiqueForm" $ newCritiqueForm user critVal t
           case rs of 
             Just critique -> do
               sId <- update $ AddCritique pId critique

@@ -8,9 +8,11 @@ import PaperRoll
 
 import Safe
 import Control.Applicative ((<$>),(<*>),pure)
+import Control.Monad.Trans
 import qualified Data.List as List
 import qualified Data.Map as Map
 import qualified Data.Set as Set
+import Data.Time
 import Snap.Core (getParam, redirect, writeBS)
 import Snap.Types (writeText)
 import Snap.Snaplet (Handler)
@@ -37,27 +39,28 @@ handleFollow doFollow = do
   aUser <- currentUser
   us <- query QueryAllUsers
   fUser' <- getParam "username"
+  t      <- liftIO $ getCurrentTime
   case join $ ((\uName -> Map.lookup uName us) . userLogin) <$> aUser of
     Nothing -> redirect "#"
     Just thisUser -> case join $ ((\uName -> Map.lookup uName us) . decodeUtf8) <$> fUser' of
       Nothing -> writeBS "username Param error" -- TODO error page
       Just fUser -> let toPath = encodeUtf8 $ T.append "/user/" (userName fUser) in
         case doFollow of
-             True  -> update (UserFollow   thisUser fUser) >>= \_ -> redirect toPath
-             False -> update (UserUnfollow thisUser fUser) >>= \_ -> redirect toPath
-
+             True  -> update (UserFollow   thisUser fUser t) >>= \_ -> redirect toPath
+             False -> update (UserUnfollow thisUser fUser  ) >>= \_ -> redirect toPath
 
 handlePin :: Bool -> Handler App (AuthManager App) ()
 handlePin doPin = do
   aUser <- currentUser
   us <- query QueryAllUsers
   dId'  <- getParam "paperid"
+  t     <- liftIO $ getCurrentTime
   case join $ ((\uName -> Map.lookup uName us) . userLogin) <$> aUser of 
     Nothing -> redirect "#"
     Just user -> case join $ (readMay . T.unpack . decodeUtf8) <$> dId' of
       Nothing -> writeBS "Param error" --TODO error page
       Just dId -> do
-        _ <- update $ Pin user dId doPin
+        _ <- update $ Pin user dId doPin t
         redirect . BS.pack $ "/view_article/" ++ (show dId)
     
 handleViewUser :: Handler App (AuthManager App) ()

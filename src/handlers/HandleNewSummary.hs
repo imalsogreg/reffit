@@ -22,9 +22,11 @@ import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Auth
 import           Control.Applicative
 import           Data.Monoid
+import           Control.Monad.Trans
 import qualified Data.Map                     as Map
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
+import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)
 import           Text.Digestive
 import           Text.Digestive.Blaze.Html5
@@ -36,12 +38,13 @@ import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist  
 import qualified Data.ByteString.Char8        as BS
 
-newSummaryForm :: (Monad m) => User -> Form Text m Summary
-newSummaryForm formUser =
+newSummaryForm :: (Monad m) => User -> UTCTime -> Form Text m Summary
+newSummaryForm formUser t =
   Summary
   <$> "poster" .: choice posterOpts Nothing
   <*> "prose"  .: check "Not a valid summary" (not . T.null) (text Nothing)
-  <*> pure [] 
+  <*> pure []
+  <*> pure t
   where 
     posterOpts = [(Just (userName formUser), userName formUser)
                  ,(Nothing,"Anonymous")]
@@ -62,12 +65,13 @@ handleNewSummary = do
   ft        <- query QueryAllFieldTags
   pId'      <- getParam "paperid"
   authUser' <- currentUser
+  t         <- liftIO $ getCurrentTime 
   case readMay . T.unpack . decodeUtf8 <$> pId' of  
     Nothing -> writeText "paperid error" --TODO proper error message
     Just (Just pId) ->
       case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
         Just (Just user) -> do
-          (vw,rs) <- runForm "newSummaryForm" $ newSummaryForm user
+          (vw,rs) <- runForm "newSummaryForm" $ newSummaryForm user t
           case rs of
             Just summary -> do
               sId <- update $ AddSummary pId summary  

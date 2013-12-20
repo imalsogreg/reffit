@@ -227,22 +227,22 @@ data UserProseRelation = UpVoted | DownVoted | AnonVoted | NotVoted
 
 userSummaryRelation :: User -> Document -> SummaryId -> Maybe UserProseRelation
 userSummaryRelation u doc sId =
-  let relevantActivity = [ x | x@(VotedOnSummary dId' sId' _) <- userHistory u
+  let relevantActivity = [ x | x@(VotedOnSummary dId' sId' _ _) <- userHistory u
                              , dId' == docId doc &&  sId == sId']  
   in case relevantActivity of
-    []                                   -> Just NotVoted
-    [VotedOnSummary _ _ Nothing]         -> Just AnonVoted
-    [VotedOnSummary _ _ (Just UpVote)]   -> Just UpVoted
-    [VotedOnSummary _ _ (Just DownVote)] -> Just DownVoted
+    []                                     -> Just NotVoted
+    [VotedOnSummary _ _ Nothing _ ]        -> Just AnonVoted
+    [VotedOnSummary _ _ (Just UpVote) _]   -> Just UpVoted
+    [VotedOnSummary _ _ (Just DownVote) _] -> Just DownVoted
     _ -> Nothing  -- <- is these cases something went wrong w/ the filtering
 
 userCritiqueRelation :: User -> Document -> CritiqueId -> Maybe UserProseRelation
 userCritiqueRelation u doc cId =
-  let relevantActivity = [ x | x@(VotedOnCritique dId' cId' _) <- userHistory u
+  let relevantActivity = [ x | x@(VotedOnCritique dId' cId' _ _) <- userHistory u
                              , dId' == docId doc && cId == cId']
   in case relevantActivity of
-    []                                    -> Just NotVoted
-    [VotedOnCritique _ _ Nothing]         -> Just AnonVoted
-    [VotedOnCritique _ _ (Just UpVote)]   -> Just UpVoted
-    [VotedOnCritique _ _ (Just DownVote)] -> Just DownVoted
+    []                                      -> Just NotVoted
+    [VotedOnCritique _ _ Nothing _]         -> Just AnonVoted
+    [VotedOnCritique _ _ (Just UpVote) _]   -> Just UpVoted
+    [VotedOnCritique _ _ (Just DownVote) _] -> Just DownVoted
     _ -> Nothing -- <- multiple votes on the same critique!!

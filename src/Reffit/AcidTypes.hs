@@ -21,7 +21,8 @@ import Control.Applicative ((<$>),(<*>),pure)
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
 import Data.ByteString (ByteString)
-import Control.Lens (makeLenses, view,over) 
+import Control.Lens (makeLenses, view,over)
+import Data.Time
 import Data.SafeCopy (base, deriveSafeCopy)
 import qualified Data.Text as T hiding (head)
 import Data.Text.Encoding (decodeUtf8)
@@ -66,7 +67,7 @@ addDocument :: Document -> Update PersistentState ()
 addDocument doc = do  -- HandleNewPaper now finds a good Id
   modify (over documents (Map.insert (docId doc) doc))
 
-addSummary :: DocumentId -> Summary 
+addSummary :: DocumentId -> Summary
               -> Update PersistentState (Maybe SummaryId)
 addSummary pId summary = do  
   docs <- gets _documents
@@ -89,12 +90,12 @@ addSummary pId summary = do
           sAll  = [0..]
 
 castSummaryVote :: User -> Bool -> DocumentId -> Document
-                   -> SummaryId -> Summary -> UpDownVote
+                   -> SummaryId -> Summary -> UpDownVote -> UTCTime
                    -> Update PersistentState ()
-castSummaryVote user isAnon dId doc sId summary voteVal = do
+castSummaryVote user isAnon dId doc sId summary voteVal t = do
   modify (over users $ \us' ->
            let vRecord = if isAnon then Nothing else Just voteVal
-               histItem = VotedOnSummary dId sId vRecord
+               histItem = VotedOnSummary dId sId vRecord t
                u' = user { userHistory = histItem : userHistory user }
            in Map.insert (userName user) u' us')
   modify (over documents $ \ds ->
@@ -103,12 +104,12 @@ castSummaryVote user isAnon dId doc sId summary voteVal = do
            in Map.insert dId d' ds) 
           
 castCritiqueVote :: User -> Bool -> DocumentId -> Document
-                 -> CritiqueId -> Critique -> UpDownVote
+                 -> CritiqueId -> Critique -> UpDownVote -> UTCTime
                  -> Update PersistentState ()
-castCritiqueVote user isAnon dId doc cId critique voteVal = do
+castCritiqueVote user isAnon dId doc cId critique voteVal t = do
   modify (over users $ \us' ->
            let vRecord = if isAnon then Nothing else Just voteVal
-               histItem = VotedOnCritique dId cId vRecord
+               histItem = VotedOnCritique dId cId vRecord t
                u' = user { userHistory = histItem : userHistory user }
            in Map.insert (userName user) u' us')
   modify (over documents $ \ds ->
@@ -146,18 +147,19 @@ queryAllUsers = asks _users
 -- There SHOULDN'T be, because addUser should only get called
 -- when a NEW user registers an account and gets an Auth
 -- username.  But seems safer to check and report this assumption
-addUser :: UserName -> Update PersistentState ()
-addUser uName = do
+addUser :: UserName -> UTCTime -> Update PersistentState ()
+addUser uName t = do
   allUsers <- gets _users
   case Map.lookup uName allUsers of
     Nothing ->
-      modify (over users ( Map.insert uName $ User uName Set.empty Set.empty [] Set.empty))
+      modify (over users ( Map.insert uName $ User uName Set.empty Set.empty [] Set.empty t ))
     Just _ -> do  -- This checks and refuses to overwrite, but silently
-      modify (over users id)
+      modify (over users id) 
 
-userFollow :: User -> User -> Update PersistentState ()
-userFollow a b  = do
-  let a' = a { userFollowing  = Set.insert (userName b) (userFollowing a)  }
+userFollow :: User -> User -> UTCTime -> Update PersistentState ()
+userFollow a b t = do
+  let a' = a { userFollowing  = Set.insert (userName b) (userFollowing a)
+             , userHistory    = FollowedUser (userName b) t : (userHistory a)}
       b' = b { userFollowedBy = Set.insert (userName a) (userFollowedBy b) }
   modify (over users $
           \u0 ->  Map.insert (userName a') a' $
@@ -171,14 +173,15 @@ userUnfollow a b = do
           \u0 -> Map.insert (userName a') a' $
                  Map.insert (userName b') b' u0) 
 
-pin :: User -> DocumentId -> Bool -> Update PersistentState ()
-pin user dId doPin = do
+pin :: User -> DocumentId -> Bool -> UTCTime -> Update PersistentState ()
+pin user dId doPin t = do
   let board' board0 = case doPin of
         True  -> Set.insert dId board0
         False -> Set.delete dId board0
   modify (over users $
           \u0 -> Map.insert (userName user)
-                 (user { userPinboard = board' (userPinboard user) })
+                 (user { userPinboard = board' (userPinboard user)
+                       , userHistory = PinnedDoc dId t : (userHistory user)})
                  u0)
 
 queryAllDocClasses :: Query PersistentState [DocClass]

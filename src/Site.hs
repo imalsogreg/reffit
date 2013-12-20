@@ -99,6 +99,7 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
     handleForm = render "new_user"
     handleFormSubmit = do
       l <- fmap decodeUtf8 <$> getParam "login"
+      t <- liftIO $ getCurrentTime
       case l of
         Nothing    -> redirect "/" -- TODO - Give a helpful error message
         Just uname -> do
@@ -106,7 +107,7 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
           case Map.lookup uname unameMap of
             Nothing -> do
               _ <- registerUser "login" "password"
-              _ <- update $ AddUser uname 
+              _ <- update $ AddUser uname t
               redirect "/"
             Just _ -> do
               redirect "/" -- TODO - give a helpful error message: uname is taken
@@ -200,9 +201,9 @@ testDoc i = Document Nothing i "The Earth is Round (p < .05)" ["Jacob Cohen","Ha
 
 testUsers = [ User "Arte Artimus" (Set.fromList ["Santa","Rudolph"]) Set.empty [] Set.empty ]
 
-testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Coolness  UpVote [UpVote,DownVote,UpVote]
+testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Coolness  UpVote [UpVote,DownVote,UpVote] (testDate 0)
 
-testSummary = Summary Nothing "This paper talks about why H0 hypothesist testing isn't appropriate for describing effect size." [UpVote,UpVote]
+testSummary = Summary Nothing "This paper talks about why H0 hypothesist testing isn't appropriate for describing effect size." [UpVote,UpVote] (testDate 0)
 
 testDate :: Integer -> UTCTime
 testDate d = UTCTime (ModifiedJulianDay d) (fromIntegral (0::Int)) 

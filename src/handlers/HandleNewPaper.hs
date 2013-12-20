@@ -6,7 +6,7 @@ module HandleNewPaper(
   handleNewArticle
   )
 where
-
+ 
 import           Reffit.Types
 import           Reffit.AcidTypes
 import           Reffit.FieldTag
@@ -41,8 +41,9 @@ import           Data.Time
 import           Control.Monad
 import           Control.Monad.Trans
 
-documentForm :: (Monad m) => User -> [DocClass] -> FieldTags -> (Maybe DocumentHints) -> Form Text m Document
-documentForm fromUser allDocClasses allFieldTags hints' =
+documentForm :: (Monad m) => User -> [DocClass] -> FieldTags -> (Maybe DocumentHints)
+                -> UTCTime -> Form Text m Document
+documentForm fromUser allDocClasses allFieldTags hints' t =
   Document
   <$> "poster"   .: choice posterOpts Nothing
   <*> pure 0
@@ -53,7 +54,7 @@ documentForm fromUser allDocClasses allFieldTags hints' =
   <*> "docTags"  .: validate (validateTags allFieldTags) (text Nothing) 
   <*> pure Map.empty
   <*> pure Map.empty
-  <*> pure tempTime
+  <*> pure t
     where
       posterOpts = [(Just (userName fromUser),userName fromUser)
                    ,(Nothing,"Anonymous")]  
@@ -119,6 +120,7 @@ handleNewArticle = handleForm
      dc      <- query QueryAllDocClasses 
      ft      <- query QueryAllFieldTags
      doi'    <- getParam "doi"
+     t       <- liftIO $ getCurrentTime
      hints <- case doi' of
        Nothing  -> return Nothing
        Just doi -> liftIO $ Just <$> (docHints (BS.unpack doi))
@@ -126,7 +128,7 @@ handleNewArticle = handleForm
      case join (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
        Nothing -> writeText "Error - authUser not in app user database"
        Just user  -> do 
-         (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft hints
+         (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft hints t
          case rs of 
            Just doc -> do
              let doc' = doc {docId = newId}

@@ -31,10 +31,12 @@ data UpDownVote = DownVote | UpVote
 deriveSafeCopy scv 'base ''UpDownVote
 
 data UserEvent = WroteCritique   DocumentId CritiqueId
-               | VotedOnCritique DocumentId CritiqueId (Maybe UpDownVote)
+               | VotedOnCritique DocumentId CritiqueId (Maybe UpDownVote) UTCTime
                | WroteSummary    DocumentId SummaryId
-               | VotedOnSummary  DocumentId SummaryId (Maybe UpDownVote)
+               | VotedOnSummary  DocumentId SummaryId (Maybe UpDownVote) UTCTime
                | PostedDocument  DocumentId
+               | FollowedUser    UserName   UTCTime
+               | PinnedDoc       DocumentId UTCTime
                deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy scv 'base ''UserEvent
 
@@ -43,12 +45,14 @@ data User = User { userName       :: UserName
                  , userFollowedBy :: Set.Set UserName
                  , userHistory    :: [UserEvent]
                  , userPinboard   :: Set.Set DocumentId
+                 , userJoinTime   :: UTCTime
                  } deriving (Show, Eq, Ord, Generic,Typeable)
 deriveSafeCopy scv 'base ''User
 
-data Summary = Summary { summaryPoster :: Maybe UserName
-                       , summaryProse :: Text
-                       , summaryVotes :: [UpDownVote]
+data Summary = Summary { summaryPoster   :: Maybe UserName
+                       , summaryProse    :: Text
+                       , summaryVotes    :: [UpDownVote]
+                       , summaryPostTime :: UTCTime
                        } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''Summary
 
@@ -61,6 +65,7 @@ data Critique = Critique { critiqueProse     :: Text
                          , critiqueDim       :: QualityDim
                          , critiqueVal       :: UpDownVote
                          , critiqueReactions :: [UpDownVote]
+                         , critiquePostTime  :: UTCTime
                          } deriving (Show, Generic)
 deriveSafeCopy scv 'base ''Critique
 

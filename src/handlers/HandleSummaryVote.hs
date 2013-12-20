@@ -21,9 +21,11 @@ import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Auth
 import           Control.Applicative
 import           Data.Monoid
+import           Control.Monad.Trans
 import qualified Data.Map                     as Map
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
+import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)
 import           Text.Digestive
 import           Text.Digestive.Blaze.Html5
@@ -44,6 +46,7 @@ handleSummaryVote voteDir = do
   ft        <- query QueryAllFieldTags
   idParam' <- getParam "idParam"
   authUser' <- currentUser
+  t         <- liftIO $ getCurrentTime
   -- TODO extremely deep nesting - should I be in ErrorT here?
   case idParam' of
     Nothing -> writeText "idParam not found"
@@ -66,17 +69,18 @@ handleSummaryVote voteDir = do
                     Nothing -> writeText "Need to log in."
                     Just Nothing -> writeText "userlookup Just Nothing."
                     Just (Just u) -> do 
-                      _ <- update (CastSummaryVote u False pId
-                                   doc sId summary voteDir) 
+                      _ <- update (CastSummaryVote u False pId 
+                                   doc sId summary voteDir t)  
                       redirect $ BS.concat ["/view_article/",BS.pack . show $ pId]
 
 -- TODO: Handle anonymity of votes
 handleCritiqueVote :: UpDownVote -> Handler App (AuthManager App) ()
 handleCritiqueVote voteDir = do
-  userMap  <- query QueryAllUsers
-  docs     <- query QueryAllDocs
-  idParam' <- getParam "idParam"
+  userMap   <- query QueryAllUsers
+  docs      <- query QueryAllDocs
+  idParam'  <- getParam "idParam"
   authUser' <- currentUser
+  t         <- liftIO $ getCurrentTime
   -- TODO so similar to handleSummaryVote - badly need a refactor
   case idParam' of
     Nothing -> writeText "idParam not found"
@@ -101,5 +105,5 @@ handleCritiqueVote voteDir = do
                   Just Nothing -> writeText "Just nothing - need to log in"
                   Just (Just u) -> do
                 --TODO handle vote anonymity
-                    _ <- update (CastCritiqueVote u False pId doc cId critique voteDir)
+                    _ <- update (CastCritiqueVote u False pId doc cId critique voteDir t)
                     redirect $ BS.concat ["/view_article/",BS.pack . show $ pId]
