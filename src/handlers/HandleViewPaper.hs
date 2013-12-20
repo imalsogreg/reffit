@@ -4,11 +4,13 @@ module HandleViewPaper (handleViewPaper) where
 
 import Reffit.Types
 import Reffit.AcidTypes
+import Reffit.Sort
 
 import Safe
 import Control.Applicative ((<$>),(<*>),pure)
 import qualified Data.List as List
 import qualified Data.Map as Map
+import Data.Time
 import Snap.Core (getParam)
 import Snap.Core (writeText)
 import Snap.Snaplet (Handler)
@@ -23,12 +25,14 @@ import qualified Data.Set as Set
 import Data.Text.Encoding (decodeUtf8)
 import Control.Lens
 import Control.Monad
+import Control.Monad.Trans
    
 handleViewPaper :: Handler App (AuthManager App) ()
 handleViewPaper = do
   us <- query QueryAllUsers
   pId'  <- getParam "paperid"
   aUser <- currentUser
+  t     <- liftIO $ getCurrentTime
   let u = join $ (flip Map.lookup) us <$> userLogin <$> aUser  :: Maybe User
   case readMay . T.unpack . decodeUtf8 <$> pId' of  
     Nothing -> writeText "Need paperid parameter"  -- TODO: Proper error page
@@ -40,7 +44,7 @@ handleViewPaper = do
                      T.concat ["You entered: "
                               , T.pack (show pId) 
                               ," Document wasn't found in the database."]
-        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u doc)        
+        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u doc t)        
 
 --TODO Move all this score stuff into the Scores module
   
@@ -88,8 +92,8 @@ nCritique :: UpDownVote -> Document -> Int
 nCritique vDir doc = Map.size . Map.filter ((==vDir) . critiqueVal)
                      $ docCritiques doc
   
-allArticleViewSplices :: Maybe User -> Document -> Splices (SnapletISplice App)
-allArticleViewSplices u doc = do
+allArticleViewSplices :: Maybe User -> Document -> UTCTime -> Splices (SnapletISplice App)
+allArticleViewSplices u doc t = do
   "articleSummarySummary"   ## I.textSplice (summarySummary doc) :: Splices (SnapletISplice App)
   "articlePraiseSummary"    ## I.textSplice (critiqueSummary  doc UpVote) :: Splices (SnapletISplice App)
   "articleCriticismSummary" ## I.textSplice (critiqueSummary doc DownVote) :: Splices (SnapletISplice App)
@@ -99,12 +103,13 @@ allArticleViewSplices u doc = do
   "docType"                 ## I.textSplice (docClassName . docClass $ doc)  
   "docId"                   ## I.textSplice (T.pack . show $ docId doc)
   "docTitle"                ## I.textSplice (docTitle doc)
+  "timeSince"               ## I.textSplice (T.pack . sayTimeDiff t . docPostTime $ doc) 
   let (pinUrl, pinBtn) = pinText u
   "pinUrl"                  ## I.textSplice pinUrl
   "pinboardBtnTxt"          ## I.textSplice pinBtn
-  (allSummarySplices u doc . Map.toList . docSummaries $ doc)
-  (allCritiqueSplices UpVote   "articlePraise"     u doc . Map.toList . docCritiques $ doc )
-  (allCritiqueSplices DownVote "articleCriticisms" u doc . Map.toList . docCritiques $ doc )
+  (allSummarySplices t u doc . Map.toList . docSummaries $ doc)
+  (allCritiqueSplices t UpVote   "articlePraise"     u doc . Map.toList . docCritiques $ doc )
+  (allCritiqueSplices t DownVote "articleCriticisms" u doc . Map.toList . docCritiques $ doc )
    where
      pinText :: Maybe User -> (T.Text, T.Text)
      pinText Nothing = ("","")
@@ -112,17 +117,21 @@ allArticleViewSplices u doc = do
           | Set.member (docId doc) (userPinboard user) = ("unpin", "Unpin")
           | otherwise                                  = ("pin",   "Pinboard")
                          
-allSummarySplices :: Maybe User -> Document -> [(SummaryId,Summary)] -> Splices (SnapletISplice App)
-allSummarySplices u doc ss = "articleSummaries" ## renderSummaries u doc ss
+allSummarySplices :: UTCTime -> Maybe User -> Document -> [(SummaryId,Summary)]
+                  -> Splices (SnapletISplice App)
+allSummarySplices t u doc ss = "articleSummaries" ## renderSummaries t u doc ss
 
-renderSummaries :: Maybe User -> Document -> [(SummaryId,Summary)] -> SnapletISplice App
-renderSummaries u doc = I.mapSplices $ I.runChildrenWith . splicesFromSummary u doc
+renderSummaries :: UTCTime -> Maybe User -> Document -> [(SummaryId,Summary)]
+                -> SnapletISplice App
+renderSummaries t u doc = I.mapSplices $ I.runChildrenWith . splicesFromSummary t u doc
 
-splicesFromSummary :: Monad n => Maybe User -> Document -> (SummaryId,Summary) -> Splices (I.Splice n)
-splicesFromSummary u doc (sId,s) = do 
+splicesFromSummary :: Monad n => UTCTime -> Maybe User -> Document -> (SummaryId,Summary)
+                   -> Splices (I.Splice n)
+splicesFromSummary t u doc (sId,s) = do 
   "upCount"       ## I.textSplice (T.pack . show $ nUp) 
   "downCount"     ## I.textSplice (T.pack . show $ nDown)
   "proseText"     ## I.textSplice (T.pack . show $ summaryProse s)
+  "proseTimeSince"     ## I.textSplice (T.pack . sayTimeDiff t . summaryPostTime $ s) 
   case summaryPoster s of
     Nothing -> do
       "prosePoster"             ## I.textSplice "Anonymous"
@@ -167,19 +176,22 @@ splicesFromSummary u doc (sId,s) = do
                               -- couldn't find user -> summary rln
   where (nUp, nDown) = summaryUpsDowns s
                   
-allCritiqueSplices :: UpDownVote -> T.Text -> Maybe User -> Document -> [(CritiqueId,Critique)]-> Splices (SnapletISplice App)
-allCritiqueSplices vTarg tag u doc cs = tag ## renderCritiques u doc cs'
+allCritiqueSplices :: UTCTime -> UpDownVote -> T.Text -> Maybe User -> Document
+                   -> [(CritiqueId,Critique)]-> Splices (SnapletISplice App)
+allCritiqueSplices t vTarg tag u doc cs = tag ## renderCritiques t u doc cs'
   where cs' = filter ( (==vTarg) . critiqueVal . snd) cs 
 
-renderCritiques :: Maybe User -> Document -> [(CritiqueId,Critique)] -> SnapletISplice App
-renderCritiques u doc = I.mapSplices $ I.runChildrenWith . splicesFromCritique u doc
+renderCritiques :: UTCTime -> Maybe User -> Document -> [(CritiqueId,Critique)] -> SnapletISplice App
+renderCritiques t u doc = I.mapSplices $ I.runChildrenWith . splicesFromCritique t u doc
 
-splicesFromCritique :: Monad n => Maybe User -> Document -> (CritiqueId,Critique) -> Splices (I.Splice n)
-splicesFromCritique u doc (cId,c) = do
+splicesFromCritique :: Monad n => UTCTime -> Maybe User -> Document -> (CritiqueId,Critique)
+                    -> Splices (I.Splice n)
+splicesFromCritique t u doc (cId,c) = do
   "upCount"      ## I.textSplice (T.pack . show $ nUp)
   "downCount"    ## I.textSplice (T.pack . show $ nDown)
   "proseText"    ## I.textSplice (critiqueProse c)
   "critiqueDim"  ## I.textSplice (T.pack . show $ critiqueDim c)
+  "proseTimeSince"    ## I.textSplice (T.pack . sayTimeDiff t . critiquePostTime $ c)
   case critiquePoster c of
     Nothing -> do
       "prosePoster"            ## I.textSplice "Anonymous"

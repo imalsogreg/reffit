@@ -5,6 +5,7 @@ module HandleViewUser (handleViewUser, handleFollow, handlePin) where
 import Reffit.Types
 import Reffit.AcidTypes
 import PaperRoll
+import Reffit.Sort
 
 import Safe
 import Control.Applicative ((<$>),(<*>),pure)

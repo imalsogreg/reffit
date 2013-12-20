@@ -59,16 +59,18 @@
     <div class="article_view_header">
       <h2>
 	<docTitle/>
+      </h2>
+      <p class="header-post-time">
 	<ifLoggedIn>
 	  <pinBoardBtn>
-	    <span> 
+	    <span> <timeSince/>
 	      <a href="/${pinUrl}/${docId}">
-		<button class="btn btn-primary"><pinboardBtnTxt/></button>
+		<button class="btn btn-primary btn-xs"><pinboardBtnTxt/></button>
 	      </a>
 	    </span>
 	  </pinBoardBtn>
 	</ifLoggedIn>
-      </h2>
+      </p>
     </div>
 
   <div class="row">

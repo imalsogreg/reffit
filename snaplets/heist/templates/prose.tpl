@@ -23,7 +23,7 @@
 </div>
 
 <div class="prose-poster">
-  <p>
+  <p> <proseTimeSince/> by
     <a href="${prosePosterDestination}">
       <prosePoster/>
     </a>
