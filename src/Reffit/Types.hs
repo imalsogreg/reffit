@@ -83,3 +83,8 @@ data Document = Document { docUploader  :: Maybe UserName
                          } deriving (Show, Generic, Typeable)
 deriveSafeCopy scv 'base ''Document
 
+data DocumentHints = DocumentHints { titleHint   :: Text
+                                   , authorsHint :: [Text]
+                                   , linkHint    :: Text
+                                   , yearHint    :: Maybe Int
+                                   }

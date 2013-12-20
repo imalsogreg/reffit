@@ -131,8 +131,9 @@ routes = [
       ("search",     handlePaperRoll)
     , ("login",         with auth handleLoginSubmit)
     , ("logout",        with auth handleLogout)
-    , ("new_user",      with auth handleNewUser) 
-    , ("new_article",   with auth handleNewArticle)
+    , ("new_user",      with auth handleNewUser)
+    , ("new_article",        with auth handleNewArticle)
+    , ("new_article/:doi",   with auth handleNewArticle)
     , ("new_summary/:paperid", with auth handleNewSummary)
     , ("new_praise/:paperid", with auth (handleNewCritique UpVote))
     , ("new_criticism/:paperid", with auth (handleNewCritique DownVote))
@@ -147,6 +148,7 @@ routes = [
     , ("pin/:paperid",   with auth $ handlePin True) 
     , ("unpin/:paperid", with auth $ handlePin False)
     , ("/", handleIndex)
+
     , ("add_1000",      handleAdd1000) -- TODO just testing
     , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
     , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)

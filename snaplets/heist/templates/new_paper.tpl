@@ -69,15 +69,7 @@
             </div>
 	  </div>
 	</dfForm>
- 
-
- 
-
- 
-	<a class="testButton">Test</a> <input type="text" size="50" class="testText"/>
-	
-
-    
+     
   </div>
 
   <button class="toggleFieldTags btn btn-default">Available Field Tags</button>
@@ -85,45 +77,15 @@
   
   <script>
 
-  function opensearch(data) { 
-    if (data && typeof data === 'object'){
-      console.log( "data is ok." );
-      $(".doiSuccess").show();
-      return 0;
-    };
-    $(".doiError").show();
-  };
-
   $(document).ready(function(){
 
     $(".toggleFieldTags").click(function(){
       $(".field_tags").toggle();
     });
 
-    $(".testButton").click(function(){
-      $(".testText").val("Hi");
-    });
-
     var r = $(".doiButton").click(function(){
-
-      $.ajax({
-
-        crossDomain: true,
-
-
-        dataType: 'jsonp',
-        url: "http://nurture.nature.com/cgi-bin/opensearch?db=crossref&out=jsonp&q=" + "10.1159/000072442",
-
-
-        success: function(data){
-           console.log( "Success" );
-        },
-        failure: function(data){
-           console.log( "Failure" );
-        }
-
-      });
-
+      var doi = $('.doiText').val();
+      window.location.href = "/new_article/" + encodeURIComponent(doi);
     });
 
   });

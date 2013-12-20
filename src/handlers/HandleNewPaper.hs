@@ -10,6 +10,7 @@ where
 import           Reffit.Types
 import           Reffit.AcidTypes
 import           Reffit.FieldTag
+import           Reffit.CrossRef
 import           Application 
 import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          HasAcid (getAcidStore),
@@ -37,15 +38,17 @@ import           Text.Digestive.Heist
 import           GHC.Int
 import qualified Data.Tree                    as RT
 import           Data.Time
+import           Control.Monad
+import           Control.Monad.Trans
 
-documentForm :: (Monad m) => User -> [DocClass] -> FieldTags -> Form Text m Document
-documentForm fromUser allDocClasses allFieldTags =
+documentForm :: (Monad m) => User -> [DocClass] -> FieldTags -> (Maybe DocumentHints) -> Form Text m Document
+documentForm fromUser allDocClasses allFieldTags hints' =
   Document
   <$> "poster"   .: choice posterOpts Nothing
   <*> pure 0
-  <*> "title"    .: check "Not a valid title" (not . T.null) (text Nothing)
-  <*> "authors"  .: validate validateAuthors (text Nothing)
-  <*> "link"     .: check "Not a valid link" (not . T.null) (text Nothing)
+  <*> "title"    .: check "Not a valid title" (not . T.null) (text (Just defTitle)) 
+  <*> "authors"  .: validate validateAuthors (text (Just defAuthors))
+  <*> "link"     .: check "Not a valid link" (not . T.null) (text (Just defLink))
   <*> "docClass" .: choice classOpts Nothing
   <*> "docTags"  .: validate (validateTags allFieldTags) (text Nothing) 
   <*> pure Map.empty
@@ -56,6 +59,10 @@ documentForm fromUser allDocClasses allFieldTags =
                    ,(Nothing,"Anonymous")]  
       classOpts  = [(dc,docClassName dc) | dc <- allDocClasses]
       tempTime   = UTCTime (ModifiedJulianDay 0) (fromIntegral (0::Int))
+      defTitle   = maybe "" titleHint hints'
+      defAuthors = maybe "" (T.intercalate ", " . authorsHint) hints'
+      defYear    = maybe "" (T.pack . show . yearHint) hints'
+      defLink    = maybe "" linkHint hints'
 
 documentView :: View H.Html -> H.Html
 documentView view = do
@@ -111,17 +118,20 @@ handleNewArticle = handleForm
      docs    <- query QueryAllDocs
      dc      <- query QueryAllDocClasses 
      ft      <- query QueryAllFieldTags
+     doi'    <- getParam "doi"
+     hints <- case doi' of
+       Nothing  -> return Nothing
+       Just doi -> liftIO $ Just <$> (docHints (BS.unpack doi))
      authUser' <- currentUser
-     case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+     case join (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
        Nothing -> writeText "Error - authUser not in app user database"
-       Just Nothing -> writeText "Error - justNothing, I'm not sure how you'd get this."  -- TODO Send to please-login page
-       Just (Just user)  -> do 
-         (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft
+       Just user  -> do 
+         (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft hints
          case rs of 
            Just doc -> do
              let doc' = doc {docId = newId}
              _ <- update $ AddDocument doc'
-             redirect . BS.pack $ "view_article/" ++ (show . docId $ doc')
+             redirect . BS.pack $ "/view_article/" ++ (show . docId $ doc')
              where
                newId = head . filter (\k -> Map.notMember k docs)
                        $ (tHash: tLen: tNotTaken)
