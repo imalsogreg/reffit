@@ -7,6 +7,7 @@ import Reffit.AcidTypes
 import PaperRoll
 import Reffit.Sort
 
+import Text.Blaze.Html
 import Safe
 import Control.Applicative ((<$>),(<*>),pure)
 import Control.Monad.Trans
@@ -70,22 +71,24 @@ handleViewUser = do
   docs    <- query QueryAllDocs
   cAUser' <- currentUser
   profileName' <- getParam "username" 
+  t       <- liftIO $ getCurrentTime
   case decodeUtf8 <$> profileName' of 
     Nothing -> writeText "Error decoding username"  --TODO
     Just profileName -> case Map.lookup profileName userMap of 
       Nothing -> writeText "User not in database."  -- TODO 
       Just profileUser -> do
         let cUser' = join $ Map.lookup <$> (userLogin <$> cAUser') <*> pure userMap :: Maybe User
-        renderWithSplices "user" (profileSplices cUser' profileUser docs) 
+        renderWithSplices "user" (profileSplices t cUser' profileUser docs) 
  
-profileSplices :: Maybe User -> User -> Map.Map DocumentId Document -> Splices (SnapletISplice App)
-profileSplices cUser' profileUser docs = do
+profileSplices :: UTCTime -> Maybe User -> User -> Map.Map DocumentId Document -> Splices (SnapletISplice App)
+profileSplices t cUser' profileUser docs = do
   -- Conditionally splice OUT the 'follow button'
   -- TODO this is a temporary measure to prevent self-following.
   when (cUser' == Just profileUser) $ "followButton" ## I.textSplice ""
   "userName"         ## I.textSplice $ userName profileUser
   "followBtnText" ## I.textSplice followBtnText
   "followBtnLink" ## I.textSplice followBtnLink
+  (allEventSplices  t (userHistory profileUser))
   "nPinboard"     ## I.textSplice . T.pack . show . 
     length $ userPinboardDocs docs profileUser
   "nFollowing"    ## I.textSplice . T.pack . show . Set.size . userFollowing
@@ -99,3 +102,18 @@ profileSplices cUser' profileUser docs = do
             Just True  -> ("Unfollow", T.append "unfollow/" (userName profileUser))
             Nothing    -> ("n/a","/")
   
+allEventSplices :: UTCTime -> Map.Map DocumentId Document 
+                   -> [UserEvent] -> Splices (SnapletISplice App)
+allEventSplices t docs events = do
+  "userEvents" ## renderEvents t docs events
+  
+renderEvents :: UTCTime -> Map.Map DocumentId Document 
+                -> [UserEvent] -> Splices (SnapletISplice App)
+renderEvents t docs = I.mapSplices $ I.runChildrenWith . splicesFromEvent t docs
+
+splicesFromEvent :: UTCTime -> Map.Map DocumentId Document 
+                    ->UserEvent -> Splices (I.Splice n)
+splicesFromEvent t docs event = case event of
+  (WroteCritique dId _) -> docLink
+  where
+    docLink
