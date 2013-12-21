@@ -49,12 +49,12 @@ presentationSort :: Map.Map DocumentId Document -> PresentationStrategy
 presentationSort docMap (SearchBy searchTerm) =
   searchDocs 10 docMap searchTerm
 presentationSort docMap (FiltSort s fts) = 
-  (sortBy sortF) 
+  (L.sortBy sortF) 
   . filter (\d -> any (\dtag -> any (tagIncludes dtag) fts) (docFieldTags d)) 
   . Map.elems $ docMap
   where
     sortF = case s of
-      New -> 
+      New -> docPostTime
 
 -- TODO pagination.  add Int and Int to each constructor for startInd and #of
 data PresentationStrategy = FiltSort SortBy [TagPath]
