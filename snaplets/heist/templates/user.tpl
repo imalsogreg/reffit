@@ -36,35 +36,33 @@
     </ul>
     
     <div class="tab-content">
-    <div class="tab-pane active" id="activity">
-      <activities>
-	<ul>
-	  <li>Event 1</li>
-	  <li>Event 2</li>
-	</ul>
-	<userEvent/>
-      </activities>
-    </div>
+      <div class="tab-pane active" id="activity">
+	<userEvents>
+	  <ul>
+	    <eventNode/>
+	  </ul>
+	</userEvents>
+      </div>
+      
     
-    <div class="tab-pane" id="pinboard">
-      <pinboard>
-	<apply template="_paper_roll"/>
-      </pinboard>
-    </div>
-    
-    <div class="tab-pane" id="following">
-      <following>
-	<apply template="userBlock"/>
-      </following>
-    </div>
-    
-    <div class="tab-pane" id="followers">
-      <followers>
-	<apply template="userBlock"/>
-      </followers>
-    </div>
-    
+      <div class="tab-pane" id="pinboard">
+	<pinboard>
+	  <apply template="_paper_roll"/>
+	</pinboard>
+      </div>
+      
+      <div class="tab-pane" id="following">
+	<following>
+	  <apply template="userBlock"/>
+	</following>
+      </div>
+      
+      <div class="tab-pane" id="followers">
+	<followers>
+	  <apply template="userBlock"/>
+	</followers>
+      </div>
     </div>
   </div>
-  
+
 </apply>

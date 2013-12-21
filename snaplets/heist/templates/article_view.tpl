@@ -63,13 +63,13 @@
       <p class="header-post-time">
 	<ifLoggedIn>
 	  <pinBoardBtn>
-	    <span> <timeSince/>
+	    <span> 
 	      <a href="/${pinUrl}/${docId}">
 		<button class="btn btn-primary btn-xs"><pinboardBtnTxt/></button>
 	      </a>
 	    </span>
 	  </pinBoardBtn>
-	</ifLoggedIn>
+	</ifLoggedIn> <timeSince/>
       </p>
     </div>
 

@@ -63,13 +63,19 @@ queryAllDocs = asks _documents
 -- Factor this out.
 
 -- TODO: Check that document title isn't already taken
-addDocument :: Document -> Update PersistentState ()
-addDocument doc = do  -- HandleNewPaper now finds a good Id
+addDocument :: Maybe User -> Document -> Update PersistentState ()
+addDocument user' doc = do  -- HandleNewPaper now finds a good Id
   modify (over documents (Map.insert (docId doc) doc))
+  case user' of
+    Just user -> 
+      modify (over users     (Map.insert (userName user)
+                              user { userHistory = PostedDocument (docId doc)
+                                                   : (userHistory user) }))
+    Nothing -> return ()
 
-addSummary :: DocumentId -> Summary
+addSummary :: Maybe User -> DocumentId -> Summary
               -> Update PersistentState (Maybe SummaryId)
-addSummary pId summary = do  
+addSummary user' pId summary = do  
   docs <- gets _documents
   case Map.lookup pId docs of
     Nothing -> return Nothing 
@@ -80,7 +86,13 @@ addSummary pId summary = do
                   (docId doc)
                   (doc { docSummaries = Map.insert sId summary 
                                         (docSummaries doc)}) 
-                  docs')) 
+                  docs'))
+        case user' of
+          Just user ->
+            modify (over users (Map.insert (userName user)
+                                (user { userHistory = WroteSummary (docId doc) sId :
+                                                      (userHistory user) })))
+          Nothing -> return ()
         return (Just sId)
         where
           sId = head . filter (\k -> Map.notMember k (docSummaries doc)) $
@@ -117,9 +129,9 @@ castCritiqueVote user isAnon dId doc cId critique voteVal t = do
                d' = doc { docCritiques = Map.insert cId c' (docCritiques doc) } 
            in Map.insert dId d' ds)
 
-addCritique :: DocumentId -> Critique 
+addCritique :: Maybe User -> DocumentId -> Critique 
                -> Update PersistentState (Maybe SummaryId)
-addCritique pId critique = do
+addCritique user' pId critique = do
   docs <- gets _documents
   case Map.lookup pId docs of
     Nothing -> modify (over documents id) >> return Nothing
@@ -131,6 +143,12 @@ addCritique pId critique = do
                 (doc { docCritiques = Map.insert cId critique
                                       (docCritiques doc)})
                 docs'))
+      case user' of
+        Just user -> 
+          modify (over users $ Map.insert (userName user)
+                  (user { userHistory = WroteCritique pId cId :
+                                        (userHistory user)}))
+        Nothing -> return ()
       return (Just cId)
         where
           cId = head . filter (\k -> Map.notMember k (docCritiques doc)) $ 
@@ -146,13 +164,13 @@ queryAllUsers = asks _users
 -- a user by that name?
 -- There SHOULDN'T be, because addUser should only get called
 -- when a NEW user registers an account and gets an Auth
--- username.  But seems safer to check and report this assumption
+-- username.  But seems safer to check and report this
 addUser :: UserName -> UTCTime -> Update PersistentState ()
 addUser uName t = do
   allUsers <- gets _users
   case Map.lookup uName allUsers of
     Nothing ->
-      modify (over users ( Map.insert uName $ User uName Set.empty Set.empty [] Set.empty t ))
+      modify (over users ( Map.insert uName $ User uName Set.empty Set.empty [] Set.empty Set.empty t ))
     Just _ -> do  -- This checks and refuses to overwrite, but silently
       modify (over users id) 
 
@@ -193,7 +211,17 @@ addDocClass dc = do
   
 queryAllFieldTags :: Query PersistentState FieldTags
 queryAllFieldTags = asks _fieldTags
- 
+
+addUserTag :: User -> TagPath -> Update PersistentState ()
+addUserTag user tp =
+  modify (over users (Map.insert (userName user)
+                      (user { userTags = Set.insert tp (userTags user) })))
+
+deleteUserTag :: User -> TagPath -> Update PersistentState ()
+deleteUserTag user tp =
+  modify (over users (Map.insert (userName user)
+                      (user {userTags = Set.delete tp (userTags user) } )))
+
 addFieldTag :: TagPath -> Update PersistentState ()
 addFieldTag tp = modify (over fieldTags (insertTag tp))
 

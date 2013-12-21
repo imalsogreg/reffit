@@ -37,6 +37,7 @@ import qualified Text.Blaze.Html5             as H
 import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist  
 import qualified Data.ByteString.Char8        as BS
+import           Control.Monad
 
 newSummaryForm :: (Monad m) => User -> UTCTime -> Form Text m Summary
 newSummaryForm formUser t =
@@ -61,20 +62,20 @@ newSummaryView view = do
 handleNewSummary :: Handler App (AuthManager App) ()  
 handleNewSummary = do 
   userMap   <- query QueryAllUsers
-  docs      <- query QueryAllDocs
-  ft        <- query QueryAllFieldTags
   pId'      <- getParam "paperid"
   authUser' <- currentUser
   t         <- liftIO $ getCurrentTime 
-  case readMay . T.unpack . decodeUtf8 <$> pId' of  
+  case join $ readMay . T.unpack . decodeUtf8 <$> pId' of  
     Nothing -> writeText "paperid error" --TODO proper error message
-    Just (Just pId) ->
-      case (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
-        Just (Just user) -> do
+    Just pId ->
+      case join (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+        Nothing -> writeBS "Couldn't find user in database" 
+        Just user -> do
           (vw,rs) <- runForm "newSummaryForm" $ newSummaryForm user t
           case rs of
             Just summary -> do
-              sId <- update $ AddSummary pId summary  
+              let user' = maybe Nothing (const $ Just user) (summaryPoster summary)
+              _ <- update $ AddSummary user' pId summary  
               --let a = sId :: SummaryId  -- TODO: Must vote for
               -- Vote for own summary     -- user's summary automatically
               redirect . BS.pack $ "/view_article/" ++ show pId

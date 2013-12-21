@@ -132,7 +132,8 @@ handleNewArticle = handleForm
          case rs of 
            Just doc -> do
              let doc' = doc {docId = newId}
-             _ <- update $ AddDocument doc'
+                 user' = maybe Nothing (const $ Just user) (docUploader doc')
+             _ <- update $ AddDocument user' doc'  
              redirect . BS.pack $ "/view_article/" ++ (show . docId $ doc')
              where
                newId = head . filter (\k -> Map.notMember k docs)

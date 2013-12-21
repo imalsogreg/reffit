@@ -7,8 +7,7 @@ import Reffit.AcidTypes
 import PaperRoll
 import Reffit.Sort
 
-import Text.Blaze.Html5
-import Text.Blaze.Html5.Attributes
+import qualified Text.XmlHtml as X
 import Safe
 import Control.Applicative ((<$>),(<*>),pure)
 import Control.Monad.Trans
@@ -35,7 +34,8 @@ import Data.Maybe
 
 userPinboardDocs :: Map.Map DocumentId Document -> User -> [Document]
 userPinboardDocs docs =
-  catMaybes . Prelude.map (\dId -> Map.lookup dId docs) . Set.toList . userPinboard
+  catMaybes . Prelude.map (\dId -> Map.lookup dId docs) .
+  Set.toList . userPinboard 
 
 handleFollow :: Bool -> Handler App (AuthManager App) ()
 handleFollow doFollow = do
@@ -81,7 +81,8 @@ handleViewUser = do
         let cUser' = join $ Map.lookup <$> (userLogin <$> cAUser') <*> pure userMap :: Maybe User
         renderWithSplices "user" (profileSplices t cUser' profileUser docs) 
  
-profileSplices :: UTCTime -> Maybe User -> User -> Map.Map DocumentId Document -> Splices (SnapletISplice App)
+profileSplices :: UTCTime -> Maybe User -> User -> Map.Map DocumentId Document
+               -> Splices (SnapletISplice App)
 profileSplices t cUser' profileUser docs = do
   -- Conditionally splice OUT the 'follow button'
   -- TODO this is a temporary measure to prevent self-following.
@@ -109,21 +110,80 @@ allEventSplices t docs events = do
   "userEvents" ## renderEvents t docs events
   
 renderEvents :: UTCTime -> Map.Map DocumentId Document 
-                -> [UserEvent] -> Splices (SnapletISplice App)
+                -> [UserEvent] -> SnapletISplice App
 renderEvents t docs = I.mapSplices $ I.runChildrenWith . splicesFromEvent t docs
 
-splicesFromEvent :: UTCTime -> Map.Map DocumentId Document 
+splicesFromEvent :: (Monad n) => UTCTime -> Map.Map DocumentId Document 
                     ->UserEvent -> Splices (I.Splice n)
-splicesFromEvent t docs event = case event of
-  (WroteCritique dId _) -> toHtml "Hi"
-    where
-      docTitle d = maybe "error" docTitle (Map.lookup (docId d) docs)
-      docLink    = a ! href (T.append "/view_article/" dId) $ docTitle dId 
-      
-dTitleUtil :: DocumentId -> Map.Map DocumentId Document -> T.Text
-dTitleUtil dId docs = maybe "error" docTitle (Map.lookup dId docs)
 
-sTimeUtil :: UTCTime -> DocumentId -> SummaryId -> Map.Map DocumentId Document -> T.Text
-sTimeUtil t dId sId docs = (sayTimeDiff t . summaryPostTime) 
-                           <$> Map.lookup sId 
-                           <$> (Map.lookup dId docs)
+splicesFromEvent t docs event = do
+    "eventNode" ##  eventSplice t docs event
+
+eventSplice :: (Monad m) => UTCTime -> Map.Map DocumentId Document
+               -> UserEvent -> I.Splice m
+eventSplice t docs (WroteCritique dId cId)  =
+  return [X.Element "p" [] [X.TextNode  "wrote a critique of "
+                           , X.Element  "a" [("href",dLinkT dId docs)]
+                             [X.TextNode . shortTitle tLen $ dTitleT dId docs] 
+                           , X.TextNode $ cTimeT t dId cId docs] ]
+eventSplice _ _ (VotedOnCritique _ _ _ _) = return []
+eventSplice t docs (WroteSummary dId sId) =
+  return [X.Element "p" [] [X.TextNode "write a summary of "
+                           ,X.Element "a" [("href",dLinkT dId docs)]
+                            [X.TextNode . shortTitle tLen $ dTitleT dId docs]
+                           ,X.TextNode $ sTimeT t dId sId docs] ]
+eventSplice _ _ (VotedOnSummary _ _ _ _) = return []
+eventSplice t docs (PostedDocument dId) =
+  return [X.Element "p" [] [X.TextNode "posted "
+                           ,X.Element "a" [("href",dLinkT dId docs)]
+                            [X.TextNode . shortTitle tLen $ dTitleT dId docs]
+                           ,X.TextNode $ dTimeT t dId docs]]
+eventSplice t _ (FollowedUser uName eTime) =
+  return [X.Element "p" [] [X.TextNode "followed "
+                           ,X.Element "a" [("href", T.append "/user/" uName)]
+                            [X.TextNode uName] 
+                           ,X.TextNode . T.pack . sayTimeDiff t $ eTime]] 
+eventSplice t docs (PinnedDoc dId eTime) =
+  return [X.Element "p" [] [X.TextNode "pinned "
+                           ,X.Element "a" [("href",dLinkT dId docs)]
+                            [X.TextNode . shortTitle tLen $ dTitleT dId docs]
+                           ,X.TextNode . T.pack $ sayTimeDiff t eTime]]
+
+tLen :: Int
+tLen = 60
+
+shortTitle :: Int -> T.Text -> T.Text
+shortTitle n t
+  | T.length t <= n = t
+  | otherwise       = sTitle
+  where
+    tokens        = T.splitOn " " t :: [T.Text]
+    tLengths      = scanl (\s tk -> s + T.length tk) 0 tokens :: [Int] 
+    tLengthsS     = zipWith (+) tLengths [0..] --lngth of titles,counting spaces
+    measureTokens = zip tLengthsS tokens
+    keepTokens    = takeWhile ((< n - 1) . fst) measureTokens :: [(Int,T.Text)]
+    sTitle        = T.append (T.intercalate " " (map snd keepTokens)) "..." :: T.Text
+
+dTitleT :: DocumentId -> Map.Map DocumentId Document -> T.Text
+dTitleT dId docs = maybe "error" docTitle (Map.lookup dId docs)
+
+dLinkT :: DocumentId -> Map.Map DocumentId Document -> T.Text
+dLinkT dId _    = T.append "/view_article/" (T.pack . show $ dId)
+--dLinkT dId docs = maybe "#" (T.append "/view_article/") (docLink <$> Map.lookup dId docs)
+
+dTimeT :: UTCTime -> DocumentId -> Map.Map DocumentId Document -> T.Text
+dTimeT t dId docs = maybe "error" T.pack $ do
+  doc <- Map.lookup dId docs
+  return $ sayTimeDiff t (docPostTime doc)
+
+cTimeT :: UTCTime -> DocumentId -> CritiqueId -> Map.Map DocumentId Document -> T.Text
+cTimeT t dId cId docs = maybe "error" T.pack $ do
+  doc  <- Map.lookup dId docs
+  crit <- Map.lookup cId $ docCritiques doc
+  return $ sayTimeDiff t (critiquePostTime crit)
+
+sTimeT :: UTCTime -> DocumentId -> CritiqueId -> Map.Map DocumentId Document -> T.Text
+sTimeT t dId sId docs = maybe "error" T.pack $ do
+  doc  <- Map.lookup dId docs
+  smry <- Map.lookup sId $ docSummaries doc
+  return $ sayTimeDiff t (summaryPostTime smry)

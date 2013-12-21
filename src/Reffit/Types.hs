@@ -45,6 +45,7 @@ data User = User { userName       :: UserName
                  , userFollowedBy :: Set.Set UserName
                  , userHistory    :: [UserEvent]
                  , userPinboard   :: Set.Set DocumentId
+                 , userTags       :: Set.Set TagPath
                  , userJoinTime   :: UTCTime
                  } deriving (Show, Eq, Ord, Generic,Typeable)
 deriveSafeCopy scv 'base ''User

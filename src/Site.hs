@@ -123,8 +123,8 @@ handleDumpState = do
 handleAdd1000 :: Handler App App ()
 handleAdd1000 = do
   -- d <- query QueryAllDocs
-  forM_ [1..1000] $ \i -> update $ AddDocument (testDoc (fromIntegral i))
- 
+  forM_ [1..(1000::Int)] $ \i -> update $ AddDocument Nothing (testDoc (fromIntegral i))
+
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
