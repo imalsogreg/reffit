@@ -13,7 +13,7 @@ import qualified Data.Text as T
 import Data.String
 
 data SortBy = New | Hot | Popular | Controversial
-
+            deriving (Show, Eq)
 
 
 -- |Sort doc list by a function - bool to False for ascending order

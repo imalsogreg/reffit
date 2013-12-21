@@ -5,5 +5,7 @@
   <paper_roll_papers>
     <apply template="paperBlock"/>
   </paper_roll_papers>
+  
+  <test/>
 
 </div>

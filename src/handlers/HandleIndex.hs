@@ -11,6 +11,7 @@ import Reffit.AcidTypes
 import Reffit.FieldTag
 
 import Control.Applicative
+import Snap.Core (getParams, writeText)
 import Snap.Snaplet(Handler)
 import Snap.Snaplet.AcidState (query)
 import Snap.Snaplet.Auth
@@ -21,22 +22,33 @@ import qualified Heist.Interpreted as I
 import qualified Data.Text as T
 import qualified Data.Map as Map 
 import qualified Data.Set as Set
+import qualified Data.ByteString.Char8 as BS
 import Control.Monad
+import Control.Monad.Trans
+import Data.Time
 
 handleIndex :: Handler App (AuthManager App) ()
 --handleIndex = handlePaperRoll
 handleIndex = do
-  docs  <- query QueryAllDocs
-  us    <- query QueryAllUsers
-  aUser <- currentUser
-
+  docs        <- query QueryAllDocs
+  us          <- query QueryAllUsers
+  tags        <- query QueryAllFieldTags
+  aUser       <- currentUser
+  indexParams <- getParams
+  tNow        <- liftIO $ getCurrentTime
   let user' = join $ Map.lookup <$> (userLogin <$> aUser) <*> pure us :: Maybe User 
-  renderWithSplices "_index" (allIndexSplices docs user' us)  
+  renderWithSplices "_index" (allIndexSplices tNow docs user' us indexParams tags)   
 
-allIndexSplices :: Map.Map DocumentId Document -> Maybe User -> Map.Map UserName User -> Splices (SnapletISplice App)
-allIndexSplices docs user' us = do
-  allPaperRollSplices (Map.elems docs)
+allIndexSplices :: UTCTime -> Map.Map DocumentId Document
+                   -> Maybe User -> Map.Map UserName User 
+                   -> Map.Map BS.ByteString [BS.ByteString]
+                   -> FieldTags
+                   -> Splices (SnapletISplice App)
+allIndexSplices tNow docs user' us indexParams tags  = do
+  let docsToShow = presentationSort tNow docs (paramsToStrategy tags indexParams)
+  allPaperRollSplices docsToShow
   allStatsSplices docs us
+  "test" ## I.textSplice . T.pack . show $ paramsToStrategy tags indexParams
   case user' of 
     Nothing -> return ()
     Just user -> allFilterTagSplices user 
@@ -54,7 +66,7 @@ allStatsSplices docs us = do
     
 allFilterTagSplices :: User -> Splices (SnapletISplice App)
 allFilterTagSplices user = "fieldTags" ## renderFieldTags user (Set.toList $ userTags user)
-
+ 
 renderFieldTags :: User -> [TagPath] -> SnapletISplice App
 renderFieldTags user = I.mapSplices $ I.runChildrenWith . splicesFromFieldTag user
 

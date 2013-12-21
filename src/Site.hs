@@ -129,7 +129,7 @@ handleAdd1000 = do
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes = [
-      ("search",     handlePaperRoll)
+      ("search",    with auth  handleIndex)
     , ("login",         with auth handleLoginSubmit)
     , ("logout",        with auth handleLogout)
     , ("new_user",      with auth handleNewUser)
@@ -150,6 +150,7 @@ routes = [
     , ("unpin/:paperid", with auth $ handlePin False)
     , ("/add_usertag/:fieldtag", with auth $ handleAddTag True)  
     , ("/delete_usertag/:fieldtag", with auth $ handleAddTag False)
+    , ("/about", render "about")
     , ("/:params" , with auth $ handleIndex)
     , ("/", with auth $ handleIndex)
 

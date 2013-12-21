@@ -1,10 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module PaperRoll (
-  handlePaperRoll,
-  allPaperRollSplices
-  )
-       where
+module PaperRoll where
 
 import Reffit.Types
 import Reffit.AcidTypes
@@ -28,7 +24,9 @@ import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Map as Map
 import qualified Data.ByteString.Char8 as BS
 import Control.Monad (join)
-  
+import Control.Monad.Trans (liftIO)
+import Data.Time
+
 handlePaperRoll :: Handler App App ()
 handlePaperRoll = method GET handleNotGet
   where  
@@ -36,29 +34,40 @@ handlePaperRoll = method GET handleNotGet
       do
         docs      <- query QueryAllDocs
         tags      <- query QueryAllFieldTags
+        tNow      <- liftIO $ getCurrentTime
         indexParams <- getParams
-        let docsToShow = case paramsToStrategy tags indexParams of
-              (SearchBy searchTerm) -> searchDocs 10 docs searchTerm
-              (FiltSort s fts)      -> Map.elems docs 
-              
-        renderWithSplices "paper_roll" (allPaperRollSplices docsToShow)
+        let docsToShow = presentationSort tNow docs 
+                         (paramsToStrategy tags indexParams) 
+--        renderWithSplices "paper_roll" (allPaperRollSplices docsToShow)
+        writeText . T.pack . show $ paramsToStrategy tags indexParams
 
 -- TODO - move this to Reffit.Sort?  Reffit.Search?
-presentationSort :: Map.Map DocumentId Document -> PresentationStrategy
+presentationSort :: UTCTime -> Map.Map DocumentId Document 
+                    -> PresentationStrategy
                     -> [Document]
-presentationSort docMap (SearchBy searchTerm) =
+presentationSort _ docMap (SearchBy searchTerm) =
   searchDocs 10 docMap searchTerm
-presentationSort docMap (FiltSort s fts) = 
-  (L.sortBy sortF) 
+presentationSort tNow docMap (FiltSort s [])  =
+  (sortDocs (sortF tNow s) True) . Map.elems $ docMap
+presentationSort tNow docMap (FiltSort s fts) = 
+  (sortDocs (sortF tNow s) True) 
   . filter (\d -> any (\dtag -> any (tagIncludes dtag) fts) (docFieldTags d)) 
   . Map.elems $ docMap
-  where
-    sortF = case s of
-      New -> docPostTime
+
+sortF :: UTCTime -> SortBy -> (Document -> Int)
+sortF t s = case s of
+  New -> floor . (\d -> diffUTCTime (docPostTime d) t0)
+  Hot -> hotnessScore t
+  Popular -> qualityScore
+  Controversial -> controversyScore
+      
+t0 :: UTCTime
+t0 = UTCTime (ModifiedJulianDay 0) 0
 
 -- TODO pagination.  add Int and Int to each constructor for startInd and #of
 data PresentationStrategy = FiltSort SortBy [TagPath]
                           | SearchBy T.Text
+                          deriving (Show, Eq)
 
 paramsToStrategy :: FieldTags -> Map.Map BS.ByteString [BS.ByteString] 
                     -> PresentationStrategy
@@ -100,16 +109,16 @@ splicesFromDocument doc = do
   "noveltyScore"        ## I.textSplice (T.pack $ show (novScore))
   "rigorScore"          ## I.textSplice (T.pack $ show (rigScore))
   "coolnessScore"       ## I.textSplice (T.pack $ show (coolScore))
-  (allFieldTags $ docFieldTags doc)
+  (allDFieldTags $ docFieldTags doc)
  
-allFieldTags :: [TagPath] -> Splices (SnapletISplice App)
-allFieldTags tags = "fieldTags" ## renderFieldTags fLabels
+allDFieldTags :: [TagPath] -> Splices (SnapletISplice App)
+allDFieldTags tags = "fieldTags" ## renderDFieldTags fLabels
     where
       fLabels = map last tags
 
-renderFieldTags :: [T.Text] -> SnapletISplice App
-renderFieldTags = I.mapSplices $ I.runChildrenWith . splicesFromTag 
+renderDFieldTags :: [T.Text] -> SnapletISplice App
+renderDFieldTags = I.mapSplices $ I.runChildrenWith . splicesFromDTag 
 
-splicesFromTag :: Monad n => T.Text -> Splices (I.Splice n)
-splicesFromTag t = do
+splicesFromDTag :: Monad n => T.Text -> Splices (I.Splice n)
+splicesFromDTag t = do
   "fieldTag" ## I.textSplice t
