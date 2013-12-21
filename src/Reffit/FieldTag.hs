@@ -86,6 +86,8 @@ insertTag (x:xs) tags = case L.elemIndex x (topLabels tags) of
 -- |Determine whether a reference path 'includes' a query path
 --  e.g. a document with "Biology"."Neuroscience" should be
 --  included in a query for "Biology"
+  
+--TODO need to clarify the meaning, better name.  which tag is first?
 tagIncludes :: TagPath -> TagPath -> Bool
 _  `tagIncludes` []     = True                     -- Query is general
 [] `tagIncludes` (_:_)  = False                    -- Query is specific

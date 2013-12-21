@@ -59,7 +59,7 @@
         <input type="text" name="filterTag" placeholder="Biology.Neuroscience" class="form-control">
       </ifLoggedOut>
       
-      <select class="form-control" name="filterBy">
+      <select class="form-control" name="sortBy">
         <option>New</option>
         <option>Hot</option>
         <option>Popular</option>
