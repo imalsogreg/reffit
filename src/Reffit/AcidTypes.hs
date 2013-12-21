@@ -227,6 +227,7 @@ addFieldTag tp = modify (over fieldTags (insertTag tp))
 
 makeAcidic ''PersistentState ['addDocument,         'queryAllDocs
                              , 'queryAllUsers,      'addUser
+                             , 'addUserTag,         'deleteUserTag
                              , 'userFollow,         'userUnfollow
                              , 'pin
                              , 'queryAllDocClasses, 'addDocClass

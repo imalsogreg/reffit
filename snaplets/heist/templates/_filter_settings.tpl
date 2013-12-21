@@ -1,33 +1,75 @@
 <div class="panel panel-success">
   <div class="panel-heading"><h4 class="panel-title">Filter settings</h4></div>
-
   <div class="panel-body">
     <form method="GET">
       
-      <fieldTags>
+      <ifLoggedIn>
 	<ul>
-	  <fieldTag>
-	    <li>
-	      <input type="checkbox" ref="filterTag"><fieldTagLabel/>
-	      <a href="/${userName}/deleteFieldPath/${fieldTagText}">
-		<button type="button" class="close">&times;</button>
-	      </a>
-	    </li>
-	  </fieldTag>
+          <fieldTags>
+	    <fieldTag>
+              
+              <div class="row form-horizontal">
+
+                <div class="col-sm-2">
+	          <input type="checkbox" name="filterTag.${fieldTagFullText}" class="form-control"><fieldTagLabel/>
+                </div>
+
+                <div class="col-sm-8">
+                  <span class="form-control"><fieldTagText/></span>
+                </div>
+
+                <div class="col-sm-2">
+	          <a href="/delete_usertag/${fieldTagFullText}">
+		    <button type="button" class="close form-control">&times;</button>
+	          </a>
+                </div>
+
+	      </div>
+
+	    </fieldTag>
+          </fieldTags>
 	</ul>
-      </fieldTags>
+        
+	<div class="row form-horizontal">
+          
+	  <input type="text" class="col-sm-offset-2 col-sm-6 control-label addTagText"/>
+          
+          <script>
+          $(document).ready(function(){
+            $('.addTagBtn').click(function(){
+              var r = $('.addTagText').val();
+              window.location.href = "/add_usertag/" + encodeURIComponent(r);
+              return false;
+            });
+          });
+
+          </script>
+
+	  <div class="col-sm-4"><a class="addTagBtn">
+	      <button class="btn btn-default form-control">Add</button></a>
+	  </div>
+          
+	</div>
+        
+ 
+  
+      </ifLoggedIn>
       
-      <select class="form-control">
-	<option>New</option>
-	<option>Hot</option>
-	<option>Popular</option>
-	<option>Controversial</option>
+      <ifLoggedOut>
+        <input type="text" name="filterTag" placeholder="Biology.Neuroscience" class="form-control">
+      </ifLoggedOut>
+      
+      <select class="form-control" name="filterBy">
+        <option>New</option>
+        <option>Hot</option>
+        <option>Popular</option>
+        <option>Controversial</option>
       </select>
       
       <button type="submit" class="btn btn-default">Sort</button>
       
     </form>
-  
+    
   </div>
-
+  
 </div>

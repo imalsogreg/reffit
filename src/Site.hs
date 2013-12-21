@@ -148,7 +148,10 @@ routes = [
     , ("unfollow/:username", with auth $ handleFollow False)
     , ("pin/:paperid",   with auth $ handlePin True) 
     , ("unpin/:paperid", with auth $ handlePin False)
-    , ("/", handleIndex)
+    , ("/add_usertag/:fieldtag", with auth $ handleAddTag True)  
+    , ("/delete_usertag/:fieldtag", with auth $ handleAddTag False)
+    , ("/:params" , with auth $ handleIndex)
+    , ("/", with auth $ handleIndex)
 
     , ("add_1000",      handleAdd1000) -- TODO just testing
     , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    

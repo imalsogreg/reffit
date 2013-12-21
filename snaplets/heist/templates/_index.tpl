@@ -13,8 +13,10 @@
 
       <apply template="_community_stats"/>
 
+      <ifLoggedIn>
       <apply template="userFeed"/>      
-      
+      </ifLoggedIn>      
+
     </div>
     
   </div>

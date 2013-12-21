@@ -1,11 +1,15 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HandleViewUser (handleViewUser, handleFollow, handlePin) where
+module HandleViewUser (handleViewUser
+                      , handleFollow
+                      , handlePin
+                      , handleAddTag) where
 
 import Reffit.Types
 import Reffit.AcidTypes
 import PaperRoll
 import Reffit.Sort
+import Reffit.FieldTag
 
 import qualified Text.XmlHtml as X
 import Safe
@@ -25,6 +29,7 @@ import Application
 import Heist
 import qualified Heist.Interpreted as I
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Char8 as BS
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import GHC.Int
@@ -81,6 +86,26 @@ handleViewUser = do
         let cUser' = join $ Map.lookup <$> (userLogin <$> cAUser') <*> pure userMap :: Maybe User
         renderWithSplices "user" (profileSplices t cUser' profileUser docs) 
  
+handleAddTag :: Bool -> Handler App (AuthManager App) ()
+handleAddTag doAdd = do
+  aUser <- currentUser
+  us    <- query QueryAllUsers
+  tags  <- query QueryAllFieldTags
+  tag   <- getParam "fieldtag"
+  case (fromFullName . T.decodeUtf8) <$> tag of
+    Nothing -> writeBS "error reading fieldtag parameter" --TODO error page
+    Just tp -> do
+      when (not (tp `tagPathIsElem` tags) && doAdd) 
+               $ writeBS "fieldtag wasn't in fieldtag database" 
+      case join $ Map.lookup <$> (userLogin <$> aUser) <*> pure us of
+        Nothing -> writeBS "error user isn't in database"
+        Just user -> do
+          _ <- if doAdd 
+            then update $ AddUserTag user tp
+            else update $ DeleteUserTag user tp
+          redirect "/"
+                           
+
 profileSplices :: UTCTime -> Maybe User -> User -> Map.Map DocumentId Document
                -> Splices (SnapletISplice App)
 profileSplices t cUser' profileUser docs = do

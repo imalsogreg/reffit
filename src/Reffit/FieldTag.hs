@@ -59,6 +59,12 @@ testTags =
 topLabels :: FieldTags -> [T.Text]
 topLabels fts = map (\(Node t _) -> t) fts
 
+toFullName :: TagPath -> T.Text
+toFullName = T.intercalate "."
+
+fromFullName :: T.Text -> TagPath
+fromFullName = T.splitOn "."
+
 tagPathIsElem :: TagPath -> FieldTags -> Bool
 tagPathIsElem tp tagsTop = not (L.null tp) && aux tp tagsTop
   where
