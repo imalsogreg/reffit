@@ -165,12 +165,12 @@ queryAllUsers = asks _users
 -- There SHOULDN'T be, because addUser should only get called
 -- when a NEW user registers an account and gets an Auth
 -- username.  But seems safer to check and report this
-addUser :: UserName -> UTCTime -> Update PersistentState ()
-addUser uName t = do
+addUser :: UserName -> T.Text -> UTCTime -> Update PersistentState ()
+addUser uName email t = do
   allUsers <- gets _users
   case Map.lookup uName allUsers of
     Nothing ->
-      modify (over users ( Map.insert uName $ User uName Set.empty Set.empty [] Set.empty Set.empty t ))
+      modify (over users ( Map.insert uName $ User uName email Set.empty Set.empty [] Set.empty Set.empty t ))
     Just _ -> do  -- This checks and refuses to overwrite, but silently
       modify (over users id) 
 

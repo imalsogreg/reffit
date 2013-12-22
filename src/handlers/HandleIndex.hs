@@ -48,7 +48,6 @@ allIndexSplices tNow docs user' us indexParams tags  = do
   let docsToShow = presentationSort tNow docs (paramsToStrategy tags indexParams)
   allPaperRollSplices docsToShow
   allStatsSplices docs us
-  "test" ## I.textSplice . T.pack . show $ paramsToStrategy tags indexParams
   case user' of 
     Nothing -> return ()
     Just user -> allFilterTagSplices user 

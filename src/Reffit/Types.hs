@@ -41,6 +41,7 @@ data UserEvent = WroteCritique   DocumentId CritiqueId
 deriveSafeCopy scv 'base ''UserEvent
 
 data User = User { userName       :: UserName
+                 , userEmail      :: Text
                  , userFollowing  :: Set.Set UserName
                  , userFollowedBy :: Set.Set UserName
                  , userHistory    :: [UserEvent]

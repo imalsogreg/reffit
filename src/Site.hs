@@ -99,18 +99,20 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
     handleForm = render "new_user"
     handleFormSubmit = do
       l <- fmap decodeUtf8 <$> getParam "login"
+      e <- fmap decodeUtf8 <$> getParam "email"
       t <- liftIO $ getCurrentTime
-      case l of
-        Nothing    -> redirect "/" -- TODO - Give a helpful error message
-        Just uname -> do
+      case (l,e) of
+        (Nothing,_) -> redirect "/" -- TODO - Give a helpful error message
+        (_,Nothing) -> redirect "/" -- TODO - Give a helpful error message
+        (Just uname, Just email) -> do
           unameMap <- query QueryAllUsers
           case Map.lookup uname unameMap of
             Nothing -> do
               _ <- registerUser "login" "password"
-              _ <- update $ AddUser uname t
+              _ <- update $ AddUser uname email t
               redirect "/"
             Just _ -> do
-              redirect "/" -- TODO - give a helpful error message: uname is taken
+              writeText "Username is taken" -- TODO - give a helpful error message: uname is taken
 
 handleDumpState :: Handler App App ()
 handleDumpState = do
@@ -154,12 +156,12 @@ routes = [
     , ("/:params" , with auth $ handleIndex)
     , ("/", with auth $ handleIndex)
 
-    , ("add_1000",      handleAdd1000) -- TODO just testing
-    , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
-    , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
-    , ("/dump_state", handleDumpState)
-    , ("/test", writeText "test")
-    , ("/new_doc_class", with auth handleNewDocClass)
+--    , ("add_1000",      handleAdd1000) -- TODO just testing
+--    , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
+--    , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
+--    , ("/dump_state", handleDumpState)
+--    , ("/test", writeText "test")
+--    , ("/new_doc_class", with auth handleNewDocClass)
     , ("/static", serveDirectory "static") 
     ]
 
@@ -203,7 +205,7 @@ testDoc :: Int32 -> Document
 testDoc i = Document Nothing i "The Earth is Round (p < .05)" ["Jacob Cohen","Hans Ruthorford Jr."]
             "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] (Map.fromList [(0,testSummary)]) (Map.fromList [(0,testPraise)]) (testDate 0)
 
-testUsers = [ User "Arte Artimus" (Set.fromList ["Santa","Rudolph"]) Set.empty [] Set.empty ]
+testUsers = [ User "Arte Artimus" "arte@test.com" (Set.fromList ["Santa","Rudolph"]) Set.empty [] Set.empty ] 
 
 testPraise = Critique "This was a really awesome paper.  High cool points" (Just "Arte Artimus") Coolness  UpVote [UpVote,DownVote,UpVote] (testDate 0)
 
