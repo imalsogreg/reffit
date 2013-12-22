@@ -25,7 +25,7 @@ type CoolnessScore = Int
 
 documentDimScores :: Document -> (NoveltyScore, RigorScore, CoolnessScore)
 documentDimScores doc =
-  let filtQuality         = filter ((>1) . critiqueScore)
+  let filtQuality         = filter ((\(u,d) -> u-d >1) . critiqueScores)
       filtDim d           = filter ((==d) . critiqueDim)
       filtPraise          = filter ((==UpVote)   . critiqueVal)
       filtCriticism       = filter ((==DownVote) . critiqueVal)
@@ -55,12 +55,6 @@ controversyScore doc =
   let (p,c) = documentNCritiques doc
   in (p + c) * (10 - (abs $ p - c))   -- TODO this is a pretty weak controversy score 
 
-data UserStats = UserStats { userNPosts     :: Int
-                           , userSummaries  :: (Int,Int,Int)
-                           , userPraises    :: (Int,Int,Int)
-                           , userCriticisms :: (Int,Int,Int)
-                           , userNVotes     :: (Int,Int)
-                           } deriving (Eq, Show)
 
 lookupSummary :: DocumentId -> SummaryId -> Map.Map DocumentId Document 
                  -> Maybe Summary
@@ -84,15 +78,26 @@ lookupCritiques :: [(DocumentId,CritiqueId)] -> Map.Map DocumentId Document
 lookupCritiques inds docs = catMaybes
                             [lookupCritique dId cId docs | (dId,cId) <- inds]
 
+data UserStats = UserStats { userNPosts     :: Int
+                           , userSummaries  :: (Int,Int,Int)
+                           , userPraises    :: (Int,Int,Int)
+                           , userCriticisms :: (Int,Int,Int)
+                           , userNVotes     :: (Int,Int)
+                           } deriving (Eq, Show)
+
+-- TODO : This isn't too nice on the eyes
 userUsageStats :: Map.Map DocumentId Document -> User -> UserStats
-userUsageStats docs user = undefined -- UserStats undefined
---                           nDoc 
---                           (nSum,sumUp,sumDown)
+userUsageStats docs user = UserStats 
+                           nDoc 
+                           (nSum,sumUp,sumDown)
+                           (nPraises,nPUps,nPDowns)
+                           (nCrits,  nCUps,nCDowns)
+                           (nUp,nDown)
   where
     h = userHistory user
     nDoc = length [x | x@(PostedDocument {}) <- h]
-    sums  = [lookupSummary dId sId | (WroteSummary dId sId) <- h]
-    nsum  = length sums
+    sums  = catMaybes [lookupSummary dId sId docs | (WroteSummary dId sId) <- h]
+    nSum  = length sums
     (sumUp,sumDown) = foldl (\(a,b) (c,d) -> (a+b,c+d)) (0,0) (map summaryScores sums)
     critiqueInds = [(dId,cId) | (WroteCritique dId cId) <- h]
     critiques = lookupCritiques critiqueInds docs
@@ -102,4 +107,16 @@ userUsageStats docs user = undefined -- UserStats undefined
     (pUps, pDowns) = List.partition (==UpVote) praiseVotes
     (nPUps,nPDowns) = (length pUps, length pDowns)
     nCrits = length crits
+    critVotes = concat . map critiqueReactions $ crits
+    (cUps,cDowns) = List.partition (==UpVote) critVotes
+    (nCUps,nCDowns) = (length cUps, length cDowns)
+    allUserVotes = catMaybes $ [vd|(VotedOnSummary _ _ vd _)  <- h] ++
+                   [vd|(VotedOnCritique _ _ vd _) <- h]
+    (allUps,allDowns) = List.partition (==UpVote) allUserVotes
+    (nUp,nDown) = (length allUps, length allDowns)
     
+userReputation :: Map.Map DocumentId Document -> User -> Int
+userReputation docs user =
+  case userUsageStats docs user of
+    (UserStats _ (_,sUp,_) (_,pUp,_) (_,cUp,_) _) ->
+      sUp + pUp + cUp

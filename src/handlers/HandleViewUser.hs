@@ -123,6 +123,8 @@ profileSplices t cUser' profileUser docs = do
   "nFollowers"    ## I.textSplice . T.pack . show . Set.size . userFollowedBy
     $ profileUser
   (allPaperRollSplices $ userPinboardDocs docs profileUser)
+  (allUserBlockSplices "following" docs (userFollowing  profileUser))
+  (allUserBlockSplices "followers" docs (userFollowedBy profileUser)) 
   where (followBtnText,followBtnLink) =
           case Set.member (userName profileUser) <$> (userFollowing <$> cUser') of
             Just False -> ("Follow",   T.append "follow/"  (userName profileUser))
@@ -212,3 +214,18 @@ sTimeT t dId sId docs = maybe "error" T.pack $ do
   doc  <- Map.lookup dId docs
   smry <- Map.lookup sId $ docSummaries doc
   return $ sayTimeDiff t (summaryPostTime smry)
+
+allUserBlockSplices :: T.Text -> Map.Map DocumentId Document 
+                       -> Set.Set UserName -> Splices (SnapletISplice App)
+allUserBlockSplices nodeName docs userNames = 
+  nodeName ## renderUserBlocks docs (Set.toList userNames)
+
+renderUserBlocks :: Map.Map DocumentId Document -> [UserName] -> SnapletISplice App
+renderUserBlocks docs = I.mapSplices $ I.runChildrenWith . splicesFromUserBlock docs
+
+-- TODO - put users reputations in the parens (will have to take users map,
+--        or get the User in here, not just UserName
+splicesFromUserBlock :: Monad n => Map.Map DocumentId Document 
+                        -> UserName -> Splices (I.Splice n)
+splicesFromUserBlock docs userName = do
+  "userName" ## I.textSplice userName

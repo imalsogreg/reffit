@@ -2,6 +2,6 @@
 
   <!-- Just this for now.  But maybe later also reputation -->
   <!-- and favorite tag, etc -->
-  <userName/>
+  <a href="/user/${userName}"><userName/></a>(<userRep/>)
 
 </div>
