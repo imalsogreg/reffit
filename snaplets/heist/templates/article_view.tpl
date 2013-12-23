@@ -78,10 +78,15 @@
     <div class="col-sm-4" id="summaries-div">
       <div class="article_summaries">
 	<h3>Summaries 
+
+          <ifLoggedIn>
           <a href="/new_summary/${docId}">
             <button type="button" class="btn btn-primary btn-xs">New</button>
-        </a></h3>
-	<articleSummaries>
+          </a>
+          </ifLoggedIn>
+
+        </h3>
+        <articleSummaries>
 	  <apply template="summary"/>
 	</articleSummaries>
       </div>
@@ -89,7 +94,11 @@
 
     <div class="col-sm-4" id="praise-div">
       <div class="article_praise">
-	<h3>Praise  <a href="/new_praise/${docId}"><button type="button" class="btn btn-success btn-xs">New</button></a></h3>
+	<h3>Praise  
+<ifLoggedIn>
+<a href="/new_praise/${docId}"><button type="button" class="btn btn-success btn-xs">New</button></a>
+</ifLoggedIn>
+</h3>
 	<articlePraise>
 	  <apply template="articlePraise"/>
 	</articlePraise>
@@ -98,7 +107,9 @@
 
     <div class="col-sm-4" id="criticisms-div">
       <div class="article_criticisms">
-	<h3>Criticism <a href="/new_criticism/${docId}"><button type="button" class="btn btn-warning btn-xs">New</button></a></h3>
+	<h3>Criticism 
+<ifLoggedIn>
+<a href="/new_criticism/${docId}"><button type="button" class="btn btn-warning btn-xs">New</button></a></ifLoggedIn></h3>
 	<articleCriticisms>
 	  <apply template="articleCriticisms"/>
 	</articleCriticisms>
