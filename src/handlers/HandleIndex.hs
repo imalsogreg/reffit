@@ -50,7 +50,7 @@ allIndexSplices tNow docs user' us indexParams tags  = do
   allPaperRollSplices docsToShow
   allStatsSplices docs us
   case user' of 
-    Nothing -> return ()
+    Nothing -> "tagsButton" ## tagButtonSplice testTags
     Just user -> allFilterTagSplices user 
 
 
@@ -65,7 +65,9 @@ allStatsSplices docs us = do
                     (sum $ map (length . critiqueReactions) (Map.elems $ docCritiques d))) (Map.elems docs)) 
     
 allFilterTagSplices :: User -> Splices (SnapletISplice App)
-allFilterTagSplices user = "fieldTags" ## renderFieldTags user (Set.toList $ userTags user)
+allFilterTagSplices user = do
+  "fieldTags"  ## renderFieldTags user (Set.toList $ userTags user)
+  "tagsButton" ## tagButtonSplice testTags 
  
 renderFieldTags :: User -> [TagPath] -> SnapletISplice App
 renderFieldTags user = I.mapSplices $ I.runChildrenWith . splicesFromFieldTag user

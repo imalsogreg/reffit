@@ -3,7 +3,8 @@
 module HandleNewPaper(
   documentView,
   documentForm,
-  handleNewArticle
+  handleNewArticle,
+  tagButtonSplice
   )
 where
  
