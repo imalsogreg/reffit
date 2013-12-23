@@ -1,22 +1,33 @@
 <apply template="base">
 
-  <div class="new_comment_form">
-    <dfForm>
+
+    <dfForm class="form-group form-horizontal">
       
       <dfChildErrorList ref=""/>
       
-      <dfLabel ref="poster">Post as: </dfLabel>
-      <dfInputSelect ref="poster"/>
-      <br>
+      <div class="form-group">
+        <dfLabel ref="poster" class="col-sm-2 control-label">Post as: </dfLabel>
+        <div class="col-sm-8">
+          <dfInputSelect ref="poster" class="form-control"/>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <dfLabel ref="prose" class="col-sm-2 control-label">Comment: </dfLabel>
+        <div class="col-sm-8">
+          <dfInputTextArea ref="prose" rows="10" cols="50" class="form-control"/>
+        </div>
+
+      </div>
       
-      <dfLabel ref="prose">Comment: </dfLabel>
-      <dfInputText ref="prose" size="50"/>
-      <br>
-      
-      <dfInputSubmit value="Submit"/>
-      
+      <div class="form-group">
+        <div class="col-sm-offset-2 col-sm-10">
+          <dfInputSubmit value="Submit"/>
+        </div>
+      </div>
+
     </dfForm>
-  </div>
+
 
 </apply>
 
