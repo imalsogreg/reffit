@@ -6,7 +6,9 @@
     <link rel="stylesheet" type="text/css" href="/static/media/css/prose.css"/>    
     <script src="/static/media/js/jquery-1.10.2.js"/>
     <script src="/static/media/bootstrap/dist/js/bootstrap.js"/>
+    <script src="/static/media/js/tree.js"/>
     <link rel="stylesheet" type="text/css" href="/static/media/bootstrap/dist/css/bootstrap.css"/>
+    <link rel="stylesheet" type="test/css" href="/static/media/css/tree.css"/>
     <link rel="icon" type="image/png" href="/static/media/img/flavCircle.png"/>
 
   

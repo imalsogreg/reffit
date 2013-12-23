@@ -148,39 +148,33 @@ handleNewArticle = handleForm
              heistLocal (bindDigestiveSplices vw)
                $ renderWithSplices "_new_paper" ftSplices
                where ftSplices = do
-                       "fieldTags" ## I.textSplice $ T.intercalate " | "  tagList 
                        "tagsButton" ## tagButtonSplice testTags
                      tagList = concat $ map RT.flatten testTags :: [FieldTag]  
                      
-
+-- These splices are for the button, which should have the 'add tag label'
+-- as a parent list-item, because tree.js shows the first list item on load.
 tagButtonSplice :: (Monad m) => FieldTags -> I.Splice m
-tagButtonSplice tags = return $ [tagTreeButtonNode tags]
+tagButtonSplice tags = return $ [X.Element "ul"  [] $
+                                 [X.Element "li" [] $ 
+                                 [X.Element "a" [] [X.TextNode "Choose Tag"]
+                                 , tagTreeButtonNode [] tags]]] 
+  
+tagTreeButtonNode :: TagPath -> FieldTags -> X.Node
+tagTreeButtonNode basePath tags = X.Element "ul" [] 
+                                  $ map (fieldTagButtonNode basePath) tags
 
-tagTreeButtonNode :: FieldTags -> X.Node
-tagTreeButtonNode tags = X.Element "ul" [] 
-                           $ map fieldTagButtonNode tags
-
-fieldTagButtonNode :: RT.Tree FieldTag -> X.Node
-fieldTagButtonNode (RT.Node n [])   = X.Element "li" [] [X.TextNode n]
-fieldTagButtonNode (RT.Node n subs) = 
-  X.Element "li" [] [X.TextNode n
-                    , tagTreeButtonNode subs]
-
-
-{- -- This is the way I thought of with heist recursion in mind
-   -- It seems to be much easier with XmlHtml!  I like the
-   -- mutual recursion for going over the Data.Tree here!
-allTreesSplices :: FieldTags -> Splices (SnapletISplice App)
-allTreesSplices tagPaths = do
-  "buttonTags" ## renderSubTrees tagPaths
-
-renderSubTrees :: FieldTags -> SnapletISplice App
-renderSubTrees = I.mapSplices $ I.runChildrenWith . splicesFromSubTree
-
-splicesFromSubTree :: RT.Tree FieldTag -> Splices (I.Splice (Handler App App))
-splicesFromSubTree (RT.Node t []) = do  
-  "tagName" ## I.textSplice t 
-splicesFromSubTree (RT.Node t subs) = do 
-  "tagName" ## I.textSplice t
-  (allTreesSplices subs)
--}
+fieldTagButtonNode :: TagPath -> RT.Tree FieldTag -> X.Node
+fieldTagButtonNode basePath (RT.Node n [])   =
+  X.Element "li" [("name", toFullName $ basePath ++ [n])]
+  [X.Element "a" [] [X.TextNode n],
+   X.Element "a"
+   [("name", toFullName $ basePath ++ [n]),("class","btn-add btn btn-default btn-xs"),("shortName",n)]
+   [X.TextNode "Add"]
+  ] 
+fieldTagButtonNode basePath (RT.Node n subs) = 
+  X.Element "li" [("name", toFullName basePath')]
+  [ X.Element "a" [] [ X.TextNode $ T.append n " (..)" ]
+  , X.Element "a" [("name", toFullName basePath'),("class","btn-add btn btn-default btn-xs"),("shortName",n)] [X.TextNode "Add"]
+  , tagTreeButtonNode basePath' subs
+  ]  
+  where basePath' = basePath ++ [n]

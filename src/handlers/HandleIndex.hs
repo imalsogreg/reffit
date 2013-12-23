@@ -9,6 +9,7 @@ import Reffit.Types
 import PaperRoll
 import Reffit.AcidTypes
 import Reffit.FieldTag
+import HandleNewPaper -- to get fieldTag button splices. TODO restructure
 
 import Control.Applicative
 import Snap.Core (getParams, writeText)

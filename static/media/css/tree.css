@@ -2,11 +2,15 @@
 /* http://stackoverflow.com/questions/11167628/trees-in-twitter-bootstrap */
 /* By Mehmet Atas */
 
+.tree {
+    margin: 5px -40px;
+}
+
 .tree li {
-    margin: 0px 0;
+    margin: 0px 0;  /* TODO - edited by me to position.  Probably not robust */
     list-style-type: none;
     position: relative;
-    padding: 20px 5px 0px 5px;
+    padding: 0px 5px 0px 5px;
 }
 .tree li::before {
     content:'';
@@ -22,9 +26,9 @@
 .tree li::after {
     content:'';
     position: absolute;
-    top: 30px;
+    top: 10px;
     width: 25px;
-    height: 20px;
+    height: 00px;
     right: auto;
     left: -20px;
     border-top: 1px solid #ccc;
@@ -47,17 +51,5 @@
 }
 /*Remove connectors after last child*/
  .tree li:last-child::before {
-    height: 30px;
-}
-/*Time for some hover effects*/
-
-/*We will apply the hover effect the the lineage of the element also*/
- .tree li a:hover, .tree li a:hover+ul li a {
-    background: #c8e4f8;
-    color: #000;
-    border: 1px solid #94a0b4;
-}
-/*Connector styles on hover*/
- .tree li a:hover+ul li::after, .tree li a:hover+ul li::before, .tree li a:hover+ul::before, .tree li a:hover+ul ul::before {
-    border-color: #94a0b4;
+    height: 10px;
 }

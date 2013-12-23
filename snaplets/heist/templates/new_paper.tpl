@@ -57,33 +57,43 @@
               <dfInputSelect ref="docClass" class="form-control"/>
             </div>
 	  </div>
-	  <div class="form-group">
+	  
+	  <!-- Hide this form group.  JS of field tags selector will invisibly write to it. -->
+	  <div class="form-group" style="display:none;">
             <label ref="docTags" for="docTags" class="col-sm-2 control-label">Field Tags</label>
             <div class="col-sm-10">
-              <dfInputText ref="docTags" size="80" class="form-control" placeholder="Math.Statistics, Philosophy.PhilosophyOfScience"/>
+              <dfInputText ref="docTags" size="80" class="form-control" id="fieldTagsHidden"/>
             </div>
 	  </div>
+	  
 	  <div class="form-group">
-            <div class="col-sm-offset-2 col-sm-10">
+	    <label class="col-sm-2 control-label">Field Tags</label>
+	    <div class="col-sm-8">
+	      <input  class="form-control disabledInput" id="fieldTagsView" disabled/>
+	    </div>
+	    <div class="col-sm-2">
+	      <button class="btn btn-default btn-xs form-control btn-clear" href="#">Clear</button>
+	    </div>	    
+	  </div>
+	  
+	  <div class="form-group">
+	    <div class="col-sm-offset-2 col-sm-8">
+	      <div class="tree">
+		<tagsButton/>
+	      </div>	      
+	    </div>
+	    
+            <div class="col-sm-2">
               <dfInputSubmit value="Enter" class="btn btn-default"/>
             </div>
 	  </div>
 	</dfForm>
-     
+	
   </div>
 
-  <tagsButton/>
-
-  <button class="toggleFieldTags btn btn-default">Available Field Tags</button>
-  <p class="field_tags"><fieldTags/></p>
-  
   <script>
 
   $(document).ready(function(){
-
-    $(".toggleFieldTags").click(function(){
-      $(".field_tags").toggle();
-    });
 
     var r = $(".doiButton").click(function(){
       var doi = $('.doiText').val();
