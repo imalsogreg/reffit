@@ -33,6 +33,7 @@ import           Heist
 import qualified Heist.Interpreted            as I
 import           Application
 import qualified Text.Blaze.Html5             as H
+import qualified Text.XmlHtml                 as X
 import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist
 import           GHC.Int
@@ -148,4 +149,38 @@ handleNewArticle = handleForm
                $ renderWithSplices "_new_paper" ftSplices
                where ftSplices = do
                        "fieldTags" ## I.textSplice $ T.intercalate " | "  tagList 
+                       "tagsButton" ## tagButtonSplice testTags
                      tagList = concat $ map RT.flatten testTags :: [FieldTag]  
+                     
+
+tagButtonSplice :: (Monad m) => FieldTags -> I.Splice m
+tagButtonSplice tags = return $ [tagTreeButtonNode tags]
+
+tagTreeButtonNode :: FieldTags -> X.Node
+tagTreeButtonNode tags = X.Element "ul" [] 
+                           $ map fieldTagButtonNode tags
+
+fieldTagButtonNode :: RT.Tree FieldTag -> X.Node
+fieldTagButtonNode (RT.Node n [])   = X.Element "li" [] [X.TextNode n]
+fieldTagButtonNode (RT.Node n subs) = 
+  X.Element "li" [] [X.TextNode n
+                    , tagTreeButtonNode subs]
+
+
+{- -- This is the way I thought of with heist recursion in mind
+   -- It seems to be much easier with XmlHtml!  I like the
+   -- mutual recursion for going over the Data.Tree here!
+allTreesSplices :: FieldTags -> Splices (SnapletISplice App)
+allTreesSplices tagPaths = do
+  "buttonTags" ## renderSubTrees tagPaths
+
+renderSubTrees :: FieldTags -> SnapletISplice App
+renderSubTrees = I.mapSplices $ I.runChildrenWith . splicesFromSubTree
+
+splicesFromSubTree :: RT.Tree FieldTag -> Splices (I.Splice (Handler App App))
+splicesFromSubTree (RT.Node t []) = do  
+  "tagName" ## I.textSplice t 
+splicesFromSubTree (RT.Node t subs) = do 
+  "tagName" ## I.textSplice t
+  (allTreesSplices subs)
+-}

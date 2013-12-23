@@ -72,6 +72,8 @@
      
   </div>
 
+  <tagsButton/>
+
   <button class="toggleFieldTags btn btn-default">Available Field Tags</button>
   <p class="field_tags"><fieldTags/></p>
   
