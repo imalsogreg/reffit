@@ -1,14 +1,27 @@
-<form method="post" action="${postAction}">
-  <table id="info">
-    <tr>
-      <td>Login:</td><td><input type="text" name="login" size="20" /></td>
-    </tr>
-    <tr>
-      <td>Password:</td><td><input type="password" name="password" size="20" /></td>
-    </tr>
-    <tr>
-      <td></td>
-      <td><input type="submit" value="${submitText}" /></td>
-    </tr>
-  </table>
+<div class="login-form">
+
+<form method="post" action="${postAction}" class="form-horizontal" role="form">
+
+  <div class="form-group">
+    <label class="control-label col-sm-4">Login</label>
+    <div class="col-sm-8">
+      <input type="text" name="login" size="20" class="form-control"/>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="control-label col-sm-4">Password</label>
+    <div class="col-sm-8">
+      <input type="password" name="password" size="20" class="form-control"/>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <div class="col-sm-offset-4 col-sm-4">
+      <input type="submit" value="${submitText}" class="form-control"/>
+    </div>
+  </div>
+
 </form>
+
+</div>

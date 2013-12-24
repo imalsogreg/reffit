@@ -170,3 +170,8 @@ h3 .button{
  border-width:1px;
  border-radius: 3px;
 }
+
+.login-form{
+  margin: 0px auto;
+  width: 40%; 
+}
