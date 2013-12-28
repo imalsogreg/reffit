@@ -130,7 +130,7 @@ splicesFromSummary :: Monad n => UTCTime -> Maybe User -> Document -> (SummaryId
 splicesFromSummary t u doc (sId,s) = do 
   "upCount"       ## I.textSplice (T.pack . show $ nUp) 
   "downCount"     ## I.textSplice (T.pack . show $ nDown)
-  "proseText"     ## I.textSplice (T.pack . show $ summaryProse s)
+  "proseText"     ## I.textSplice (summaryProse s)
   "proseTimeSince"     ## I.textSplice (T.pack . sayTimeDiff t . summaryPostTime $ s) 
   case summaryPoster s of
     Nothing -> do
