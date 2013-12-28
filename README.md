@@ -8,7 +8,7 @@ Reffit is a community micro-review system for science papers.  It takes ideas fr
 Installation
 ============
 
-Non-haskell dependency on the (icu)[http://site.icu-project.org/] library (libicu-dev in Ubuntu).
+Non-haskell dependency on the [icu](http://site.icu-project.org/) library (libicu-dev in Ubuntu).
 <pre>
 cabal sandbox init
 cabal install
