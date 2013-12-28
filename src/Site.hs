@@ -100,17 +100,20 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
     handleFormSubmit = do
       l <- fmap decodeUtf8 <$> getParam "login"
       e <- fmap decodeUtf8 <$> getParam "email"
+      p <- getParam "password"
       t <- liftIO $ getCurrentTime
-      case (l,e) of
-        (Nothing,_) -> redirect "/" -- TODO - Give a helpful error message
-        (_,Nothing) -> redirect "/" -- TODO - Give a helpful error message
-        (Just uname, Just email) -> do
+      case (l,e,p) of
+        (Nothing,_,_) -> redirect "/" -- TODO - Give a helpful error message
+        (_,Nothing,_) -> redirect "/" -- TODO - Give a helpful error message
+        (_,_,Nothing) -> redirect "/" -- TODO -- error message
+        (Just uname, Just email, Just pw) -> do
           unameMap <- query QueryAllUsers
           case Map.lookup uname unameMap of
             Nothing -> do
               _ <- registerUser "login" "password"
               _ <- update $ AddUser uname email t
-              redirect "/"
+              _ <- loginByUsername uname (ClearText pw) True --TODO remember by default
+              redirect "/" 
             Just _ -> do
               writeText "Username is taken" -- TODO - give a helpful error message: uname is taken
 

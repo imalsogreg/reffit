@@ -1,3 +1,5 @@
+(anyone visiting from /r/haskell to look at the site, if you want to try writing a comment / voting, but don't want to make up a username and password, login with username: test, pw: test .  I'll delete that account around Jan 5th)
+
 reffit
 ======
 
