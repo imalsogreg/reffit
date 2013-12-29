@@ -16,7 +16,6 @@ import Reffit.Types
 import Reffit.OverviewComment
 import Reffit.Document 
 import Reffit.User
-import Reffit.DataVersion
 import Reffit.FieldTag
 
 import Safe
@@ -56,7 +55,7 @@ data PersistentState = PersistentState {
   
 makeLenses ''PersistentState
 
-deriveSafeCopy scv 'base ''PersistentState
+deriveSafeCopy 0 'base ''PersistentState
 
 queryAllDocs :: Query PersistentState (Map.Map DocumentId Document)
 queryAllDocs = asks _documents

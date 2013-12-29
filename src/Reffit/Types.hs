@@ -10,7 +10,6 @@ import qualified Data.Map as Map
 import           GHC.Int
 import           GHC.Generics
 import           Data.Typeable
-import           Reffit.DataVersion
 import           Reffit.FieldTag
 import           Data.Time.Clock
 import Data.SafeCopy (base, deriveSafeCopy)
