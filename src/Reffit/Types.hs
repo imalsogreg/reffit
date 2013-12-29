@@ -25,31 +25,11 @@ type UserName   = Text
 type CritiqueId = Int32
 type SummaryId  = Int32
 type DocumentId = Int32
-
+ 
 data UpDownVote = DownVote | UpVote
                 deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy scv 'base ''UpDownVote
 
-data UserEvent = WroteCritique   DocumentId CritiqueId
-               | VotedOnCritique DocumentId CritiqueId (Maybe UpDownVote) UTCTime
-               | WroteSummary    DocumentId SummaryId
-               | VotedOnSummary  DocumentId SummaryId (Maybe UpDownVote) UTCTime
-               | PostedDocument  DocumentId
-               | FollowedUser    UserName   UTCTime
-               | PinnedDoc       DocumentId UTCTime
-               deriving (Show, Eq, Ord, Generic, Typeable)
-deriveSafeCopy scv 'base ''UserEvent
-
-data User = User { userName       :: UserName
-                 , userEmail      :: Text
-                 , userFollowing  :: Set.Set UserName
-                 , userFollowedBy :: Set.Set UserName
-                 , userHistory    :: [UserEvent]
-                 , userPinboard   :: Set.Set DocumentId
-                 , userTags       :: Set.Set TagPath
-                 , userJoinTime   :: UTCTime
-                 } deriving (Show, Eq, Ord, Generic,Typeable)
-deriveSafeCopy scv 'base ''User
 
 data Summary = Summary { summaryPoster   :: Maybe UserName
                        , summaryProse    :: Text

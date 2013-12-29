@@ -1,6 +1,7 @@
 module Reffit.Scores where
 
 import Reffit.Types
+import Reffit.User
 
 import qualified Data.Map as Map
 import qualified Data.List as List

@@ -4,6 +4,7 @@ module HandleViewPaper (handleViewPaper) where
 
 import Reffit.Types
 import Reffit.AcidTypes
+import Reffit.User
 import Reffit.Sort
 
 import Safe

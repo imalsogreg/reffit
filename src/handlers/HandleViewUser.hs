@@ -7,6 +7,7 @@ module HandleViewUser (handleViewUser
 
 import Reffit.Types
 import Reffit.AcidTypes
+import Reffit.User
 import PaperRoll
 import Reffit.Sort
 import Reffit.FieldTag
@@ -15,7 +16,7 @@ import qualified Text.XmlHtml as X
 import Safe
 import Control.Applicative ((<$>),(<*>),pure)
 import Control.Monad.Trans
-import qualified Data.List as List
+
 import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Time
@@ -32,7 +33,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Char8 as BS
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
-import GHC.Int
 import Control.Lens
 import Control.Monad
 import Data.Maybe

@@ -13,6 +13,7 @@
 module Reffit.AcidTypes where
 
 import Reffit.Types
+import Reffit.User
 import Reffit.DataVersion
 import Reffit.FieldTag
 

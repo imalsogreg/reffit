@@ -7,6 +7,7 @@ where
 
 import Reffit.Types
 import PaperRoll
+import Reffit.User
 import Reffit.AcidTypes
 import Reffit.FieldTag
 import HandleNewPaper -- to get fieldTag button splices. TODO restructure

@@ -10,20 +10,17 @@ where
  
 import           Reffit.Types
 import           Reffit.AcidTypes
+import           Reffit.User
 import           Reffit.FieldTag
 import           Reffit.CrossRef
 import           Application 
-import           Snap.Snaplet.AcidState (Update, Query, Acid,
-                                         HasAcid (getAcidStore),
-                                         makeAcidic,
-                                         update,query,acidInit)
+import           Snap.Snaplet.AcidState (update,query)
 import           Snap.Core
 import           Snap.Snaplet(Handler)
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Auth
 import           Control.Applicative
 import qualified Data.ByteString.Char8        as BS
-import           Data.Monoid
 import           Data.Hashable
 import qualified Data.Map                     as Map
 import           Data.Text                    (Text)
@@ -32,7 +29,6 @@ import           Text.Digestive
 import           Text.Digestive.Blaze.Html5
 import           Heist 
 import qualified Heist.Interpreted            as I
-import           Application
 import qualified Text.Blaze.Html5             as H
 import qualified Text.XmlHtml                 as X
 import           Text.Digestive.Snap (runForm)
