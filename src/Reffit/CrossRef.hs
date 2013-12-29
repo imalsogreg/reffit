@@ -3,6 +3,7 @@
 module Reffit.CrossRef where
 
 import Reffit.Types
+import Reffit.Document
 
 import qualified Network.HTTP as H 
 import Network.Browser

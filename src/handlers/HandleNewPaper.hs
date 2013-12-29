@@ -10,9 +10,11 @@ where
  
 import           Reffit.Types
 import           Reffit.AcidTypes
+import           Reffit.Document
 import           Reffit.User
 import           Reffit.FieldTag
 import           Reffit.CrossRef
+
 import           Application 
 import           Snap.Snaplet.AcidState (update,query)
 import           Snap.Core

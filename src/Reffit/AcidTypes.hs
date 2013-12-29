@@ -13,6 +13,8 @@
 module Reffit.AcidTypes where
 
 import Reffit.Types
+import Reffit.OverviewComment
+import Reffit.Document 
 import Reffit.User
 import Reffit.DataVersion
 import Reffit.FieldTag

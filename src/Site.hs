@@ -14,6 +14,8 @@ module Site
 
 import           Reffit.Types
 import           Reffit.AcidTypes
+import           Reffit.OverviewComment
+import           Reffit.Document
 import           Reffit.User
 import           Reffit.FieldTag
 import           Reffit.CrossRef

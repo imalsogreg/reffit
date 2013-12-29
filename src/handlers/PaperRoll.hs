@@ -4,6 +4,7 @@ module PaperRoll where
 
 import Reffit.Types
 import Reffit.AcidTypes
+import Reffit.Document
 import Reffit.Scores
 import Reffit.Sort
 import Reffit.Search

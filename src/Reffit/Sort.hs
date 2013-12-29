@@ -3,6 +3,7 @@
 module Reffit.Sort where
 
 import Reffit.Types
+import Reffit.Document
 import Reffit.Scores
 
 import Text.Printf

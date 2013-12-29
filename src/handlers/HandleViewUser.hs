@@ -7,6 +7,8 @@ module HandleViewUser (handleViewUser
 
 import Reffit.Types
 import Reffit.AcidTypes
+import Reffit.Document
+import Reffit.OverviewComment
 import Reffit.User
 import PaperRoll
 import Reffit.Sort

@@ -6,6 +6,8 @@ module HandleIndex(
 where
 
 import Reffit.Types
+import Reffit.Document
+import Reffit.OverviewComment
 import PaperRoll
 import Reffit.User
 import Reffit.AcidTypes

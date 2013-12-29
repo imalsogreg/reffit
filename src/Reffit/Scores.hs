@@ -1,7 +1,9 @@
 module Reffit.Scores where
 
 import Reffit.Types
+import Reffit.Document
 import Reffit.User
+import Reffit.OverviewComment
 
 import qualified Data.Map as Map
 import qualified Data.List as List

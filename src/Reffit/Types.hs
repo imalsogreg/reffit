@@ -19,54 +19,14 @@ import qualified Data.Set as Set
 
 data DocClass = DocClass { docClassName :: Text
                          } deriving (Show, Generic, Typeable, Eq)
-deriveSafeCopy scv 'base ''DocClass
+deriveSafeCopy 0 'base ''DocClass
 
 type UserName   = Text
 type CritiqueId = Int32
-type SummaryId  = Int32
+type SummaryId  = Int32 
 type DocumentId = Int32
  
 data UpDownVote = DownVote | UpVote
                 deriving (Show, Eq, Ord, Generic, Typeable)
-deriveSafeCopy scv 'base ''UpDownVote
+deriveSafeCopy 0 'base ''UpDownVote
 
-
-data Summary = Summary { summaryPoster   :: Maybe UserName
-                       , summaryProse    :: Text
-                       , summaryVotes    :: [UpDownVote]
-                       , summaryPostTime :: UTCTime
-                       } deriving (Show, Generic)
-deriveSafeCopy scv 'base ''Summary
-
-data QualityDim = Novelty | Rigor | Coolness
-                deriving (Eq, Show, Generic, Typeable)
-deriveSafeCopy scv 'base ''QualityDim
-
-data Critique = Critique { critiqueProse     :: Text
-                         , critiquePoster    :: Maybe UserName
-                         , critiqueDim       :: QualityDim
-                         , critiqueVal       :: UpDownVote
-                         , critiqueReactions :: [UpDownVote]
-                         , critiquePostTime  :: UTCTime
-                         } deriving (Show, Generic)
-deriveSafeCopy scv 'base ''Critique
-
-
-data Document = Document { docUploader  :: Maybe UserName
-                         , docId        :: DocumentId
-                         , docTitle     :: Text
-                         , docAuthors   :: [Text]
-                         , docLink      :: Text
-                         , docClass     :: DocClass
-                         , docFieldTags :: [TagPath]
-                         , docSummaries :: Map.Map SummaryId  Summary
-                         , docCritiques :: Map.Map CritiqueId Critique
-                         , docPostTime  :: UTCTime
-                         } deriving (Show, Generic, Typeable)
-deriveSafeCopy scv 'base ''Document
-
-data DocumentHints = DocumentHints { titleHint   :: Text
-                                   , authorsHint :: [Text]
-                                   , linkHint    :: Text
-                                   , yearHint    :: Maybe Int
-                                   }
