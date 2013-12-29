@@ -19,8 +19,8 @@ type FieldTag = T.Text
 type TagPath = [FieldTag]
 type FieldTags = Forest FieldTag
 
-testTags :: Forest FieldTag
-testTags =
+tagHierarchy :: Forest FieldTag
+tagHierarchy =
   [
     Node "Biology" [
          Node "Anthropology" []

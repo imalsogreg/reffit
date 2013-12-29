@@ -9,6 +9,9 @@ where
 
 import           Reffit.Types
 import           Reffit.AcidTypes
+import           Reffit.Document
+import           Reffit.OverviewComment
+import           Reffit.User
 
 import           Safe
 import           Application 

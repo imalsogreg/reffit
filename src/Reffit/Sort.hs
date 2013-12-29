@@ -3,13 +3,17 @@
 module Reffit.Sort where
 
 import Reffit.Types
+import Reffit.Document
+import Reffit.FieldTag
 import Reffit.Scores
+import Reffit.Search
 
 import Text.Printf
 import Data.List
 import Data.Time
 import Data.Time.Clock
 import qualified Data.Text as T
+import qualified Data.Map as Map
 import Data.String
 
 data SortBy = New | Hot | Popular | Controversial
@@ -21,6 +25,36 @@ data SortBy = New | Hot | Popular | Controversial
 sortDocs :: (Document -> Int) -> Bool -> [Document]  -> [Document]
 sortDocs scoreF True  = sortBy (\a b -> scoreF b `compare` scoreF a)
 sortDocs scoreF False = sortBy (\a b -> scoreF a `compare` scoreF b)
+
+ 
+-- TODO pagination.  add Int and Int to each constructor for startInd and #of
+data PresentationStrategy = FiltSort SortBy [TagPath]
+                          | SearchBy T.Text
+                          deriving (Show, Eq)
+
+
+presentationSort :: UTCTime -> Map.Map DocumentId Document 
+                    -> PresentationStrategy 
+                    -> [Document]
+presentationSort _ docMap (SearchBy searchTerm) =
+  searchDocs 10 docMap searchTerm 
+presentationSort tNow docMap (FiltSort s [])  =
+  (sortDocs (sortF tNow s) True) . Map.elems $ docMap
+presentationSort tNow docMap (FiltSort s fts) = 
+  (sortDocs (sortF tNow s) True) 
+  . filter (\d -> any (\dtag -> any (tagIncludes dtag) fts) (docFieldTags d)) 
+  . Map.elems $ docMap
+
+sortF :: UTCTime -> SortBy -> (Document -> Int)
+sortF t s = case s of
+  New -> floor . (\d -> diffUTCTime (docPostTime d) t0)
+  Hot -> hotnessScore t
+  Popular -> qualityScore
+  Controversial -> controversyScore
+      
+t0 :: UTCTime
+t0 = UTCTime (ModifiedJulianDay 0) 0
+
 
 readSort :: (IsString a,Eq a) => a -> Maybe SortBy
 readSort "New"           = Just New

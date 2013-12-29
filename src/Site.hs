@@ -14,8 +14,12 @@ module Site
 
 import           Reffit.Types
 import           Reffit.AcidTypes
+import           Reffit.OverviewComment
+import           Reffit.Document
+import           Reffit.User
 import           Reffit.FieldTag
 import           Reffit.CrossRef
+import           Reffit.PaperRoll
 
 import           Control.Lens (view)
 import           Snap.Snaplet.AcidState (Update, Query, Acid,
@@ -23,7 +27,7 @@ import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          makeAcidic,
                                          update,query,acidInit)
 
-import           PaperRoll
+
 import           HandleIndex
 import           HandleNewPaper
 import           HandleNewDocClass
@@ -43,7 +47,7 @@ import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
 import           Snap.Snaplet.Auth.Backends.JsonFile
-import           Snap.Snaplet.Heist
+import           Snap.Snaplet.Heist 
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Snaplet.AcidState
 import           Snap.Util.FileServe
@@ -195,10 +199,10 @@ factoryReset = PersistentState Map.empty Map.empty [] []
 convenienceReset :: PersistentState
 convenienceReset = PersistentState Map.empty Map.empty [DocClass "Paper", DocClass "Preprint"
                                                        ,DocClass "Blog Post", DocClass "Video"
-                                                       ,DocClass "Book"] testTags 
+                                                       ,DocClass "Book"] tagHierarchy
 
 stresstestReset :: PersistentState
-stresstestReset = PersistentState docs Map.empty [DocClass "Paper"] testTags
+stresstestReset = PersistentState docs Map.empty [DocClass "Paper"] tagHierarchy
   where
     docs = Map.fromList [(i, Document Nothing i "The Earth is Round (p < .05)" []
               "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty (testDate (fromIntegral i)))

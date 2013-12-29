@@ -8,6 +8,8 @@ where
 
 import           Reffit.Types
 import           Reffit.AcidTypes
+import           Reffit.Document
+import           Reffit.OverviewComment
 
 import           Safe
 import           Application 

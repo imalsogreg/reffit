@@ -3,6 +3,8 @@
 module Reffit.Search where
 
 import Reffit.Types
+import Reffit.Document
+
 import qualified Data.Map as Map
 import qualified Data.Text as T
 import Data.List (sortBy, (\\))
