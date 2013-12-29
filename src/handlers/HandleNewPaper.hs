@@ -147,8 +147,8 @@ handleNewArticle = handleForm
              heistLocal (bindDigestiveSplices vw)
                $ renderWithSplices "_new_paper" ftSplices
                where ftSplices = do
-                       "tagsButton" ## tagButtonSplice testTags
-                     tagList = concat $ map RT.flatten testTags :: [FieldTag]  
+                       "tagsButton" ## tagButtonSplice tagHierarchy
+                     tagList = concat $ map RT.flatten tagHierarchy :: [FieldTag]  
                      
 -- These splices are for the button, which should have the 'add tag label'
 -- as a parent list-item, because tree.js shows the first list item on load.

@@ -10,7 +10,7 @@ import Reffit.AcidTypes
 import Reffit.Document
 import Reffit.OverviewComment
 import Reffit.User
-import PaperRoll
+import Reffit.PaperRoll
 import Reffit.Sort
 import Reffit.FieldTag
 

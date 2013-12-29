@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module PaperRoll where
+module Reffit.PaperRoll where
 
 import Reffit.Types
 import Reffit.AcidTypes
-import Reffit.Document
+import Reffit.Document 
 import Reffit.Scores
 import Reffit.Sort
 import Reffit.Search
@@ -28,47 +28,7 @@ import Control.Monad (join)
 import Control.Monad.Trans (liftIO)
 import Data.Time
 
-handlePaperRoll :: Handler App App ()
-handlePaperRoll = method GET handleNotGet
-  where  
-    handleNotGet = 
-      do
-        docs      <- query QueryAllDocs
-        tags      <- query QueryAllFieldTags
-        tNow      <- liftIO $ getCurrentTime
-        indexParams <- getParams
-        let docsToShow = presentationSort tNow docs 
-                         (paramsToStrategy tags indexParams) 
---        renderWithSplices "paper_roll" (allPaperRollSplices docsToShow)
-        writeText . T.pack . show $ paramsToStrategy tags indexParams
 
--- TODO - move this to Reffit.Sort?  Reffit.Search?
-presentationSort :: UTCTime -> Map.Map DocumentId Document 
-                    -> PresentationStrategy
-                    -> [Document]
-presentationSort _ docMap (SearchBy searchTerm) =
-  searchDocs 10 docMap searchTerm
-presentationSort tNow docMap (FiltSort s [])  =
-  (sortDocs (sortF tNow s) True) . Map.elems $ docMap
-presentationSort tNow docMap (FiltSort s fts) = 
-  (sortDocs (sortF tNow s) True) 
-  . filter (\d -> any (\dtag -> any (tagIncludes dtag) fts) (docFieldTags d)) 
-  . Map.elems $ docMap
-
-sortF :: UTCTime -> SortBy -> (Document -> Int)
-sortF t s = case s of
-  New -> floor . (\d -> diffUTCTime (docPostTime d) t0)
-  Hot -> hotnessScore t
-  Popular -> qualityScore
-  Controversial -> controversyScore
-      
-t0 :: UTCTime
-t0 = UTCTime (ModifiedJulianDay 0) 0
-
--- TODO pagination.  add Int and Int to each constructor for startInd and #of
-data PresentationStrategy = FiltSort SortBy [TagPath]
-                          | SearchBy T.Text
-                          deriving (Show, Eq)
 
 paramsToStrategy :: FieldTags -> Map.Map BS.ByteString [BS.ByteString] 
                     -> PresentationStrategy

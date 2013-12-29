@@ -8,7 +8,8 @@ where
 import Reffit.Types
 import Reffit.Document
 import Reffit.OverviewComment
-import PaperRoll
+import Reffit.Sort
+import Reffit.PaperRoll
 import Reffit.User
 import Reffit.AcidTypes
 import Reffit.FieldTag
@@ -30,7 +31,7 @@ import qualified Data.ByteString.Char8 as BS
 import Control.Monad
 import Control.Monad.Trans
 import Data.Time
-
+ 
 handleIndex :: Handler App (AuthManager App) ()
 --handleIndex = handlePaperRoll
 handleIndex = do
@@ -53,8 +54,8 @@ allIndexSplices tNow docs user' us indexParams tags  = do
   allPaperRollSplices docsToShow
   allStatsSplices docs us
   case user' of 
-    Nothing -> "tagsButton" ## tagButtonSplice testTags
-    Just user -> allFilterTagSplices user 
+    Nothing -> "tagsButton" ## tagButtonSplice tagHierarchy
+    Just user -> allFilterTagSplices (Set.toList . userTags $ user)
 
 
 allStatsSplices :: Map.Map DocumentId Document -> Map.Map UserName User -> Splices (SnapletISplice App)
@@ -66,17 +67,17 @@ allStatsSplices docs us = do
   "nVotes"    ## I.textSplice $ T.pack . show $
     sum (map (\d -> (sum $ map (length . summaryVotes) (Map.elems $ docSummaries d)) +
                     (sum $ map (length . critiqueReactions) (Map.elems $ docCritiques d))) (Map.elems docs)) 
-    
-allFilterTagSplices :: User -> Splices (SnapletISplice App)
-allFilterTagSplices user = do
-  "fieldTags"  ## renderFieldTags user (Set.toList $ userTags user)
-  "tagsButton" ## tagButtonSplice testTags 
- 
-renderFieldTags :: User -> [TagPath] -> SnapletISplice App
-renderFieldTags user = I.mapSplices $ I.runChildrenWith . splicesFromFieldTag user
 
-splicesFromFieldTag :: Monad n => User -> TagPath -> Splices (I.Splice n)
-splicesFromFieldTag user tp = do
-  "userName"         ## I.textSplice . userName $ user
-  "fieldTagText"     ## I.textSplice . last $ tp
+allFilterTagSplices :: [TagPath] -> Splices (SnapletISplice App)
+allFilterTagSplices tps = do
+  "fieldTags"  ## renderFieldTags tps 
+  "tagsButton" ## tagButtonSplice tagHierarchy
+ 
+renderFieldTags :: [TagPath] -> SnapletISplice App
+renderFieldTags = I.mapSplices $ I.runChildrenWith . splicesFromFieldTag
+
+splicesFromFieldTag :: Monad n => TagPath -> Splices (I.Splice n)
+splicesFromFieldTag tp = do
+  "fieldTagText"     ## I.textSplice . last $ tp 
   "fieldTagFullText" ## I.textSplice . toFullName $ tp
+
