@@ -75,6 +75,30 @@ addDocument user' doc = do  -- HandleNewPaper now finds a good Id
                                                    : (userHistory user) }))
     Nothing -> return ()
 
+addOComment :: Maybe User -> DocumentId -> OverviewComment
+            -> Update PersistentState (Maybe OverviewCommentId)
+addOComment user' pId comment = do
+  docs <- gets _documents
+  case Map.lookup pId docs of
+    Nothing -> return Nothing -- TODO - how to signal error?
+    Just doc -> do
+      modify (over documents $ \docs' ->
+               (Map.insert (docId doc)
+                (doc { docOComments = Map.insert cId comment (docOComments doc) }) docs')) 
+      case user' of
+        Just user ->
+          modify (over users (Map.insert (userName user)
+                              (user {userHistory = WroteOComment (docId doc) cId : userHistory user })))
+        Nothing -> return ()
+      return (Just cId) 
+      where
+        cId = head . filter (\k -> Map.notMember k (docOComments doc)) $
+              (cHash:cInd:cAll)
+        cHash = abs . fromIntegral . hash $ T.unpack (ocText comment) ++ show (ocPostTime comment)
+        cInd  = fromIntegral . Map.size $ docOComments doc
+        cAll = [0..]  
+
+{-
 addSummary :: Maybe User -> DocumentId -> Summary
               -> Update PersistentState (Maybe SummaryId)
 addSummary user' pId summary = do  
@@ -102,7 +126,10 @@ addSummary user' pId summary = do
           sHash = fromIntegral . hash . summaryProse $ summary
           sInd  = fromIntegral . Map.size $ docSummaries doc
           sAll  = [0..]
+-}
 
+
+{- 
 castSummaryVote :: User -> Bool -> DocumentId -> Document
                    -> SummaryId -> Summary -> UpDownVote -> UTCTime
                    -> Update PersistentState ()
@@ -116,7 +143,24 @@ castSummaryVote user isAnon dId doc sId summary voteVal t = do
            let s' = summary { summaryVotes = voteVal : summaryVotes summary }
                d' = doc { docSummaries = Map.insert sId s' (docSummaries doc)}
            in Map.insert dId d' ds) 
-          
+-}
+
+castOCommentVote :: User -> Bool -> DocumentId -> Document
+                 -> OverviewCommentId -> OverviewComment -> UpDownVote
+                 -> UTCTime
+                 -> Update PersistentState ()
+castOCommentVote user isAnon dId doc cId comment voteVal t = do
+  modify (over users $ \us' ->
+           let vRecord = if isAnon then Nothing else Just voteVal
+               histItem = VotedOnOComment dId cId vRecord t
+               u' = user { userHistory = histItem : userHistory user }
+           in Map.insert (userName user) u' us')
+  modify (over documents $ \ds ->
+           let c' = comment { ocResponse = voteVal : ocResponse comment }
+               d' = doc {docOComments = Map.insert cId c' (docOComments doc) }
+           in Map.insert dId d' ds)
+
+{-
 castCritiqueVote :: User -> Bool -> DocumentId -> Document
                  -> CritiqueId -> Critique -> UpDownVote -> UTCTime
                  -> Update PersistentState ()
@@ -130,7 +174,9 @@ castCritiqueVote user isAnon dId doc cId critique voteVal t = do
            let c' = critique { critiqueReactions = voteVal : critiqueReactions critique }
                d' = doc { docCritiques = Map.insert cId c' (docCritiques doc) } 
            in Map.insert dId d' ds)
+ -}
 
+{-
 addCritique :: Maybe User -> DocumentId -> Critique 
                -> Update PersistentState (Maybe SummaryId)
 addCritique user' pId critique = do
@@ -158,6 +204,7 @@ addCritique user' pId critique = do
           cHash = fromIntegral . hash . critiqueProse $ critique
           cInd  = fromIntegral . Map.size $ docCritiques doc
           cAll  = [0..]
+-}
 
 queryAllUsers :: Query PersistentState (Map.Map T.Text User)
 queryAllUsers = asks _users
@@ -234,5 +281,6 @@ makeAcidic ''PersistentState ['addDocument,         'queryAllDocs
                              , 'pin
                              , 'queryAllDocClasses, 'addDocClass
                              , 'queryAllFieldTags,  'addFieldTag
-                             , 'addSummary,         'addCritique
-                             , 'castSummaryVote,    'castCritiqueVote]
+                             , 'addOComment,        'castOCommentVote]
+--                             , 'addSummary,         'addCritique
+--                             , 'castSummaryVote,    'castCritiqueVote]

@@ -1,9 +1,13 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TupleSections     #-}
 
 module HandleNewCritique(
-  newCritiqueView,
-  newCritiqueForm,
-  handleNewCritique
+--  newCritiqueView, 
+--  newCritiqueForm,
+--  handleNewCritique,
+  newOCommentView,
+  newOCommentForm,
+  handleNewOComment
   )
 where
 
@@ -38,6 +42,24 @@ import           Text.Digestive.Heist
 import qualified Data.ByteString.Char8        as BS
 import           Control.Monad
 
+newOCommentForm :: (Monad m) => User -> OverviewCommentType -> UTCTime -> Form Text m OverviewComment
+newOCommentForm formUser ocType t =
+  OverviewComment
+  <$> "poster"    .: choice posterOpts Nothing
+  <*> "prose"     .: check "Not a valid entry" (not . T.null) (text Nothing)
+  <*> ocVoteVal
+  <*> pure []
+  <*> pure t 
+  where
+    posterOpts = [(Just (userName formUser), userName formUser)
+                 ,(Nothing, "Anonymous")]
+    dimOpts = [(Novelty,"Novelty"),(Rigor,"Rigor"),(Coolness,"Coolness")]
+    ocVoteVal = case ocType of
+      Summary'  -> pure Nothing
+      Praise    -> (Just . (,UpVote)  ) <$> critiqueVoteVal
+      Criticism -> (Just . (,DownVote)) <$> critiqueVoteVal
+    critiqueVoteVal = "dimension" .: choice dimOpts Nothing
+    
 newCritiqueForm :: (Monad m) => User -> UpDownVote -> UTCTime -> Form Text m Critique
 newCritiqueForm formUser critValue t =
   Critique
@@ -64,7 +86,13 @@ newCritiqueView view = do
   errorList "prose" view
   label     "prose" view "Article Critique"
   inputText "prose" view
-   
+
+-- I write the form in a .tpl rather than digestive-functors
+-- So that I can style it with twitter bootstrap
+newOCommentView :: View H.Html -> H.Html
+newOCommentView = undefined
+
+{-
 handleNewCritique :: UpDownVote -> Handler App (AuthManager App) ()  
 handleNewCritique critVal = do 
   userMap   <- query QueryAllUsers
@@ -87,3 +115,24 @@ handleNewCritique critVal = do
               redirect . BS.pack $ "/view_article/" ++ show pId
             Nothing -> do 
               heistLocal (bindDigestiveSplices vw) $ render "new_critique"
+-}
+ 
+handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
+handleNewOComment commentType = do
+  userMap <- query QueryAllUsers
+  pId'    <- getParam "paperid"
+  authUser' <- currentUser
+  t         <- liftIO $ getCurrentTime
+  case join $ readMay . T.unpack . decodeUtf8 <$> pId' of
+    Nothing -> writeText "paperid error" -- TODO proper error message
+    Just pId ->
+      case join $ (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+        Just user -> do
+          (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t
+          case rs of
+            Just comment -> do
+              let user' = maybe Nothing (const $ Just user) (ocPoster comment)
+              _ <- update $ AddOComment user' pId comment 
+              redirect . BS.pack $ "/view_article/" ++ show pId
+            Nothing -> do
+              heistLocal (bindDigestiveSplices vw) $ render "new_overview_comment"

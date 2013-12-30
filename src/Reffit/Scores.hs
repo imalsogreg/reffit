@@ -22,26 +22,31 @@ critiqueScores c = let (upVotes, downVotes)
                          = List.partition (==UpVote) $ critiqueReactions c
                   in (length upVotes, length downVotes)
 
+commentScores :: OverviewComment -> (Int,Int)
+commentScores c =
+  let (upVotes,downVotes) = List.partition (==UpVote) $ ocResponse c
+  in  (length upVotes, length downVotes)
+
 type NoveltyScore  = Int
 type RigorScore    = Int
 type CoolnessScore = Int
 
 documentDimScores :: Document -> (NoveltyScore, RigorScore, CoolnessScore)
 documentDimScores doc =
-  let filtQuality         = filter ((\(u,d) -> u-d >1) . critiqueScores)
-      filtDim d           = filter ((==d) . critiqueDim)
-      filtPraise          = filter ((==UpVote)   . critiqueVal)
-      filtCriticism       = filter ((==DownVote) . critiqueVal)
-      listCs               = Map.elems $ docCritiques doc
-      dimensionScore d    = (length . filtDim d . filtQuality $ filtPraise    listCs) -
-                            (length . filtDim d . filtQuality $ filtCriticism listCs)
-  in (dimensionScore Novelty, dimensionScore Rigor, dimensionScore Coolness)
+  let filtQuality         = filter ((\(u,d) -> u-d >1) . commentScores) :: [OverviewComment] -> [OverviewComment]
+      filtDim d           = filter ((==d) . fst . fromJust . ocVote)
+      filtPraise          = filter ((==UpVote)   . snd . fromJust . ocVote)
+      filtCriticism       = filter ((==DownVote) . snd . fromJust . ocVote)
+      listCritiques       = filter ((/=Nothing) . ocVote) . Map.elems $ docOComments doc
+      dimensionScore d    = (length . filtDim d . filtQuality $ filtPraise    listCritiques) -
+                            (length . filtDim d . filtQuality $ filtCriticism listCritiques)
+  in (dimensionScore Novelty, dimensionScore Rigor, dimensionScore Coolness) 
 
 documentNCritiques :: Document -> (Int,Int)
 documentNCritiques d = (length praise, length criticism)
   where
-    (praise,criticism) = List.partition ((==UpVote) . critiqueVal)
-                         (Map.elems $ docCritiques d)
+    critiques = List.filter ((/=Nothing).ocVote) . Map.elems $ docOComments d :: [OverviewComment]
+    (praise,criticism) = List.partition ((==UpVote) . snd . fromJust . ocVote) critiques 
 
 qualityScore :: Document -> Int
 qualityScore doc = let (n,r,c) = documentDimScores doc in n + r + c
@@ -59,27 +64,11 @@ controversyScore doc =
   in (p + c) * (10 - (abs $ p - c))   -- TODO this is a pretty weak controversy score 
 
 
-lookupSummary :: DocumentId -> SummaryId -> Map.Map DocumentId Document 
-                 -> Maybe Summary
-lookupSummary dId sId docs = do
+lookupOComment :: DocumentId -> OverviewCommentId -> Map.Map DocumentId Document
+               -> Maybe OverviewComment
+lookupOComment dId cId docs = do
   doc <- Map.lookup dId docs
-  Map.lookup sId $ docSummaries doc
-  
-lookupSummaries :: [(DocumentId, SummaryId)] -> Map.Map DocumentId Document
-                   -> [Summary]
-lookupSummaries inds docs = catMaybes 
-                            [lookupSummary dId sId docs | (dId,sId) <- inds]
-  
-lookupCritique :: DocumentId -> CritiqueId -> Map.Map DocumentId Document 
-                  -> Maybe Critique
-lookupCritique dId cId docs = do
-  doc <- Map.lookup dId docs
-  Map.lookup cId $ docCritiques doc
-
-lookupCritiques :: [(DocumentId,CritiqueId)] -> Map.Map DocumentId Document
-                   -> [Critique]
-lookupCritiques inds docs = catMaybes
-                            [lookupCritique dId cId docs | (dId,cId) <- inds]
+  Map.lookup cId $ docOComments doc
 
 data UserStats = UserStats { userNPosts     :: Int
                            , userSummaries  :: (Int,Int,Int)
@@ -95,26 +84,25 @@ userUsageStats docs user = UserStats
                            (nSum,sumUp,sumDown)
                            (nPraises,nPUps,nPDowns)
                            (nCrits,  nCUps,nCDowns)
-                           (nUp,nDown)
+                           (nUp,nDown) 
   where
-    h = userHistory user
+    h = userHistory user 
     nDoc = length [x | x@(PostedDocument {}) <- h]
-    sums  = catMaybes [lookupSummary dId sId docs | (WroteSummary dId sId) <- h]
-    nSum  = length sums
-    (sumUp,sumDown) = foldl (\(a,b) (c,d) -> (a+b,c+d)) (0,0) (map summaryScores sums)
-    critiqueInds = [(dId,cId) | (WroteCritique dId cId) <- h]
-    critiques = lookupCritiques critiqueInds docs
-    (praises,crits) = List.partition ((==UpVote) . critiqueVal) critiques
+    comments = catMaybes [lookupOComment dId sId docs | (WroteOComment dId sId) <- h]
+    sums = filter ((==Nothing) . ocVote) comments
+    nSum  = length sums 
+    (sumUp,sumDown) = foldl (\(a,b) (c,d) -> (a+b,c+d)) (0,0) (map commentScores sums)
+    critiques = filter ((/=Nothing).ocVote) comments
+    (praises,crits) = List.partition ((==UpVote) . snd . fromJust . ocVote) critiques 
     nPraises     = length praises
-    praiseVotes = concat . map critiqueReactions $ praises
+    praiseVotes = concat . map ocResponse $ praises
     (pUps, pDowns) = List.partition (==UpVote) praiseVotes
     (nPUps,nPDowns) = (length pUps, length pDowns)
     nCrits = length crits
-    critVotes = concat . map critiqueReactions $ crits
+    critVotes = concat . map ocResponse $ crits
     (cUps,cDowns) = List.partition (==UpVote) critVotes
     (nCUps,nCDowns) = (length cUps, length cDowns)
-    allUserVotes = catMaybes $ [vd|(VotedOnSummary _ _ vd _)  <- h] ++
-                   [vd|(VotedOnCritique _ _ vd _) <- h]
+    allUserVotes = catMaybes $ [vd|(VotedOnOComment _ _ vd _)  <- h]
     (allUps,allDowns) = List.partition (==UpVote) allUserVotes
     (nUp,nDown) = (length allUps, length allDowns)
     

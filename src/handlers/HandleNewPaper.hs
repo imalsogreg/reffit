@@ -53,7 +53,6 @@ documentForm fromUser allDocClasses allFieldTags hints' t =
   <*> "docClass" .: choice classOpts Nothing
   <*> "docTags"  .: validate (validateTags allFieldTags) (text Nothing) 
   <*> pure Map.empty
-  <*> pure Map.empty
   <*> pure t
     where
       posterOpts = [(Just (userName fromUser),userName fromUser)

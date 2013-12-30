@@ -20,10 +20,11 @@ data DocClass = DocClass { docClassName :: Text
                          } deriving (Show, Generic, Typeable, Eq)
 deriveSafeCopy 0 'base ''DocClass
 
-type UserName   = Text
-type CritiqueId = Int32
-type SummaryId  = Int32 
-type DocumentId = Int32
+type UserName          = Text
+type CritiqueId        = Int32
+type SummaryId         = Int32 
+type DocumentId        = Int32
+type OverviewCommentId = Int32
  
 data UpDownVote = DownVote | UpVote
                 deriving (Show, Eq, Ord, Generic, Typeable)
