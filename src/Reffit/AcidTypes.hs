@@ -25,7 +25,7 @@ import Control.Monad.Reader (asks)
 import Data.ByteString (ByteString)
 import Control.Lens (makeLenses, view,over)
 import Data.Time
-import Data.SafeCopy (base, deriveSafeCopy)
+import Data.SafeCopy 
 import qualified Data.Text as T hiding (head)
 import Data.Text.Encoding (decodeUtf8)
 import GHC.Generics
@@ -52,10 +52,23 @@ data PersistentState = PersistentState {
   , _docClasses :: [DocClass]
   , _fieldTags  :: FieldTags
   } deriving (Show, Generic, Typeable)
-  
 makeLenses ''PersistentState
+deriveSafeCopy 1 'extension ''PersistentState
 
-deriveSafeCopy 0 'base ''PersistentState
+data PersistentState0 = PersistentState0 {
+    _documents0  :: Map.Map DocumentId Document0
+  , _users0      :: Map.Map UserName User0
+  , _docClasses0 :: [DocClass]
+  , _fieldTags0  :: FieldTags
+  } deriving (Show, Generic, Typeable)
+makeLenses ''PersistentState0
+deriveSafeCopy 0 'base ''PersistentState0
+
+instance Migrate PersistentState where
+  type MigrateFrom PersistentState = PersistentState0
+  migrate (PersistentState0 d u c f) =
+    PersistentState (Map.map migrate d) (Map.map migrate u) c f 
+
 
 queryAllDocs :: Query PersistentState (Map.Map DocumentId Document)
 queryAllDocs = asks _documents

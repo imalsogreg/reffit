@@ -28,9 +28,11 @@
       <prosePoster/>
     </a>
   </p>
+  <reBlock>
   <p>
         Re: <span class="label label-default"><critiqueDim/></span>     
   </p>
+  </reBlock>
 </div>
 
 
