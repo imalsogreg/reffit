@@ -63,11 +63,13 @@ allStatsSplices docs us = do
   "nUsers"    ## I.textSplice $ T.pack . show . Map.size $ us
   "nDocs"     ## I.textSplice $ T.pack . show . Map.size $ docs
   "nComments" ## I.textSplice $ T.pack . show $
-    sum (map (\d -> (Map.size . docSummaries $ d) + (Map.size . docCritiques $ d)) (Map.elems docs))
+    sum (map (\d -> (Map.size . docOComments $ d)) (Map.elems docs)  )
   "nVotes"    ## I.textSplice $ T.pack . show $
-    sum (map (\d -> (sum $ map (length . summaryVotes) (Map.elems $ docSummaries d)) +
-                    (sum $ map (length . critiqueReactions) (Map.elems $ docCritiques d))) (Map.elems docs)) 
-
+    sum $ map docNVotes (Map.elems docs)
+  where 
+    docNVotes doc = sum . map (length . ocResponse) . 
+                    Map.elems $ docOComments doc
+     
 allFilterTagSplices :: [TagPath] -> Splices (SnapletISplice App)
 allFilterTagSplices tps = do
   "fieldTags"  ## renderFieldTags tps 

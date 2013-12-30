@@ -126,10 +126,10 @@ addSummary user' pId summary = do
           sHash = fromIntegral . hash . summaryProse $ summary
           sInd  = fromIntegral . Map.size $ docSummaries doc
           sAll  = [0..]
--}
 
 
-{- 
+
+
 castSummaryVote :: User -> Bool -> DocumentId -> Document
                    -> SummaryId -> Summary -> UpDownVote -> UTCTime
                    -> Update PersistentState ()
@@ -144,11 +144,29 @@ castSummaryVote user isAnon dId doc sId summary voteVal t = do
                d' = doc { docSummaries = Map.insert sId s' (docSummaries doc)}
            in Map.insert dId d' ds) 
 -}
+addSummary :: Maybe User -> DocumentId -> Summary
+              -> Update PersistentState (Maybe SummaryId)
+addSummary user' pId summary = undefined
+
+castSummaryVote :: User -> Bool -> DocumentId -> Document
+                   -> SummaryId -> Summary -> UpDownVote -> UTCTime
+                   -> Update PersistentState ()
+castSummaryVote user isAnon dId doc sId summary voteVal t = undefined
 
 castOCommentVote :: User -> Bool -> DocumentId -> Document
                  -> OverviewCommentId -> OverviewComment -> UpDownVote
                  -> UTCTime
                  -> Update PersistentState ()
+
+castCritiqueVote :: User -> Bool -> DocumentId -> Document
+                 -> CritiqueId -> Critique -> UpDownVote -> UTCTime
+                 -> Update PersistentState ()
+castCritiqueVote user isAnon dId doc cId critique voteVal t = undefined
+
+addCritique :: Maybe User -> DocumentId -> Critique 
+               -> Update PersistentState (Maybe SummaryId)
+addCritique user' pId critique = undefined
+
 castOCommentVote user isAnon dId doc cId comment voteVal t = do
   modify (over users $ \us' ->
            let vRecord = if isAnon then Nothing else Just voteVal
@@ -174,9 +192,9 @@ castCritiqueVote user isAnon dId doc cId critique voteVal t = do
            let c' = critique { critiqueReactions = voteVal : critiqueReactions critique }
                d' = doc { docCritiques = Map.insert cId c' (docCritiques doc) } 
            in Map.insert dId d' ds)
- -}
 
-{-
+
+
 addCritique :: Maybe User -> DocumentId -> Critique 
                -> Update PersistentState (Maybe SummaryId)
 addCritique user' pId critique = do
@@ -281,6 +299,6 @@ makeAcidic ''PersistentState ['addDocument,         'queryAllDocs
                              , 'pin
                              , 'queryAllDocClasses, 'addDocClass
                              , 'queryAllFieldTags,  'addFieldTag
-                             , 'addOComment,        'castOCommentVote]
---                             , 'addSummary,         'addCritique
---                             , 'castSummaryVote,    'castCritiqueVote]
+                             , 'addOComment,        'castOCommentVote
+                             , 'addSummary,         'addCritique
+                             , 'castSummaryVote,    'castCritiqueVote]

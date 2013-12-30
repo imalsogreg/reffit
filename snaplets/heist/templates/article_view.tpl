@@ -87,7 +87,7 @@
 
         </h3>
         <articleSummaries>
-	  <apply template="summary"/>
+	  <apply template="o_comment"/>
 	</articleSummaries>
       </div>
     </div>
@@ -100,7 +100,7 @@
 </ifLoggedIn>
 </h3>
 	<articlePraise>
-	  <apply template="articlePraise"/>
+	  <apply template="o_comment"/>
 	</articlePraise>
       </div>
     </div>
@@ -111,7 +111,7 @@
 <ifLoggedIn>
 <a href="/new_criticism/${docId}"><button type="button" class="btn btn-warning btn-xs">New</button></a></ifLoggedIn></h3>
 	<articleCriticisms>
-	  <apply template="articleCriticisms"/>
+	  <apply template="o_comment"/>
 	</articleCriticisms>
       </div>
     </div>

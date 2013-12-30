@@ -42,10 +42,21 @@ documentDimScores doc =
                             (length . filtDim d . filtQuality $ filtCriticism listCritiques)
   in (dimensionScore Novelty, dimensionScore Rigor, dimensionScore Coolness) 
 
+documentSummaries :: Document -> Map.Map OverviewCommentId OverviewComment
+documentSummaries = Map.filter ((==Nothing) . ocVote) . docOComments
+
+documentNSummaries :: Document -> Int
+documentNSummaries = Map.size . documentSummaries
+
+documentCritiques :: Document -> (Map.Map OverviewCommentId OverviewComment
+                                 ,Map.Map OverviewCommentId OverviewComment)
+documentCritiques doc = Map.partition ((==UpVote) . snd . fromJust . ocVote) .
+                        Map.filter ((/=Nothing) . ocVote) . docOComments $ doc
+
 documentNCritiques :: Document -> (Int,Int)
 documentNCritiques d = (length praise, length criticism)
   where
-    critiques = List.filter ((/=Nothing).ocVote) . Map.elems $ docOComments d :: [OverviewComment]
+    critiques = List.filter ((/=Nothing).ocVote) . Map.elems $ docOComments d
     (praise,criticism) = List.partition ((==UpVote) . snd . fromJust . ocVote) critiques 
 
 qualityScore :: Document -> Int
