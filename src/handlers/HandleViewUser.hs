@@ -150,18 +150,22 @@ splicesFromEvent t docs event = do
 
 eventSplice :: (Monad m) => UTCTime -> Map.Map DocumentId Document
                -> UserEvent -> I.Splice m
-eventSplice t docs (WroteCritique dId cId)  =
-  return [X.Element "p" [] [X.TextNode  "wrote a critique of "
+eventSplice t docs (WroteOComment dId cId)  =
+  return [X.Element "p" [] [X.TextNode  "commented on "
                            , X.Element  "a" [("href",dLinkT dId docs)]
                              [X.TextNode . shortTitle tLen $ dTitleT dId docs] 
-                           , X.TextNode $ cTimeT t dId cId docs] ]
-eventSplice _ _ (VotedOnCritique _ _ _ _) = return []
+                           , X.TextNode $ ocTimeT t dId cId docs] ] 
+eventSplice _ _ (VotedOnOComment _ _ _ _) = return []
+
+{-
 eventSplice t docs (WroteSummary dId sId) =
   return [X.Element "p" [] [X.TextNode "write a summary of "
                            ,X.Element "a" [("href",dLinkT dId docs)]
                             [X.TextNode . shortTitle tLen $ dTitleT dId docs]
                            ,X.TextNode $ sTimeT t dId sId docs] ]
 eventSplice _ _ (VotedOnSummary _ _ _ _) = return []
+-}
+ 
 eventSplice t docs (PostedDocument dId) =
   return [X.Element "p" [] [X.TextNode "posted "
                            ,X.Element "a" [("href",dLinkT dId docs)]
@@ -205,18 +209,14 @@ dTimeT t dId docs = maybe "error" T.pack $ do
   doc <- Map.lookup dId docs
   return $ sayTimeDiff t (docPostTime doc)
 
-cTimeT :: UTCTime -> DocumentId -> CritiqueId -> Map.Map DocumentId Document -> T.Text
-cTimeT t dId cId docs = maybe "error" T.pack $ do
+ocTimeT :: UTCTime -> DocumentId -> OverviewCommentId 
+           -> Map.Map DocumentId Document
+           -> T.Text
+ocTimeT t dId cId docs = maybe "error" T.pack $ do
   doc  <- Map.lookup dId docs
-  crit <- Map.lookup cId $ docCritiques doc
-  return $ sayTimeDiff t (critiquePostTime crit)
-
-sTimeT :: UTCTime -> DocumentId -> CritiqueId -> Map.Map DocumentId Document -> T.Text
-sTimeT t dId sId docs = maybe "error" T.pack $ do
-  doc  <- Map.lookup dId docs
-  smry <- Map.lookup sId $ docSummaries doc
-  return $ sayTimeDiff t (summaryPostTime smry)
-
+  comm <- Map.lookup cId $ docOComments doc
+  return $ sayTimeDiff t (ocPostTime comm)
+ 
 allUserBlockSplices :: T.Text -> Map.Map DocumentId Document 
                        -> Set.Set UserName -> Splices (SnapletISplice App)
 allUserBlockSplices nodeName docs userNames = 

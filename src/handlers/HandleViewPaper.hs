@@ -8,11 +8,13 @@ import Reffit.Document
 import Reffit.OverviewComment
 import Reffit.User
 import Reffit.Sort
+import Reffit.Scores
 
 import Safe
 import Control.Applicative ((<$>),(<*>),pure)
 import qualified Data.List as List
 import qualified Data.Map as Map
+import Data.Maybe (fromJust)
 import Data.Time
 import Snap.Core (getParam)
 import Snap.Core (writeText)
@@ -71,16 +73,16 @@ summarySummary :: Document -> T.Text
 summarySummary doc = 
   T.unwords [T.pack (show nVotes),"votes /"
             , T.pack (show  nSummaries), "summaries"] 
-  where nSummaries = Map.size . docSummaries $ doc
-        nVotes     = sum . map length . map summaryVotes . Map.elems . docSummaries $ doc :: Int
+  where nSummaries = documentNSummaries doc
+        sums       = documentSummaries doc
+        nVotes     = sum . map (length . ocResponse) . Map.elems $ sums
 
 critiqueSummary :: Document -> UpDownVote -> T.Text
 critiqueSummary doc critType = 
   T.concat [T.pack (show concensusPct),"% consensus on "
-           , T.pack (show . length $ critiques), " points"] 
+           , T.pack (show $ (nUps+nDowns)), " points"] 
   where 
-    critiques = filter ((==critType).critiqueVal) . Map.elems . docCritiques $ doc :: [Critique]
-    (nUps,nDowns) = List.partition ((==critType).critiqueVal) critiques & over both length
+    (nUps,nDowns) = documentNCritiques doc
     concensusPct = if (nUps + nDowns > 0)
                    then floor (fI nUps/ fI (nUps+nDowns) * (100::Double)) 
                    else (0 :: Int)
@@ -88,12 +90,15 @@ critiqueSummary doc critType =
 fI :: (Integral a, Real b) => a -> b
 fI = fromIntegral
 
+-- This should be in Reffit.Scores
 nSummaries :: Document -> Int
-nSummaries doc = Map.size $ docSummaries doc
+nSummaries doc = Map.size . Map.filter ((==Nothing).ocVote) . docOComments $ doc
 
+-- This should be in Reffit.Scores
 nCritique :: UpDownVote -> Document -> Int
-nCritique vDir doc = Map.size . Map.filter ((==vDir) . critiqueVal)
-                     $ docCritiques doc
+nCritique vDir doc = Map.size . Map.filter ((==vDir) . snd . fromJust . ocVote) 
+                     . Map.filter ((/=Nothing) . ocVote)
+                     $ docOComments doc 
   
 allArticleViewSplices :: Maybe User -> Document -> UTCTime -> Splices (SnapletISplice App)
 allArticleViewSplices u doc t = do
@@ -110,92 +115,62 @@ allArticleViewSplices u doc t = do
   let (pinUrl, pinBtn) = pinText u
   "pinUrl"                  ## I.textSplice pinUrl
   "pinboardBtnTxt"          ## I.textSplice pinBtn
-  (allSummarySplices t u doc . Map.toList . docSummaries $ doc)
-  (allCritiqueSplices t UpVote   "articlePraise"     u doc . Map.toList . docCritiques $ doc )
-  (allCritiqueSplices t DownVote "articleCriticisms" u doc . Map.toList . docCritiques $ doc )
-   where
+--  (allSummarySplices t u doc . Map.toList . documentSummaries $ doc)
+  (allOCommentSplices t Summary' "articleSummaries" u doc)  
+--  (allCritiqueSplices t UpVote   "articlePraise"     u doc (Map.toList praise) )
+  (allOCommentSplices t Praise "articlePraise" u doc)
+--  (allCritiqueSplices t DownVote "articleCriticism" u doc (Map.toList criticism) )
+  (allOCommentSplices t Criticism "articleCriticisms" u doc)
+   where 
      pinText :: Maybe User -> (T.Text, T.Text)
      pinText Nothing = ("","")
      pinText (Just user)
           | Set.member (docId doc) (userPinboard user) = ("unpin", "Unpin")
           | otherwise                                  = ("pin",   "Pinboard")
                          
-allSummarySplices :: UTCTime -> Maybe User -> Document -> [(SummaryId,Summary)]
-                  -> Splices (SnapletISplice App)
-allSummarySplices t u doc ss = "articleSummaries" ## renderSummaries t u doc ss
 
-renderSummaries :: UTCTime -> Maybe User -> Document -> [(SummaryId,Summary)]
-                -> SnapletISplice App
-renderSummaries t u doc = I.mapSplices $ I.runChildrenWith . splicesFromSummary t u doc
+data UserProseRelation = UpVoted | DownVoted | AnonVoted | NotVoted
 
-splicesFromSummary :: Monad n => UTCTime -> Maybe User -> Document -> (SummaryId,Summary)
-                   -> Splices (I.Splice n)
-splicesFromSummary t u doc (sId,s) = do 
-  "upCount"       ## I.textSplice (T.pack . show $ nUp) 
-  "downCount"     ## I.textSplice (T.pack . show $ nDown)
-  "proseText"     ## I.textSplice (summaryProse s)
-  "proseTimeSince"     ## I.textSplice (T.pack . sayTimeDiff t . summaryPostTime $ s) 
-  case summaryPoster s of
-    Nothing -> do
-      "prosePoster"             ## I.textSplice "Anonymous"
-      "prosePosterDestination"  ## I.textSplice "#"
-    Just uName -> do
-      "prosePoster"  ## I.textSplice uName
-      "prosePosterDestination" ## I.textSplice $ T.append "/user/" uName
-      
-  case u of
-    Nothing -> do
-      "upBtnUrl"   ## I.textSplice "/login"
-      "downBtnUrl" ## I.textSplice "/login"
-    Just user ->
-      case userSummaryRelation user doc sId of
-        (Just AnonVoted) -> do
-          "upBtnUrl" ## I.textSplice "#"
-          "downBtnURl" ## I.textSplice "#"
-          "upBtnHighlight" ## I.textSplice "triangle-anon"
-          "downBtnHighlight" ## I.textSplice "triangle-anon"
-        (Just UpVoted) -> do
-          "upBtnUrl" ## I.textSplice "#"
-          "downBtnUrl" ## I.textSplice "#"
-          "upBtnHighlight" ## I.textSplice "triangle-on"
-          "downBtnHighlight" ## I.textSplice "triangle-off"
-        (Just DownVoted) -> do
-          "upBtnUrl" ## I.textSplice "#"
-          "downBtnUrl" ## I.textSplice "#"
-          "upBtnHighlight" ## I.textSplice "triangle-off"
-          "downBtnHighlight" ## I.textSplice "triangle-on"
-        (Just NotVoted) -> do
-          "upBtnUrl" ## I.textSplice (T.concat ["/cast_summary_upvote/"
-                                               ,T.pack (show $ docId doc)
-                                               ,"."
-                                               ,T.pack (show $ sId)])
-          "downBtnUrl" ## I.textSplice (T.concat ["/cast_summary_downvote/"
-                                                 ,T.pack (show $ docId doc)
-                                                 ,"."
-                                                 ,T.pack (show $sId)])
-          "upBtnHighlight" ## I.textSplice "triangle-togglable"
-          "downBtnHighlight" ## I.textSplice "triangle-togglable"
-        Nothing -> return ()  -- TODO this is some kind of problem,
-                              -- couldn't find user -> summary rln
-  where (nUp, nDown) = summaryUpsDowns s
-                  
-allCritiqueSplices :: UTCTime -> UpDownVote -> T.Text -> Maybe User -> Document
-                   -> [(CritiqueId,Critique)]-> Splices (SnapletISplice App)
-allCritiqueSplices t vTarg tag u doc cs = tag ## renderCritiques t u doc cs'
-  where cs' = filter ( (==vTarg) . critiqueVal . snd) cs 
+userCommentRelation :: User -> Document -> OverviewCommentId -> Maybe UserProseRelation
+userCommentRelation u doc cId =
+  let relevantActivity = [x | x@(VotedOnOComment dId' cId' _ _) <- userHistory u
+                            , dId' == docId doc && cId == cId']
+  in case relevantActivity of
+    []                                       -> Just NotVoted
+    [VotedOnOComment _ _ Nothing _ ]         -> Just AnonVoted
+    [VotedOnOComment _ _ (Just UpVote) _]    -> Just UpVoted
+    [VotedOnOComment _ _ (Just DownVote) _ ] -> Just DownVoted
+    _ -> Nothing -- <- in these cases something went wrong w/ filtering, 
+                 -- or a doublevote happened
 
-renderCritiques :: UTCTime -> Maybe User -> Document -> [(CritiqueId,Critique)] -> SnapletISplice App
-renderCritiques t u doc = I.mapSplices $ I.runChildrenWith . splicesFromCritique t u doc
+allOCommentSplices :: UTCTime -> OverviewCommentType -> T.Text -> Maybe User
+                      -> Document
+                      -> Splices (SnapletISplice App)
+allOCommentSplices t commType tagText u doc = 
+  tagText ## renderOComments t commType u doc (Map.toList cs')
+ where (p,c) = documentCritiques doc
+       cs' = case commType of
+         Summary'  -> documentSummaries doc
+         Praise    -> p
+         Criticism -> c
 
-splicesFromCritique :: Monad n => UTCTime -> Maybe User -> Document -> (CritiqueId,Critique)
-                    -> Splices (I.Splice n)
-splicesFromCritique t u doc (cId,c) = do
+renderOComments :: UTCTime -> OverviewCommentType -> Maybe User -> Document 
+                   -> [(OverviewCommentId, OverviewComment)] 
+                   -> SnapletISplice App
+renderOComments t ct u doc = I.mapSplices $ I.runChildrenWith . 
+                             splicesFromOComment t ct u doc
+
+splicesFromOComment :: Monad n => UTCTime -> OverviewCommentType 
+                       -> Maybe User -> Document 
+                       -> (OverviewCommentId, OverviewComment)
+                       -> Splices (I.Splice n)
+splicesFromOComment t ct u doc (cId,c) = do
   "upCount"      ## I.textSplice (T.pack . show $ nUp)
   "downCount"    ## I.textSplice (T.pack . show $ nDown)
-  "proseText"    ## I.textSplice (critiqueProse c)
-  "critiqueDim"  ## I.textSplice (T.pack . show $ critiqueDim c)
-  "proseTimeSince"    ## I.textSplice (T.pack . sayTimeDiff t . critiquePostTime $ c)
-  case critiquePoster c of
+  "proseText"    ## I.textSplice (ocText c)
+  reBlock
+  "proseTimeSince"    ## I.textSplice (T.pack . sayTimeDiff t . ocPostTime $ c)
+  case ocPoster c of 
     Nothing -> do
       "prosePoster"            ## I.textSplice "Anonymous"
       "prosePosterDestination" ## I.textSplice "#"
@@ -207,7 +182,7 @@ splicesFromCritique t u doc (cId,c) = do
       "upBtnUrl"   ## I.textSplice "/login"
       "downBtnUrl" ## I.textSplice "/login"
     Just user ->
-      case userCritiqueRelation user doc cId of
+      case userCommentRelation user doc cId of
         (Just AnonVoted) -> do
           "upBtnUrl" ## I.textSplice "#"
           "downBtnUrl" ## I.textSplice "#"
@@ -224,11 +199,11 @@ splicesFromCritique t u doc (cId,c) = do
           "upBtnHighlight" ## I.textSplice "triangle-off"
           "downBtnHighlight" ## I.textSplice "triangle-on"
         (Just NotVoted) -> do
-          "upBtnUrl" ## I.textSplice (T.concat ["/cast_critique_upvote/"
+          "upBtnUrl" ## I.textSplice (T.concat ["/cast_ocomment_upvote/"
                                                ,T.pack (show $ docId doc)
                                                ,"."
                                                ,T.pack (show $ cId)])
-          "downBtnUrl" ## I.textSplice (T.concat ["/cast_critique_downvote/"
+          "downBtnUrl" ## I.textSplice (T.concat ["/cast_ocomment_downvote/"
                                                  ,T.pack (show $ docId doc)
                                                  ,"."
                                                  ,T.pack (show $ cId)])
@@ -236,28 +211,12 @@ splicesFromCritique t u doc (cId,c) = do
           "downBtnHighlight" ## I.textSplice "triangle-togglable"
         Nothing -> return ()
   where
-    (nUp,nDown) = critiqueUpsDowns c
-
-data UserProseRelation = UpVoted | DownVoted | AnonVoted | NotVoted
-
-userSummaryRelation :: User -> Document -> SummaryId -> Maybe UserProseRelation
-userSummaryRelation u doc sId =
-  let relevantActivity = [ x | x@(VotedOnSummary dId' sId' _ _) <- userHistory u
-                             , dId' == docId doc &&  sId == sId']  
-  in case relevantActivity of
-    []                                     -> Just NotVoted
-    [VotedOnSummary _ _ Nothing _ ]        -> Just AnonVoted
-    [VotedOnSummary _ _ (Just UpVote) _]   -> Just UpVoted
-    [VotedOnSummary _ _ (Just DownVote) _] -> Just DownVoted
-    _ -> Nothing  -- <- is these cases something went wrong w/ the filtering
-
-userCritiqueRelation :: User -> Document -> CritiqueId -> Maybe UserProseRelation
-userCritiqueRelation u doc cId =
-  let relevantActivity = [ x | x@(VotedOnCritique dId' cId' _ _) <- userHistory u
-                             , dId' == docId doc && cId == cId']
-  in case relevantActivity of
-    []                                      -> Just NotVoted
-    [VotedOnCritique _ _ Nothing _]         -> Just AnonVoted
-    [VotedOnCritique _ _ (Just UpVote) _]   -> Just UpVoted
-    [VotedOnCritique _ _ (Just DownVote) _] -> Just DownVoted
-    _ -> Nothing -- <- multiple votes on the same critique!!
+    reBlock = case ct of
+--      Summary' -> "reBlock" ## I.textSplice . T.pack . show $ Summary'
+--      _        -> "reBlock" ## I.textSplice . T.pack . show $ ct
+      Summary' -> "reBlock" ## I.textSplice "" -- chop out the 're:' block
+      _        -> "critiqueDim" ## 
+                  I.textSplice (T.pack . show . fst . 
+                                fromJust . ocVote $ c)
+    (nUp,nDown) = commentScores c
+    

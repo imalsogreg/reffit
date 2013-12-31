@@ -16,15 +16,13 @@ import           GHC.Generics
 import           Data.Typeable
 import           Data.SafeCopy (base,extension,deriveSafeCopy,Migrate,MigrateFrom,migrate)
 
-data UserEvent = WroteCritique   DocumentId CritiqueId
-               | VotedOnCritique DocumentId CritiqueId (Maybe UpDownVote) UTCTime
-               | WroteSummary    DocumentId SummaryId
-               | VotedOnSummary  DocumentId SummaryId (Maybe UpDownVote) UTCTime
+data UserEvent = WroteOComment   DocumentId OverviewCommentId
+               | VotedOnOComment DocumentId OverviewCommentId (Maybe UpDownVote) UTCTime
                | PostedDocument  DocumentId
                | FollowedUser    UserName   UTCTime
                | PinnedDoc       DocumentId UTCTime
                deriving (Show, Eq, Ord, Generic, Typeable)
-deriveSafeCopy 0 'base ''UserEvent
+deriveSafeCopy 1 'extension ''UserEvent
 
 instance Serialize UserEvent where
 
@@ -41,9 +39,6 @@ deriveSafeCopy 0 'base ''User
 
 instance Serialize User where
 
-  {-
--- Started counting versions at 0.  Now I'm using 1.  The type hasn't changed at all,
--- so I'm practicing migration w/ a trivial example.
 data UserEvent0 = WroteCritique0   DocumentId CritiqueId
                 | VotedOnCritique0 DocumentId CritiqueId (Maybe UpDownVote) UTCTime
                 | WroteSummary0    DocumentId SummaryId
@@ -53,25 +48,24 @@ data UserEvent0 = WroteCritique0   DocumentId CritiqueId
                 | PinnedDoc0       DocumentId UTCTime
                 deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy 0 'base ''UserEvent0
--}
-  
-  {-
+
 -- Is there a less boilerplate way to do this?
 instance Migrate UserEvent where
-  type MigrateFrom UserEvent         = UserEvent0
-  migrate (WroteCritique0 d c)       = WroteCritique d c
-  migrate (VotedOnCritique0 d c v t) = VotedOnCritique d c v t
-  migrate (WroteSummary0 d c)        = WroteSummary d c
-  migrate (VotedOnSummary0 d c v t)  = VotedOnSummary d c v t
-  migrate (PostedDocument0 d)        = PostedDocument d 
-  migrate (FollowedUser0 u t)        = FollowedUser u t
+  type MigrateFrom UserEvent        = UserEvent0
+  migrate (WroteCritique0 d c)       = WroteOComment d c
+  migrate (VotedOnCritique0 d c u t) = VotedOnOComment d c u t
+  migrate (WroteSummary0 d c)        = WroteOComment d c
+  migrate (VotedOnSummary0 d c u t)  = VotedOnOComment d c u t
+  migrate (PostedDocument0 d)        = PostedDocument d
+  migrate (FollowedUser0 un t)       = FollowedUser un t
   migrate (PinnedDoc0 d t)           = PinnedDoc d t
-  
+   
+{-
 data User0 = User0 { userName0       :: UserName 
                    , userEmail0      :: Text
                    , userFollowing0  :: Set.Set UserName
                    , userFollowedBy0 :: Set.Set UserName
-                   , userHistory0    :: [UserEvent]
+                   , userHistory0    :: [UserEvent0]
                    , userPinboard0   :: Set.Set DocumentId
                    , userTags0       :: Set.Set TagPath
                    , userJoinTime0   :: UTCTime
@@ -80,5 +74,9 @@ deriveSafeCopy 0 'base ''User0
 
 instance Migrate User where
   type MigrateFrom User = User0
+<<<<<<< HEAD
+  migrate (User0 n e f fb h p t jt) = User n e f fb (Prelude.map migrate h) p t jt
+=======
   migrate (User0 n e f fb h p t jt) = User n e f fb h p t jt
+>>>>>>> 7fc6b9f38b1bf312e6cd104a1609ec53a6ce8248
 -}

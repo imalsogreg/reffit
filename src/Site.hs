@@ -145,14 +145,15 @@ routes = [
     , ("new_user",      with auth handleNewUser)
     , ("new_article",        with auth handleNewArticle)
     , ("new_article/:doi",   with auth handleNewArticle)
-    , ("new_summary/:paperid", with auth handleNewSummary)
-    , ("new_praise/:paperid", with auth (handleNewCritique UpVote))
-    , ("new_criticism/:paperid", with auth (handleNewCritique DownVote))
+    , ("new_summary/:paperid", with auth (handleNewOComment Summary'))
+    , ("new_praise/:paperid", with auth (handleNewOComment Praise)) 
+    , ("new_criticism/:paperid", with auth (handleNewOComment Criticism))
     , ("view_article/:paperid", with auth handleViewPaper) 
-    , ("cast_summary_upvote/:idParam",    with auth $ handleSummaryVote  UpVote)
-    , ("cast_summary_downvote/:idParam",  with auth $ handleSummaryVote  DownVote)
-    , ("cast_critique_upvote/:idParam",  with auth $ handleCritiqueVote UpVote)
-    , ("cast_critique_downvote/:idParam",with auth $ handleCritiqueVote DownVote)
+    , ("cast_ocomment_upvote/:idParam",    
+       with auth $ handleOCommentVote  UpVote)
+    , ("cast_ocomment_downvote/:idParam",  
+       with auth $ handleOCommentVote  DownVote)
+  
     , ("user/:username", with auth $ handleViewUser)
     , ("follow/:username", with auth   $ handleFollow True)
     , ("unfollow/:username", with auth $ handleFollow False)
@@ -213,12 +214,12 @@ stresstestReset :: PersistentState
 stresstestReset = PersistentState docs Map.empty [DocClass "Paper"] tagHierarchy
   where
     docs = Map.fromList [(i, Document Nothing i "The Earth is Round (p < .05)" []
-              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty Map.empty (testDate (fromIntegral i)))
+              "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty (testDate (fromIntegral i)))
            | i <- [1..1000]] 
              
 testDoc :: Int32 -> Document
 testDoc i = Document Nothing i "The Earth is Round (p < .05)" ["Jacob Cohen","Hans Ruthorford Jr."]
-            "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] (Map.fromList [(0,testSummary)]) (Map.fromList [(0,testPraise)]) (testDate 0)
+            "https://www.ics.uci.edu/~sternh/courses/210/cohen94_pval.pdf" (DocClass "Paper") [] Map.empty (testDate 0)
 
 testUsers = [ User "Arte Artimus" "arte@test.com" (Set.fromList ["Santa","Rudolph"]) Set.empty [] Set.empty ] 
 

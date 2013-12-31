@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module HandleNewSummary(
-  newSummaryView,
-  newSummaryForm,
-  handleNewSummary
+--  newSummaryView,
+--  newSummaryForm,
+--  handleNewSummary
   )
 where
 
@@ -42,8 +42,9 @@ import           Text.Digestive.Heist
 import qualified Data.ByteString.Char8        as BS
 import           Control.Monad
 
-newSummaryForm :: (Monad m) => User -> UTCTime -> Form Text m Summary
-newSummaryForm formUser t =
+{-
+newSummaryForm :: (Monad m) => User -> UTCTime -> Bool -> Form Text m Summary
+newSummaryForm formUser t isSummary =
   Summary
   <$> "poster" .: choice posterOpts Nothing
   <*> "prose"  .: check "Not a valid summary" (not . T.null) (text Nothing)
@@ -85,3 +86,4 @@ handleNewSummary = do
               -- return $ Just sId --TODO: This doesn't work.
             Nothing -> do 
               heistLocal (bindDigestiveSplices vw) $ render "new_summary"
+-}

@@ -25,7 +25,7 @@ import Control.Monad.Reader (asks)
 import Data.ByteString (ByteString)
 import Control.Lens (makeLenses, view,over)
 import Data.Time
-import Data.SafeCopy (base, deriveSafeCopy)
+import Data.SafeCopy 
 import qualified Data.Text as T hiding (head)
 import Data.Text.Encoding (decodeUtf8)
 import GHC.Generics
@@ -54,14 +54,11 @@ data PersistentState = PersistentState {
   , _docClasses :: [DocClass]
   , _fieldTags  :: FieldTags
   } deriving (Show, Generic, Typeable)
-  
 makeLenses ''PersistentState
-
 deriveSafeCopy 0 'base ''PersistentState
 
 instance Serialize PersistentState where
   
- 
 queryAllDocs :: Query PersistentState (Map.Map DocumentId Document)
 queryAllDocs = asks _documents
 
@@ -84,6 +81,30 @@ addDocument user' doc = do  -- HandleNewPaper now finds a good Id
                                                    : (userHistory user) }))
     Nothing -> return ()
 
+addOComment :: Maybe User -> DocumentId -> OverviewComment
+            -> Update PersistentState (Maybe OverviewCommentId)
+addOComment user' pId comment = do
+  docs <- gets _documents
+  case Map.lookup pId docs of
+    Nothing -> return Nothing -- TODO - how to signal error?
+    Just doc -> do
+      modify (over documents $ \docs' ->
+               (Map.insert (docId doc)
+                (doc { docOComments = Map.insert cId comment (docOComments doc) }) docs')) 
+      case user' of
+        Just user ->
+          modify (over users (Map.insert (userName user)
+                              (user {userHistory = WroteOComment (docId doc) cId : userHistory user })))
+        Nothing -> return ()
+      return (Just cId) 
+      where
+        cId = head . filter (\k -> Map.notMember k (docOComments doc)) $
+              (cHash:cInd:cAll)
+        cHash = abs . fromIntegral . hash $ T.unpack (ocText comment) ++ 
+                show (ocPostTime comment)
+        cInd  = fromIntegral . Map.size $ docOComments doc
+        cAll = [0..]  
+
 addSummary :: Maybe User -> DocumentId -> Summary
               -> Update PersistentState (Maybe SummaryId)
 addSummary user' pId summary = do  
@@ -95,22 +116,32 @@ addSummary user' pId summary = do
         modify (over documents $ \docs' ->
                  (Map.insert
                   (docId doc)
-                  (doc { docSummaries = Map.insert sId summary 
-                                        (docSummaries doc)}) 
+                  -- TODO - POSSIBLE BUG, I'm replaying a function
+                  -- that assigns an ID, through schema migration.  
+                  -- will the ID change?
+                  (doc { docOComments = 
+                            Map.insert sId (summToOComment summary)
+                            (docOComments doc)})
                   docs'))
         case user' of
           Just user ->
-            modify (over users (Map.insert (userName user)
-                                (user { userHistory = WroteSummary (docId doc) sId :
-                                                      (userHistory user) })))
+            -- TODO POSSIBLE BUG (same as other POSSIBLE BUGS)
+            modify (over users 
+                    (Map.insert (userName user)
+                     (user { userHistory = 
+                                migrate (WroteSummary0 (docId doc) sId) 
+                                :(userHistory user) })))
           Nothing -> return ()
         return (Just sId)
         where
-          sId = head . filter (\k -> Map.notMember k (docSummaries doc)) $
+          sId = head . filter (\k -> Map.notMember k (docOComments doc)) $
                 (sHash:sInd:sAll)
           sHash = fromIntegral . hash . summaryProse $ summary
-          sInd  = fromIntegral . Map.size $ docSummaries doc
+          sInd  = fromIntegral . Map.size $ docOComments doc
           sAll  = [0..]
+
+
+
 
 castSummaryVote :: User -> Bool -> DocumentId -> Document
                    -> SummaryId -> Summary -> UpDownVote -> UTCTime
@@ -118,27 +149,51 @@ castSummaryVote :: User -> Bool -> DocumentId -> Document
 castSummaryVote user isAnon dId doc sId summary voteVal t = do
   modify (over users $ \us' ->
            let vRecord = if isAnon then Nothing else Just voteVal
-               histItem = VotedOnSummary dId sId vRecord t
+               histItem = migrate (VotedOnSummary0 dId sId vRecord t) -- NOTE Added migrate here
                u' = user { userHistory = histItem : userHistory user }
            in Map.insert (userName user) u' us')
   modify (over documents $ \ds ->
            let s' = summary { summaryVotes = voteVal : summaryVotes summary }
-               d' = doc { docSummaries = Map.insert sId s' (docSummaries doc)}
+               d' = doc { docOComments = Map.insert sId 
+                                         (summToOComment s')
+                                         (docOComments doc)}
            in Map.insert dId d' ds) 
-          
+
+castOCommentVote :: User -> Bool -> DocumentId -> Document
+                 -> OverviewCommentId -> OverviewComment -> UpDownVote
+                 -> UTCTime
+                 -> Update PersistentState ()
+
+castOCommentVote user isAnon dId doc cId comment voteVal t = do
+  modify (over users $ \us' ->
+           let vRecord = if isAnon then Nothing else Just voteVal
+               histItem = VotedOnOComment dId cId vRecord t
+               u' = user { userHistory = histItem : userHistory user }
+           in Map.insert (userName user) u' us')
+  modify (over documents $ \ds ->
+           let c' = comment { ocResponse = voteVal : ocResponse comment }
+               d' = doc {docOComments = Map.insert cId c' (docOComments doc) }
+           in Map.insert dId d' ds)
+
+
 castCritiqueVote :: User -> Bool -> DocumentId -> Document
                  -> CritiqueId -> Critique -> UpDownVote -> UTCTime
                  -> Update PersistentState ()
 castCritiqueVote user isAnon dId doc cId critique voteVal t = do
   modify (over users $ \us' ->
            let vRecord = if isAnon then Nothing else Just voteVal
-               histItem = VotedOnCritique dId cId vRecord t
+               histItem = migrate $ VotedOnCritique0 dId cId vRecord t
                u' = user { userHistory = histItem : userHistory user }
            in Map.insert (userName user) u' us')
+    -- TODO Here I'm casting Critique into Ocomment - it seems like this
+    -- might change the comment id? POSSIBLE BUG
   modify (over documents $ \ds ->
-           let c' = critique { critiqueReactions = voteVal : critiqueReactions critique }
-               d' = doc { docCritiques = Map.insert cId c' (docCritiques doc) } 
-           in Map.insert dId d' ds)
+           let c' = critique { critiqueReactions = 
+                                  voteVal : critiqueReactions critique }
+               c'' = critToOComment c'
+               d' = doc { docOComments = 
+                             Map.insert cId c'' (docOComments doc) } 
+           in Map.insert dId d' ds) 
 
 addCritique :: Maybe User -> DocumentId -> Critique 
                -> Update PersistentState (Maybe SummaryId)
@@ -151,22 +206,30 @@ addCritique user' pId critique = do
       modify (over documents $ \docs' ->
                (Map.insert
                 (docId doc)
-                (doc { docCritiques = Map.insert cId critique
-                                      (docCritiques doc)})
+                (doc {docOComments = 
+                         Map.insert cId (critToOComment critique) 
+                         (docOComments doc)}) -- BACK HERE 
+--                (doc { docCritiques0 = Map.insert cId critique 
+--                                       (docCritiques0 doc)})
+                
                 docs'))
       case user' of
         Just user -> 
           modify (over users $ Map.insert (userName user)
-                  (user { userHistory = WroteCritique pId cId :
+                  (user { userHistory = migrate (WroteCritique0 pId cId) : 
                                         (userHistory user)}))
         Nothing -> return ()
       return (Just cId)
         where
-          cId = head . filter (\k -> Map.notMember k (docCritiques doc)) $ 
+          cId = head . filter (\k -> Map.notMember k (docOComments doc)) $ 
                 (cHash:cInd:cAll)
           cHash = fromIntegral . hash . critiqueProse $ critique
-          cInd  = fromIntegral . Map.size $ docCritiques doc
+          --cInd  = fromIntegral . Map.size $ docCritiques0 doc
+          -- TODO POSSIBLE BUG: will replaying these functions in acid-state
+          -- lead to changed critique ID's??
+          cInd = fromIntegral . Map.size $ docOComments doc
           cAll  = [0..]
+
 
 queryAllUsers :: Query PersistentState (Map.Map T.Text User)
 queryAllUsers = asks _users
@@ -253,7 +316,9 @@ makeAcidic ''PersistentState ['addDocument,         'queryAllDocs, 'updateAllDoc
                              , 'addUserTag,         'deleteUserTag
                              , 'userFollow,         'userUnfollow
                              , 'pin
+                             , 'addOComment,        'castOCommentVote
                              , 'queryAllDocClasses, 'addDocClass, 'updateAllDocClasses
                              , 'queryAllFieldTags,  'addFieldTag, 'updateAllFieldTags
                              , 'addSummary,         'addCritique
                              , 'castSummaryVote,    'castCritiqueVote]
+                                                    

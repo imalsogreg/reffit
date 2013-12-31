@@ -1,8 +1,8 @@
 {-# LANGUAGE OverloadedStrings #-}
  -- TODO this module needs to be renamed, we do both types of vote casting here
 module HandleSummaryVote(
-  handleSummaryVote,
-  handleCritiqueVote
+--  handleSummaryVote,
+  handleOCommentVote
   )
 where
 
@@ -39,8 +39,9 @@ import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist  
 import qualified Data.ByteString.Char8        as BS
 import           GHC.Int
+import           Control.Monad (join)
 
--- TODO handle anonymity of votes
+{-
 handleSummaryVote :: UpDownVote -> Handler App (AuthManager App) ()  
 handleSummaryVote voteDir = do 
   userMap   <- query QueryAllUsers
@@ -74,16 +75,16 @@ handleSummaryVote voteDir = do
                       _ <- update (CastSummaryVote u False pId 
                                    doc sId summary voteDir t)  
                       redirect $ BS.concat ["/view_article/",BS.pack . show $ pId]
-
+-}
+ 
 -- TODO: Handle anonymity of votes
-handleCritiqueVote :: UpDownVote -> Handler App (AuthManager App) ()
-handleCritiqueVote voteDir = do
+handleOCommentVote :: UpDownVote -> Handler App (AuthManager App) ()
+handleOCommentVote voteDir = do
   userMap   <- query QueryAllUsers
   docs      <- query QueryAllDocs
   idParam'  <- getParam "idParam"
   authUser' <- currentUser
   t         <- liftIO $ getCurrentTime
-  -- TODO so similar to handleSummaryVote - badly need a refactor
   case idParam' of
     Nothing -> writeText "idParam not found"
     Just idParam ->
@@ -99,13 +100,12 @@ handleCritiqueVote voteDir = do
         (_,Nothing) -> writeText "critiqueid formatting error here"
         (Just pId, Just cId) -> case Map.lookup pId docs of
             Nothing -> writeText "Document isn't in database"
-            Just doc -> case Map.lookup cId (docCritiques doc) of
-              Nothing -> writeText "critique isn't in database"
-              Just critique ->
-                case Map.lookup <$> (userLogin <$> authUser') <*> pure userMap of
+            Just doc -> case Map.lookup cId (docOComments doc) of
+              Nothing -> writeText "overview comment isn't in database"
+              Just comment ->
+                case join $ Map.lookup <$> (userLogin <$> authUser') <*> pure userMap of
                   Nothing -> writeText "Need to log in"
-                  Just Nothing -> writeText "Just nothing - need to log in"
-                  Just (Just u) -> do
+                  Just u -> do
                 --TODO handle vote anonymity
-                    _ <- update (CastCritiqueVote u False pId doc cId critique voteDir t)
+                    _ <- update (CastOCommentVote u False pId doc cId comment voteDir t)
                     redirect $ BS.concat ["/view_article/",BS.pack . show $ pId]
