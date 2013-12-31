@@ -14,7 +14,8 @@ import           Application
 import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          HasAcid (getAcidStore),
                                          makeAcidic,
-                                         update,query,acidInit)
+                                         update,query,acidInit,
+                                         createCheckpoint)
 import           Snap.Snaplet.Auth 
 --import Data.Acid hiding (query)
 import Snap.Snaplet.AcidState (Update, Query, Acid, query, acidInit)
@@ -55,6 +56,15 @@ handleStateFromDisk = do
         Left e -> 
           writeText $ T.append "Parse error! " (T.pack e)
     _ -> writeText "Sorry.  Only imalsogreg can do state restore"
+
+handleCheckpoint :: Handler App (AuthManager App) ()
+handleCheckpoint = do
+  aUser <- currentUser
+  case userLogin <$> aUser of
+    Just "imalsogreg" -> do
+      _ <- createCheckpoint
+      writeText "Checkpoint made"
+    _ -> writeText "Only imalsogreg can create a checkpoint"
 
 {-
 handleMigrateStateFromDisk :: Handler App (AuthManager App) ()

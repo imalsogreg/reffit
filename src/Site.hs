@@ -122,8 +122,8 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
             Just _ -> do
               writeText "Username is taken" -- TODO - give a helpful error message: uname is taken
 
-handleDumpState :: Handler App App ()
-handleDumpState = do
+handleDumpState :: Handler App (AuthManager App) ()
+handleDumpState = do 
   d <- query QueryAllDocs
   u <- query QueryAllUsers
   dc <- query QueryAllDocClasses
@@ -163,8 +163,9 @@ routes = [
     , ("/about", render "about")
     , ("/:params" , with auth $ handleIndex)
     
-    , ("stateToDisk", with auth handleStateToDisk)
+    , ("stateToDisk",   with auth handleStateToDisk)
     , ("stateFromDisk", with auth handleStateFromDisk)
+    , ("checkpoint",    with auth handleCheckpoint)
 --    , ("migrateStateFromDisk", with auth handleMigrateStateFromDisk)
       
     , ("/", with auth $ handleIndex)
@@ -173,7 +174,7 @@ routes = [
 --    , ("add_1000",      handleAdd1000) -- TODO just testing
 --    , ("paper_roll", handlePaperRoll) -- do I still need this?  I have HandleIndex    
 --    , ("/dump_articles", writeText . T.pack . show =<< query QueryAllDocs)
---    , ("/dump_state", handleDumpState)
+    , ("/dump_state",  with auth handleDumpState)
 --    , ("/test", writeText "test")
 --    , ("/new_doc_class", with auth handleNewDocClass)
     , ("/static", serveDirectory "static") 
