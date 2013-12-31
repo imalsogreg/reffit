@@ -52,12 +52,6 @@ data Document0 = Document0 { docUploader0  :: Maybe UserName
                            } deriving (Show, Generic, Typeable)
 deriveSafeCopy 0 'base ''Document0
 
--- I can't write docSummarySplices here, because a view of the document summary
--- depends on scores for the document.  So trying to render it brings in a
--- dependency on Reffit.Scores, but Reffit.Scores depends on Reffit.Document.
--- So PaperRoll is now Reffit.PaperRoll, a module for rendering lists of papers
--- (and, if other modules need, for rendering a single paper-summary block)
-
 instance Migrate Document where
   type MigrateFrom Document = Document0
   migrate (Document0 u i title a l c tags sums crits t) = 

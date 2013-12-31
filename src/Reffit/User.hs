@@ -32,7 +32,7 @@ data User = User { userName       :: UserName
                  , userTags       :: Set.Set TagPath
                  , userJoinTime   :: UTCTime
                  } deriving (Show, Eq, Ord, Generic,Typeable)
-deriveSafeCopy 1 'extension ''User
+deriveSafeCopy 0 'base ''User
 
 
 data UserEvent0 = WroteCritique0   DocumentId CritiqueId
@@ -55,7 +55,7 @@ instance Migrate UserEvent where
   migrate (FollowedUser0 un t)       = FollowedUser un t
   migrate (PinnedDoc0 d t)           = PinnedDoc d t
    
-
+{-
 data User0 = User0 { userName0       :: UserName 
                    , userEmail0      :: Text
                    , userFollowing0  :: Set.Set UserName
@@ -70,3 +70,4 @@ deriveSafeCopy 0 'base ''User0
 instance Migrate User where
   type MigrateFrom User = User0
   migrate (User0 n e f fb h p t jt) = User n e f fb (Prelude.map migrate h) p t jt
+-}
