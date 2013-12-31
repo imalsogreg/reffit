@@ -8,6 +8,7 @@ module Reffit.User where
 import           Reffit.Types
 import           Reffit.FieldTag
 
+import           Data.Serialize
 import qualified Data.Set as Set
 import           Data.Text
 import           Data.Time
@@ -23,7 +24,9 @@ data UserEvent = WroteCritique   DocumentId CritiqueId
                | FollowedUser    UserName   UTCTime
                | PinnedDoc       DocumentId UTCTime
                deriving (Show, Eq, Ord, Generic, Typeable)
-deriveSafeCopy 1 'extension ''UserEvent
+deriveSafeCopy 0 'base ''UserEvent
+
+instance Serialize UserEvent where
 
 data User = User { userName       :: UserName 
                  , userEmail      :: Text
@@ -34,9 +37,11 @@ data User = User { userName       :: UserName
                  , userTags       :: Set.Set TagPath
                  , userJoinTime   :: UTCTime
                  } deriving (Show, Eq, Ord, Generic,Typeable)
-deriveSafeCopy 1 'extension ''User
+deriveSafeCopy 0 'base ''User
 
+instance Serialize User where
 
+  {-
 -- Started counting versions at 0.  Now I'm using 1.  The type hasn't changed at all,
 -- so I'm practicing migration w/ a trivial example.
 data UserEvent0 = WroteCritique0   DocumentId CritiqueId
@@ -48,7 +53,9 @@ data UserEvent0 = WroteCritique0   DocumentId CritiqueId
                 | PinnedDoc0       DocumentId UTCTime
                 deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy 0 'base ''UserEvent0
-
+-}
+  
+  {-
 -- Is there a less boilerplate way to do this?
 instance Migrate UserEvent where
   type MigrateFrom UserEvent         = UserEvent0
@@ -74,3 +81,4 @@ deriveSafeCopy 0 'base ''User0
 instance Migrate User where
   type MigrateFrom User = User0
   migrate (User0 n e f fb h p t jt) = User n e f fb h p t jt
+-}

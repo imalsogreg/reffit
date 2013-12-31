@@ -2,15 +2,20 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-
+{-# LANGUAGE TypeSynonymInstances #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Reffit.FieldTag where
 
+import Reffit.Types
+
+import Control.Applicative
 import qualified Data.Text as T
 import qualified Data.List as L
 import Data.Tree
 import Data.String
-
+import Data.Serialize
+import GHC.Word
 import Heist
 import qualified Heist.Interpreted as I
 import Snap.Snaplet.Heist
@@ -55,6 +60,21 @@ tagHierarchy =
        , Node "NuclearPhysics" []
        ]
     ]
+
+{-  Supposedly, these instances overlap defaults in Data.Serialize?
+instance Serialize (Tree T.Text) where
+  put (Node x nodes) = do
+    put x 
+    put nodes
+  get = Node <$> get <*> get
+
+instance Serialize (Forest T.Text) where
+  put [] = put (0 :: Word8)
+  put (t:ts) = do 
+    put (1 :: Word8)
+    put t
+    put ts
+-}
 
 topLabels :: FieldTags -> [T.Text]
 topLabels fts = map (\(Node t _) -> t) fts

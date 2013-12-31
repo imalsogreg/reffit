@@ -8,6 +8,7 @@ module Reffit.OverviewComment where
 import           Reffit.Types
 import           Reffit.FieldTag
 
+import           Data.Serialize
 import           Data.Text
 import           Data.Time
 import           GHC.Generics
@@ -22,9 +23,13 @@ data Summary = Summary { summaryPoster   :: Maybe UserName
                        } deriving (Show, Generic)
 deriveSafeCopy 0 'base ''Summary
 
+instance Serialize Summary where
+ 
 data QualityDim = Novelty | Rigor | Coolness
                 deriving (Eq, Show, Generic, Typeable)
 deriveSafeCopy 0 'base ''QualityDim
+
+instance Serialize QualityDim where
 
 data Critique = Critique { critiqueProse     :: Text
                          , critiquePoster    :: Maybe UserName
@@ -35,3 +40,4 @@ data Critique = Critique { critiqueProse     :: Text
                          } deriving (Show, Generic)
 deriveSafeCopy 0 'base ''Critique
 
+instance Serialize Critique where
