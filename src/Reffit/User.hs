@@ -8,6 +8,7 @@ module Reffit.User where
 import           Reffit.Types
 import           Reffit.FieldTag
 
+import           Data.Serialize
 import qualified Data.Set as Set
 import           Data.Text
 import           Data.Time
@@ -23,6 +24,8 @@ data UserEvent = WroteOComment   DocumentId OverviewCommentId
                deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy 1 'extension ''UserEvent
 
+instance Serialize UserEvent where
+
 data User = User { userName       :: UserName 
                  , userEmail      :: Text
                  , userFollowing  :: Set.Set UserName
@@ -34,6 +37,7 @@ data User = User { userName       :: UserName
                  } deriving (Show, Eq, Ord, Generic,Typeable)
 deriveSafeCopy 0 'base ''User
 
+instance Serialize User where
 
 data UserEvent0 = WroteCritique0   DocumentId CritiqueId
                 | VotedOnCritique0 DocumentId CritiqueId (Maybe UpDownVote) UTCTime
@@ -45,6 +49,7 @@ data UserEvent0 = WroteCritique0   DocumentId CritiqueId
                 deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy 0 'base ''UserEvent0
 
+-- Is there a less boilerplate way to do this?
 instance Migrate UserEvent where
   type MigrateFrom UserEvent        = UserEvent0
   migrate (WroteCritique0 d c)       = WroteOComment d c
@@ -69,5 +74,9 @@ deriveSafeCopy 0 'base ''User0
 
 instance Migrate User where
   type MigrateFrom User = User0
+<<<<<<< HEAD
   migrate (User0 n e f fb h p t jt) = User n e f fb (Prelude.map migrate h) p t jt
+=======
+  migrate (User0 n e f fb h p t jt) = User n e f fb h p t jt
+>>>>>>> 7fc6b9f38b1bf312e6cd104a1609ec53a6ce8248
 -}

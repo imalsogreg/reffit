@@ -9,7 +9,10 @@ import           Reffit.Types
 import           Reffit.FieldTag
 import           Reffit.OverviewComment
 
+import           Control.Applicative
 import qualified Data.Text as T
+import           Data.Serialize
+import           Data.Text
 import           Data.Time
 import           GHC.Generics
 import           Data.Typeable
@@ -39,6 +42,7 @@ data Document = Document { docUploader  :: Maybe UserName
                          } deriving (Show, Generic, Typeable)
 deriveSafeCopy 1 'extension ''Document 
 
+
 data Document0 = Document0 { docUploader0  :: Maybe UserName
                            , docId0        :: DocumentId
                            , docTitle0     :: T.Text
@@ -67,3 +71,12 @@ instance Migrate Document where
         OverviewComment sP sPr Nothing sVs sT
       critToComm (Critique cPr cp cDim cVal cReac cT) =
         OverviewComment cp cPr (Just (cDim, cVal)) cReac cT
+
+instance Serialize Document where
+
+-- I can't write docSummarySplices here, because a view of the document summary
+-- depends on scores for the document.  So trying to render it brings in a
+-- dependency on Reffit.Scores, but Reffit.Scores depends on Reffit.Document.
+-- So PaperRoll is now Reffit.PaperRoll, a module for rendering lists of papers
+-- (and, if other modules need, for rendering a single paper-summary block)
+

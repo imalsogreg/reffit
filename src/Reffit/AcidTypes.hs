@@ -41,10 +41,12 @@ import Snap (SnapletInit, Snaplet, Handler,
              addRoutes, nestSnaplet, serveSnaplet,
              defaultConfig, makeSnaplet,
              snapletValue, writeText, modify, gets)
+import Data.Serialize
 import Snap.Snaplet.AcidState (Update, Query, Acid, 
                                 HasAcid (getAcidStore),
                                 makeAcidic, update,
                                 query, acidInit)
+import Control.Lens
 
 data PersistentState = PersistentState {
     _documents  :: Map.Map DocumentId Document
@@ -55,25 +57,14 @@ data PersistentState = PersistentState {
 makeLenses ''PersistentState
 deriveSafeCopy 0 'base ''PersistentState
 
-{-
-data PersistentState0 = PersistentState0 {
-    _documents0  :: Map.Map DocumentId Document0
-  , _users0      :: Map.Map UserName User0
-  , _docClasses0 :: [DocClass]
-  , _fieldTags0  :: FieldTags
-  } deriving (Show, Generic, Typeable)
-makeLenses ''PersistentState0
-deriveSafeCopy 0 'base ''PersistentState0
-
-
-instance Migrate PersistentState where
-  type MigrateFrom PersistentState = PersistentState0
-  migrate (PersistentState0 d u c f) =
-    PersistentState (Map.map migrate d) (Map.map migrate u) c f 
--}
-
+instance Serialize PersistentState where
+  
 queryAllDocs :: Query PersistentState (Map.Map DocumentId Document)
 queryAllDocs = asks _documents
+
+-- TODO - what's the right way here?  Can't be this
+updateAllDocs :: Map.Map DocumentId Document -> Update PersistentState ()
+updateAllDocs docMap = modify (over documents (const docMap ))
 
 -- TODO: addDocument, addComment, and addCritique all have
 -- the newId t = hash t <|> length docs <|> firstNotTaken...
@@ -109,7 +100,8 @@ addOComment user' pId comment = do
       where
         cId = head . filter (\k -> Map.notMember k (docOComments doc)) $
               (cHash:cInd:cAll)
-        cHash = abs . fromIntegral . hash $ T.unpack (ocText comment) ++ show (ocPostTime comment)
+        cHash = abs . fromIntegral . hash $ T.unpack (ocText comment) ++ 
+                show (ocPostTime comment)
         cInd  = fromIntegral . Map.size $ docOComments doc
         cAll = [0..]  
 
@@ -171,13 +163,6 @@ castOCommentVote :: User -> Bool -> DocumentId -> Document
                  -> OverviewCommentId -> OverviewComment -> UpDownVote
                  -> UTCTime
                  -> Update PersistentState ()
-
-{-
-castCritiqueVote :: User -> Bool -> DocumentId -> Document
-                 -> CritiqueId -> Critique -> UpDownVote -> UTCTime
-                 -> Update PersistentState ()
-castCritiqueVote user isAnon dId doc cId critique voteVal t = undefined
--}
 
 castOCommentVote user isAnon dId doc cId comment voteVal t = do
   modify (over users $ \us' ->
@@ -249,6 +234,10 @@ addCritique user' pId critique = do
 queryAllUsers :: Query PersistentState (Map.Map T.Text User)
 queryAllUsers = asks _users
 
+-- TODO : find right way here
+updateAllUsers :: Map.Map UserName User -> Update PersistentState ()
+updateAllUsers us = modify (over users (const us))
+
 -- TODO - how can I alert the caller that there's already
 -- a user by that name?
 -- There SHOULDN'T be, because addUser should only get called
@@ -294,12 +283,20 @@ pin user dId doPin t = do
 queryAllDocClasses :: Query PersistentState [DocClass]
 queryAllDocClasses = asks _docClasses
 
+-- TODO: right type, wrong combinator
+updateAllDocClasses :: [DocClass] -> Update PersistentState ()
+updateAllDocClasses classes = modify (over docClasses (const classes))
+
 addDocClass :: DocClass -> Update PersistentState ()
 addDocClass dc = do
   modify (over docClasses (dc:))
   
 queryAllFieldTags :: Query PersistentState FieldTags
 queryAllFieldTags = asks _fieldTags
+
+-- TODO: find appropriate combinator
+updateAllFieldTags :: FieldTags -> Update PersistentState ()
+updateAllFieldTags tags = modify (over fieldTags (const tags))
 
 addUserTag :: User -> TagPath -> Update PersistentState ()
 addUserTag user tp =
@@ -314,13 +311,14 @@ deleteUserTag user tp =
 addFieldTag :: TagPath -> Update PersistentState ()
 addFieldTag tp = modify (over fieldTags (insertTag tp))
 
-makeAcidic ''PersistentState ['addDocument,         'queryAllDocs
-                             , 'queryAllUsers,      'addUser
+makeAcidic ''PersistentState ['addDocument,         'queryAllDocs, 'updateAllDocs
+                             , 'queryAllUsers,      'addUser,      'updateAllUsers
                              , 'addUserTag,         'deleteUserTag
                              , 'userFollow,         'userUnfollow
                              , 'pin
-                             , 'queryAllDocClasses, 'addDocClass
-                             , 'queryAllFieldTags,  'addFieldTag
                              , 'addOComment,        'castOCommentVote
+                             , 'queryAllDocClasses, 'addDocClass, 'updateAllDocClasses
+                             , 'queryAllFieldTags,  'addFieldTag, 'updateAllFieldTags
                              , 'addSummary,         'addCritique
                              , 'castSummaryVote,    'castCritiqueVote]
+                                                    
