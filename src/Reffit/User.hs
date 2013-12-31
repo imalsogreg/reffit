@@ -8,6 +8,7 @@ module Reffit.User where
 import           Reffit.Types
 import           Reffit.FieldTag
 
+import           Data.Serialize
 import qualified Data.Set as Set
 import           Data.Text
 import           Data.Time
@@ -25,6 +26,8 @@ data UserEvent = WroteCritique   DocumentId CritiqueId
                deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy 1 'extension ''UserEvent
 
+instance Serialize UserEvent where
+
 data User = User { userName       :: UserName 
                  , userEmail      :: Text
                  , userFollowing  :: Set.Set UserName
@@ -36,6 +39,7 @@ data User = User { userName       :: UserName
                  } deriving (Show, Eq, Ord, Generic,Typeable)
 deriveSafeCopy 1 'extension ''User
 
+instance Serialize User where
 
 -- Started counting versions at 0.  Now I'm using 1.  The type hasn't changed at all,
 -- so I'm practicing migration w/ a trivial example.

@@ -9,7 +9,9 @@ import           Reffit.Types
 import           Reffit.FieldTag
 import           Reffit.OverviewComment
 
+import           Control.Applicative
 import qualified Data.Text as T
+import           Data.Serialize
 import           Data.Text
 import           Data.Time
 import           GHC.Generics
@@ -40,6 +42,8 @@ data Document = Document { docUploader  :: Maybe UserName
                          , docPostTime  :: UTCTime
                          } deriving (Show, Generic, Typeable)
 deriveSafeCopy 0 'base ''Document
+
+instance Serialize Document where
 
 -- I can't write docSummarySplices here, because a view of the document summary
 -- depends on scores for the document.  So trying to render it brings in a

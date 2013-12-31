@@ -41,10 +41,12 @@ import Snap (SnapletInit, Snaplet, Handler,
              addRoutes, nestSnaplet, serveSnaplet,
              defaultConfig, makeSnaplet,
              snapletValue, writeText, modify, gets)
+import Data.Serialize
 import Snap.Snaplet.AcidState (Update, Query, Acid, 
                                 HasAcid (getAcidStore),
                                 makeAcidic, update,
                                 query, acidInit)
+import Control.Lens
 
 data PersistentState = PersistentState {
     _documents  :: Map.Map DocumentId Document
@@ -57,8 +59,15 @@ makeLenses ''PersistentState
 
 deriveSafeCopy 0 'base ''PersistentState
 
+instance Serialize PersistentState where
+  
+ 
 queryAllDocs :: Query PersistentState (Map.Map DocumentId Document)
 queryAllDocs = asks _documents
+
+-- TODO - what's the right way here?  Can't be this
+updateAllDocs :: Map.Map DocumentId Document -> Update PersistentState ()
+updateAllDocs docMap = modify (over documents (const docMap ))
 
 -- TODO: addDocument, addComment, and addCritique all have
 -- the newId t = hash t <|> length docs <|> firstNotTaken...
@@ -162,6 +171,10 @@ addCritique user' pId critique = do
 queryAllUsers :: Query PersistentState (Map.Map T.Text User)
 queryAllUsers = asks _users
 
+-- TODO : find right way here
+updateAllUsers :: Map.Map UserName User -> Update PersistentState ()
+updateAllUsers us = modify (over users (const us))
+
 -- TODO - how can I alert the caller that there's already
 -- a user by that name?
 -- There SHOULDN'T be, because addUser should only get called
@@ -207,12 +220,20 @@ pin user dId doPin t = do
 queryAllDocClasses :: Query PersistentState [DocClass]
 queryAllDocClasses = asks _docClasses
 
+-- TODO: right type, wrong combinator
+updateAllDocClasses :: [DocClass] -> Update PersistentState ()
+updateAllDocClasses classes = modify (over docClasses (const classes))
+
 addDocClass :: DocClass -> Update PersistentState ()
 addDocClass dc = do
   modify (over docClasses (dc:))
   
 queryAllFieldTags :: Query PersistentState FieldTags
 queryAllFieldTags = asks _fieldTags
+
+-- TODO: find appropriate combinator
+updateAllFieldTags :: FieldTags -> Update PersistentState ()
+updateAllFieldTags tags = modify (over fieldTags (const tags))
 
 addUserTag :: User -> TagPath -> Update PersistentState ()
 addUserTag user tp =
@@ -227,12 +248,12 @@ deleteUserTag user tp =
 addFieldTag :: TagPath -> Update PersistentState ()
 addFieldTag tp = modify (over fieldTags (insertTag tp))
 
-makeAcidic ''PersistentState ['addDocument,         'queryAllDocs
-                             , 'queryAllUsers,      'addUser
+makeAcidic ''PersistentState ['addDocument,         'queryAllDocs, 'updateAllDocs
+                             , 'queryAllUsers,      'addUser,      'updateAllUsers
                              , 'addUserTag,         'deleteUserTag
                              , 'userFollow,         'userUnfollow
                              , 'pin
-                             , 'queryAllDocClasses, 'addDocClass
-                             , 'queryAllFieldTags,  'addFieldTag
+                             , 'queryAllDocClasses, 'addDocClass, 'updateAllDocClasses
+                             , 'queryAllFieldTags,  'addFieldTag, 'updateAllFieldTags
                              , 'addSummary,         'addCritique
                              , 'castSummaryVote,    'castCritiqueVote]
