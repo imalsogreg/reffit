@@ -139,48 +139,47 @@ routes = [
     , ("login",         with auth handleLoginSubmit)
     , ("logout",        with auth handleLogout)
     , ("new_user",      with auth handleNewUser)
-    , ("new_article",   
-       with sess touchSession >> with auth handleNewArticle) 
-    , ("new_article/:doi",   
-       with sess touchSession >> with auth handleNewArticle)
-    , ("new_summary/:paperid", 
-
-       with auth (handleNewOComment Summary'))
+    , ("new_article",   with auth handleNewArticle) 
+    , ("new_article/:doi",   with auth handleNewArticle)
+    , ("new_summary/:paperid", with auth (handleNewOComment Summary'))
     , ("new_praise/:paperid", 
-       with sess touchSession >>
+
        with auth (handleNewOComment Praise)) 
     , ("new_criticism/:paperid", 
-       with sess touchSession >>
+--       with sess touchSession >>
        with auth (handleNewOComment Criticism))
     , ("view_article/:paperid", 
-       with sess touchSession >>
+--       with sess touchSession >>
        with auth handleViewPaper) 
     , ("cast_ocomment_upvote/:idParam",    
-       with sess touchSession >>
+--       with sess touchSession >>
        with auth (handleOCommentVote  UpVote))
     , ("cast_ocomment_downvote/:idParam",  
-       with sess touchSession >>
+--       with sess touchSession >>
        with auth (handleOCommentVote  DownVote))
    
     , ("user/:username", 
-       with sess touchSession >>
+--       with sess touchSession >>
        with auth handleViewUser)
     , ("follow/:username", 
-       with sess touchSession >>
+--       with sess touchSession >>
        with auth (handleFollow True))
     , ("unfollow/:username", 
-       with sess touchSession >>
+--       with sess touchSession >>
        with auth (handleFollow False))
-    , ("pin/:paperid",   with sess touchSession >>
+    , ("pin/:paperid",   --with sess touchSession >>
                          with auth (handlePin True)) 
-    , ("unpin/:paperid", with sess touchSession >>
+    , ("unpin/:paperid", --with sess touchSession >>
                          with auth (handlePin False))
-    , ("/add_usertag/:fieldtag", with sess touchSession >>
+    , ("/add_usertag/:fieldtag", --with sess touchSession >>
                                  with auth (handleAddTag True))  
-    , ("/delete_usertag/:fieldtag", with sess touchSession >>
+    , ("/delete_usertag/:fieldtag", -- with sess touchSession >>
                                     with auth (handleAddTag False))
-    , ("/about", with sess touchSession >> render "about")
-    , ("/:params" , with sess touchSession >>
+    , ("/about",
+--       with sess touchSession >>
+                 render "about")
+    , ("/:params" ,
+       --with sess touchSession >>
                     with auth handleIndex)
     
     , ("stateToDisk",   with auth handleStateToDisk)
@@ -188,7 +187,9 @@ routes = [
     , ("checkpoint",    with auth handleCheckpoint)
 --    , ("migrateStateFromDisk", with auth handleMigrateStateFromDisk)
       
-    , ("/", with sess touchSession >> with auth handleIndex)
+    , ("/",
+--       with sess touchSession >>
+       with auth handleIndex)
 
     , ("/dump_state",  with auth handleDumpState)
     , ("/static", serveDirectory "static") 
