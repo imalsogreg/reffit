@@ -144,7 +144,7 @@ routes = [
     , ("new_article/:doi",   
        with sess touchSession >> with auth handleNewArticle)
     , ("new_summary/:paperid", 
-       with sess touchSession >> 
+
        with auth (handleNewOComment Summary'))
     , ("new_praise/:paperid", 
        with sess touchSession >>
