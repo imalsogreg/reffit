@@ -38,6 +38,7 @@ Executable reffit
     safe,
     text-icu,
     HTTP,
+    network,
     aeson,
     lens-aeson,
     unordered-containers,
