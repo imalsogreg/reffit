@@ -41,6 +41,9 @@ import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist  
 import qualified Data.ByteString.Char8        as BS
 import           Control.Monad
+import           Heist
+import           Snap.Snaplet.Heist
+import qualified Heist.Interpreted as I
 
 newOCommentForm :: (Monad m) => User -> OverviewCommentType -> UTCTime -> Form Text m OverviewComment
 newOCommentForm formUser ocType t =
@@ -119,6 +122,8 @@ handleNewCritique critVal = do
  
 handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
 handleNewOComment commentType = do
+
+
   userMap <- query QueryAllUsers
   pId'    <- getParam "paperid"
   authUser' <- currentUser
@@ -127,12 +132,19 @@ handleNewOComment commentType = do
     Nothing -> writeText "paperid error" -- TODO proper error message
     Just pId ->
       case join $ (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+        Nothing -> writeText $ "handleNewOComment - didn't find user in database"
         Just user -> do
-          (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t
+          (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t -- What is this?
           case rs of
             Just comment -> do
               let user' = maybe Nothing (const $ Just user) (ocPoster comment)
               _ <- update $ AddOComment user' pId comment 
               redirect . BS.pack $ "/view_article/" ++ show pId
             Nothing -> do
-              heistLocal (bindDigestiveSplices vw) $ render "new_overview_comment"
+              heistLocal (bindDigestiveSplices vw) $
+                renderWithSplices "new_o_comment" (oCommentFormSplices commentType)
+
+oCommentFormSplices :: Monad m => OverviewCommentType -> Splices (I.Splice m)
+oCommentFormSplices Summary' = do
+  "reBlock" ## I.textSplice ""
+oCommentFormSplices _ = return ()
