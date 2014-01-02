@@ -82,7 +82,7 @@ handleLogin authError = heistLocal (I.bindSplices errs) $ render "login"
 -- | Handle login submit
 handleLoginSubmit :: Handler App (AuthManager App) ()
 handleLoginSubmit =
-    loginUser "login" "password" Nothing
+    loginUser "login" "password" (Just "remember")
               (\_ -> handleLogin err) (redirect "/")
   where
     err = Just "Unknown user or password"
@@ -135,52 +135,64 @@ handleDumpState = do
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes = [
-      ("search",    with auth  handleIndex)
-    , ("login",         with auth handleLoginSubmit)
+      ("login",         with auth handleLoginSubmit)
     , ("logout",        with auth handleLogout)
     , ("new_user",      with auth handleNewUser)
-    , ("new_article",   with auth handleNewArticle) 
-    , ("new_article/:doi",   with auth handleNewArticle)
-    , ("new_summary/:paperid", with auth (handleNewOComment Summary'))
+    , ("search",    
+       -- TODO: Is this the right way to refresh the session on every action??
+       withSession sess (with sess touchSession) >> 
+       with auth  handleIndex)
+    , ("new_article",   
+       withSession sess (with sess touchSession) >>
+       with auth handleNewArticle) 
+    , ("new_article/:doi",   
+       withSession sess (with sess touchSession) >> 
+       with auth handleNewArticle)
+    , ("new_summary/:paperid", 
+       withSession sess (with sess touchSession) >>
+       with auth (handleNewOComment Summary'))
     , ("new_praise/:paperid", 
-
+       withSession sess (with sess touchSession) >> 
        with auth (handleNewOComment Praise)) 
     , ("new_criticism/:paperid", 
---       with sess touchSession >>
+       withSession sess (with sess touchSession) >>
        with auth (handleNewOComment Criticism))
     , ("view_article/:paperid", 
---       with sess touchSession >>
+       withSession sess (with sess touchSession) >>
        with auth handleViewPaper) 
     , ("cast_ocomment_upvote/:idParam",    
---       with sess touchSession >>
+       withSession sess (with sess touchSession) >>
        with auth (handleOCommentVote  UpVote))
     , ("cast_ocomment_downvote/:idParam",  
---       with sess touchSession >>
+       withSession sess (with sess touchSession) >>
        with auth (handleOCommentVote  DownVote))
-   
     , ("user/:username", 
---       with sess touchSession >>
+       withSession sess (with sess touchSession) >>
        with auth handleViewUser)
     , ("follow/:username", 
---       with sess touchSession >>
+       withSession sess (with sess touchSession) >>
        with auth (handleFollow True))
     , ("unfollow/:username", 
---       with sess touchSession >>
+       withSession sess (with sess touchSession) >>
        with auth (handleFollow False))
-    , ("pin/:paperid",   --with sess touchSession >>
-                         with auth (handlePin True)) 
-    , ("unpin/:paperid", --with sess touchSession >>
-                         with auth (handlePin False))
-    , ("/add_usertag/:fieldtag", --with sess touchSession >>
-                                 with auth (handleAddTag True))  
-    , ("/delete_usertag/:fieldtag", -- with sess touchSession >>
-                                    with auth (handleAddTag False))
+    , ("pin/:paperid",   
+       withSession sess (with sess touchSession) >>
+       with auth (handlePin True)) 
+    , ("unpin/:paperid", 
+       withSession sess (with sess touchSession) >>
+       with auth (handlePin False))
+    , ("/add_usertag/:fieldtag", 
+       withSession sess (with sess touchSession) >>
+       with auth (handleAddTag True))  
+    , ("/delete_usertag/:fieldtag",
+       withSession sess (with sess touchSession) >>
+       with auth (handleAddTag False))
     , ("/about",
---       with sess touchSession >>
-                 render "about")
+       withSession sess (with sess touchSession) >>
+       render "about")
     , ("/:params" ,
-       --with sess touchSession >>
-                    with auth handleIndex)
+       withSession sess (with sess touchSession) >>
+       with auth handleIndex)
     
     , ("stateToDisk",   with auth handleStateToDisk)
     , ("stateFromDisk", with auth handleStateFromDisk)
@@ -188,7 +200,7 @@ routes = [
 --    , ("migrateStateFromDisk", with auth handleMigrateStateFromDisk)
       
     , ("/",
---       with sess touchSession >>
+       withSession sess (with sess touchSession) >>
        with auth handleIndex)
 
     , ("/dump_state",  with auth handleDumpState)

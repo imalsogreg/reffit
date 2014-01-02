@@ -22,13 +22,6 @@ import           Snap.Snaplet.Heist
 import           Heist
 import qualified Heist.Interpreted as I
 
--- TODO: Is DocumentHints only used by CrossRef?  If so, it should move there.
-data DocumentHints = DocumentHints { titleHint   :: T.Text
-                                   , authorsHint :: [T.Text]
-                                   , linkHint    :: T.Text
-                                   , yearHint    :: Maybe Int
-                                   }
-
                      
 data Document = Document { docUploader  :: Maybe UserName
                          , docId        :: DocumentId
