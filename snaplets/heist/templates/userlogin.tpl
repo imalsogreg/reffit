@@ -16,6 +16,17 @@
     </div>
   </div>
 
+<div class="form-group">
+
+  <div class="col-sm-offset-4 col-sm-8">
+    <div class="checkbox">
+      <label>
+        <input type="checkbox" name="remember">Remember me
+      </label>
+    </div>
+  </div>
+</div>
+
   <div class="form-group">
     <div class="col-sm-offset-4 col-sm-4">
       <input type="submit" value="${submitText}" class="form-control"/>

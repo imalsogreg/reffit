@@ -82,7 +82,7 @@ handleLogin authError = heistLocal (I.bindSplices errs) $ render "login"
 -- | Handle login submit
 handleLoginSubmit :: Handler App (AuthManager App) ()
 handleLoginSubmit =
-    loginUser "login" "password" Nothing
+    loginUser "login" "password" (Just "remember")
               (\_ -> handleLogin err) (redirect "/")
   where
     err = Just "Unknown user or password"
