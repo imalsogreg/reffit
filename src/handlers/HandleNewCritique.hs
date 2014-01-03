@@ -122,8 +122,6 @@ handleNewCritique critVal = do
  
 handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
 handleNewOComment commentType = do
-
-
   userMap <- query QueryAllUsers
   pId'    <- getParam "paperid"
   authUser' <- currentUser
@@ -132,7 +130,14 @@ handleNewOComment commentType = do
     Nothing -> writeText "paperid error" -- TODO proper error message
     Just pId ->
       case join $ (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
-        Nothing -> writeText $ "handleNewOComment - didn't find user in database"
+        Nothing -> do
+          method GET handleNoUser <|> method POST handleCatchLoggedOut
+            where 
+              handleNoUser = writeText "handleNewOComment: User not found in database."
+              handleCatchLoggedOut = do
+                proseText <- fmap decodeUtf8 <$> getParam "prose" 
+                renderWithSplices "caught_logout" (caughtLoggedOutSplices proseText)
+
         Just user -> do
           (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t -- What is this?
           case rs of
@@ -144,7 +149,11 @@ handleNewOComment commentType = do
               heistLocal (bindDigestiveSplices vw) $
                 renderWithSplices "new_o_comment" (oCommentFormSplices commentType)
 
+
 oCommentFormSplices :: Monad m => OverviewCommentType -> Splices (I.Splice m)
-oCommentFormSplices Summary' = do
-  "reBlock" ## I.textSplice ""
+oCommentFormSplices Summary' = "reBlock" ## I.textSplice ""
 oCommentFormSplices _ = return ()
+
+caughtLoggedOutSplices :: Monad m => Maybe Text -> Splices (I.Splice m)
+caughtLoggedOutSplices Nothing  = "pBlock" ## I.textSplice ""
+caughtLoggedOutSplices (Just t) = "prose"  ## I.textSplice t
