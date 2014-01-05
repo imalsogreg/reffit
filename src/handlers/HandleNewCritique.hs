@@ -119,7 +119,7 @@ handleNewCritique critVal = do
             Nothing -> do 
               heistLocal (bindDigestiveSplices vw) $ render "new_critique"
 -}
- 
+  
 handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
 handleNewOComment commentType = do
   userMap <- query QueryAllUsers
@@ -137,17 +137,24 @@ handleNewOComment commentType = do
               handleCatchLoggedOut = do
                 proseText <- fmap decodeUtf8 <$> getParam "prose" 
                 renderWithSplices "caught_logout" (caughtLoggedOutSplices proseText)
-
         Just user -> do
-          (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t -- What is this?
-          case rs of
-            Just comment -> do
-              let user' = maybe Nothing (const $ Just user) (ocPoster comment)
-              _ <- update $ AddOComment user' pId comment 
-              redirect . BS.pack $ "/view_article/" ++ show pId
-            Nothing -> do
-              heistLocal (bindDigestiveSplices vw) $
-                renderWithSplices "new_o_comment" (oCommentFormSplices commentType)
+          method GET handleRenderForm <|> method POST handlePostForm
+            where 
+              handleRenderForm = do
+                (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t
+                case rs of 
+                  Nothing -> do
+                    heistLocal (bindDigestiveSplices vw) $ 
+                      renderWithSplices "new_o_comment" (oCommentFormSplices commentType)
+                  Just _ -> writeText "server error - impossible case in handleNewOComment handleRenderForm"
+              handlePostForm = do
+                (_,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t -- What is this?
+                case rs of
+                  Just comment -> do
+                    let user' = maybe Nothing (const $ Just user) (ocPoster comment)
+                    _ <- update $ AddOComment user' pId comment 
+                    redirect . BS.pack $ "/view_article/" ++ show pId
+                  Nothing -> writeText "server error - impossible case in handleNewOComment handlePostForm"
 
 
 oCommentFormSplices :: Monad m => OverviewCommentType -> Splices (I.Splice m)
