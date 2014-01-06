@@ -150,13 +150,13 @@ routes = [
        with auth handleNewArticle)
     , ("new_summary/:paperid", 
        withSession sess (with sess touchSession) >>
-       with auth (handleNewOComment Summary'))
+       with auth (handleNewOComment Summary' timeoutSecs))
     , ("new_praise/:paperid", 
        withSession sess (with sess touchSession) >> 
-       with auth (handleNewOComment Praise)) 
+       with auth (handleNewOComment Praise timeoutSecs)) 
     , ("new_criticism/:paperid", 
        withSession sess (with sess touchSession) >>
-       with auth (handleNewOComment Criticism))
+       with auth (handleNewOComment Criticism timeoutSecs))
     , ("view_article/:paperid", 
        withSession sess (with sess touchSession) >>
        with auth handleViewPaper) 
@@ -213,7 +213,7 @@ app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
 
     s <- nestSnaplet "sess" sess $
-           initCookieSessionManager "site_key.txt" "sess" (Just 10)
+           initCookieSessionManager "site_key.txt" "sess" (Just timeoutSecs)
 
     -- NOTE: We're using initJsonFileAuthManager here because it's easy and
     -- doesn't require any kind of database server to run.  In practice,
@@ -227,6 +227,8 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     addAuthSplices h auth
     return $ App h s a ac
 
+timeoutSecs :: Int
+timeoutSecs = 10
 
 factoryReset :: PersistentState
 factoryReset = PersistentState Map.empty Map.empty [] []

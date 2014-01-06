@@ -20,7 +20,25 @@
 	</div>
       </div>
     </reBlock>
-    
+
+    <!-- Pass the catch-logout time delay to jquery through a splice -->
+    <div class="timeout_div">
+      <timeout_secs/>
+    </div>
+
+    <script>
+      $(document).ready(function(){
+      $('.timeout_alert').hide();
+      var timeoutSecs = $('.timeout_div').text();
+      $('.timeout_alert').slideUp( 300 ).delay( timeoutSecs*1000 ).fadeIn(400);
+      $('.submit-button').prop('disabled',true).delay( timeoutSecs*1000 );
+      });
+    </script>
+
+    <div class="alert alert-info timeout_alert">
+      <p>Sorry!  It seems you have been logged out since visiting the last page.  Please copy your comment so you don't lose your work, and log back in.</p>
+    </div>
+
     <div class="form-group">
       <dfLabel ref="prose" class="col-sm-2 control-label">Comment: </dfLabel>
       <div class="col-sm-8">
@@ -29,7 +47,7 @@
     </div>
     
     <div class="form-group">
-      <div class="col-sm-offset-2 col-sm-10">
+      <div class="col-sm-offset-2 col-sm-10 submit-button">
 	<dfInputSubmit value="Enter"/>
       </div>
     </div>

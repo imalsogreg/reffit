@@ -46,8 +46,8 @@ import           Heist
 import           Snap.Snaplet.Heist
 import qualified Heist.Interpreted as I
 
-newOCommentForm :: (Monad m) => UserName -> OverviewCommentType -> UTCTime -> Form Text m OverviewComment
-newOCommentForm formUserName ocType t =
+newOCommentForm :: (Monad m) => User -> OverviewCommentType -> UTCTime -> Form Text m OverviewComment
+newOCommentForm user ocType t =
   OverviewComment
   <$> "poster"    .: choice posterOpts Nothing
   <*> "prose"     .: check "Not a valid entry" (not . T.null) (text Nothing)
@@ -55,7 +55,7 @@ newOCommentForm formUserName ocType t =
   <*> pure []
   <*> pure t 
   where
-    posterOpts = [(Just formUserName, formUserName)
+    posterOpts = [(Just (userName user), userName user)
                  ,(Nothing, "Anonymous")]
     dimOpts = [(Novelty,"Novelty"),(Rigor,"Rigor"),(Coolness,"Coolness")]
     ocVoteVal = case ocType of
@@ -96,36 +96,17 @@ newCritiqueView view = do
 newOCommentView :: View H.Html -> H.Html
 newOCommentView = undefined
 
-handleNewOComment :: OverviewCommentType -> T.Text -> Handler App (AuthManager App) ()
-handleNewOComment commentType defaultUsername = do
+handleNewOComment :: OverviewCommentType -> Int -> Handler App (AuthManager App) ()
+handleNewOComment commentType timeoutSecs = do
   userMap <- query QueryAllUsers
-  pId'      <- getParam "paperid"
+  pId'    <- getParam "paperid"
   authUser' <- currentUser
   t         <- liftIO $ getCurrentTime
   case join $ readMay . T.unpack . decodeUtf8 <$> pId' of
-    Nothing -> writeText "Server error - couldn't find paper in database"
-    Just pId -> do
-      let user' = join $ (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap)
-          userN = maybe defaultUsername userName user'
-       case user' of 
-         Nothing -> writeText $ "handleNewOComment - didn't find user in database"
-         Just _ -> do
-           (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm userN commentType t -- What is this?
-           case (user', rs) of
-             (Nothing,Nothing) -> writeText "Server - tried to render form but no user"
-             (Just _ ,Nothing) -> do
-               heistLocal (bindDigestiveSplices vw) $
-                 renderWithSplices "new_o_comment" (oCommentFormSplices commentType)                  
-             (Nothing, Just comment) -> writeText "Server - caught logout case!"
-             (Just _ , Just comment) -> do
-               let posterName = maybe Nothing (const $ Just userN) (ocPoster comment)
-               _ <- update $ AddOComment posterName pId' comment 
-               redirect . BS.pack $ "/view_article/" ++ show pId
- 
-  {-
+    Nothing -> writeText "paperid error" -- TODO proper error message
     Just pId ->
       case join $ (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
-
+        Nothing -> writeText $ "handleNewOComment - didn't find user in database"
         Just user -> do
           (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t -- What is this?
           case rs of
@@ -135,77 +116,15 @@ handleNewOComment commentType defaultUsername = do
               redirect . BS.pack $ "/view_article/" ++ show pId
             Nothing -> do
               heistLocal (bindDigestiveSplices vw) $
-                renderWithSplices "new_o_comment" (oCommentFormSplices commentType)                  
-                  
-    -}              
-               
-{- This isn't working - I get "Post - got Nothing".  Don't understand digestive well enough
-handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
-handleNewOComment commentType = do
-  userMap <- query QueryAllUsers
-  pId'    <- getParam "paperid"
-  authUser' <- currentUser
-  t         <- liftIO $ getCurrentTime
-  case join $ readMay . T.unpack . decodeUtf8 <$> pId' of
-    Nothing -> writeText "paperid error" -- TODO proper error message
-    Just pId ->
-      case join $ (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
-        Nothing -> do
-          method GET handleNoUser <|> method POST handleCatchLoggedOut
-            where 
-              handleNoUser = writeText "handleNewOComment: User not found in database."
-              handleCatchLoggedOut = do
-                proseText <- fmap decodeUtf8 <$> getParam "prose" 
-                renderWithSplices "caught_logout" (caughtLoggedOutSplices proseText)
-        Just user -> do
-          method GET handleRenderForm <|> method POST handlePostForm
-            where 
-              handleRenderForm = do
-                view <- getForm  "newOCommentForm" $ newOCommentForm user commentType t
-                heistLocal (bindDigestiveSplices view) $
-                  renderWithSplices "new_o_comment" (oCommentFormSplices commentType)
---                return ()
-              handlePostForm   = do
-                (v,r) <- postForm "newOCommentForm" (newOCommentForm user commentType t) (snapEnv [])
-                case r of
-                  Nothing -> writeText "Post got Nothing"
-                  Just _  -> writeText $ T.append "Post got something. pId: " (T.pack . show $ (pId :: DocumentId))
-                return ()
-                
+                renderWithSplices "new_o_comment" (oCommentFormSplices commentType timeoutSecs)
 
-snapEnv :: MonadSnap m => [(T.Text, FilePath)] -> Env m
-snapEnv allFiles path = do
-    inputs <- map (TextInput . decodeUtf8) . findParams <$> getParams
-    let files = map (FileInput . snd) $ filter ((== name) . fst) allFiles
-    return $ inputs ++ files
-  where
-    findParams = fromMaybe [] . Map.lookup (encodeUtf8 name)
-    name       = fromPath path
--} 
+oCommentFormSplices :: Monad m => OverviewCommentType -> Int -> Splices (I.Splice m)
+oCommentFormSplices Summary' timeoutSecs = do
+  "reBlock"     ## I.textSplice ""
+  "timeoutSecs" ## I.textSplice $ T.pack . show $ timeoutSecs
+oCommentFormSplices _ _ = return ()
 
-
-              {-
-              handleRenderForm = do
-                (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t
-                case rs of 
-                  Nothing -> do
-                    heistLocal (bindDigestiveSplices vw) $ 
-                      renderWithSplices "new_o_comment" (oCommentFormSplices commentType)
-                  Just _ -> writeText "server error - impossible case in handleNewOComment handleRenderForm"
-              handlePostForm = do
-                (_,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t -- What is this?
-                case rs of
-                  Just comment -> do
-                    let user' = maybe Nothing (const $ Just user) (ocPoster comment)
-                    _ <- update $ AddOComment user' pId comment 
-                    redirect . BS.pack $ "/view_article/" ++ show pId
-                  Nothing -> writeText "server error - impossible case in handleNewOComment handlePostForm"
--}
-
-oCommentFormSplices :: Monad m => OverviewCommentType -> Splices (I.Splice m)
-oCommentFormSplices Summary' = "reBlock" ## I.textSplice ""
-oCommentFormSplices _ = return ()
-
+-- No longer user
 caughtLoggedOutSplices :: Monad m => Maybe Text -> Splices (I.Splice m)
 caughtLoggedOutSplices Nothing  = "pBlock" ## I.textSplice ""
 caughtLoggedOutSplices (Just t) = "prose"  ## I.textSplice t
