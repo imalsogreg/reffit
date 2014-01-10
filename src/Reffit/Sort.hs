@@ -26,23 +26,23 @@ sortDocs :: (Document -> Int) -> Bool -> [Document]  -> [Document]
 sortDocs scoreF True  = sortBy (\a b -> scoreF b `compare` scoreF a)
 sortDocs scoreF False = sortBy (\a b -> scoreF a `compare` scoreF b)
 
- 
+
 -- TODO pagination.  add Int and Int to each constructor for startInd and #of
 data PresentationStrategy = FiltSort SortBy [TagPath]
                           | SearchBy T.Text
                           deriving (Show, Eq)
 
 
-presentationSort :: UTCTime -> Map.Map DocumentId Document 
-                    -> PresentationStrategy 
+presentationSort :: UTCTime -> Map.Map DocumentId Document
+                    -> PresentationStrategy
                     -> [Document]
 presentationSort _ docMap (SearchBy searchTerm) =
-  searchDocs 10 docMap searchTerm 
+  searchDocs 10 docMap searchTerm
 presentationSort tNow docMap (FiltSort s [])  =
   (sortDocs (sortF tNow s) True) . Map.elems $ docMap
-presentationSort tNow docMap (FiltSort s fts) = 
-  (sortDocs (sortF tNow s) True) 
-  . filter (\d -> any (\dtag -> any (tagIncludes dtag) fts) (docFieldTags d)) 
+presentationSort tNow docMap (FiltSort s fts) =
+  (sortDocs (sortF tNow s) True)
+  . filter (\d -> any (\dtag -> any (tagIncludes dtag) fts) (docFieldTags d))
   . Map.elems $ docMap
 
 sortF :: UTCTime -> SortBy -> (Document -> Int)
@@ -51,7 +51,7 @@ sortF t s = case s of
   Hot -> hotnessScore t
   Popular -> qualityScore
   Controversial -> controversyScore
-      
+
 t0 :: UTCTime
 t0 = UTCTime (ModifiedJulianDay 0) 0
 
@@ -75,7 +75,7 @@ sayTimeDiff a@(UTCTime aDate _) b@(UTCTime bDate _)
   | dHours == 1 = printf "1 hour ago"
   | dMins > 1   = printf "%d minutes ago" dMins
   | dMins == 1  = printf "1 minute ago"
-  | dSecs > 1   = printf "%d seconds ago" dSecs 
+  | dSecs > 1   = printf "%d seconds ago" dSecs
   | otherwise   = printf "Just now"
   where dt = realToFrac $ diffUTCTime a b :: Double
         dSecs  = floor $ dt             :: Int

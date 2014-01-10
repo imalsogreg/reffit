@@ -34,6 +34,6 @@ dScore query doc = let qTokens  = tokenize query
 
 searchDocs :: Int -> Map.Map DocumentId Document -> T.Text -> [Document]
 searchDocs n docs queryText = let nQueryText = norm queryText in
-  take n . 
+  take n .
   sortBy (\a b -> dScore queryText a `Prelude.compare` dScore queryText b) . filter ((>0) . dScore nQueryText) $
-  Map.elems docs  
+  Map.elems docs

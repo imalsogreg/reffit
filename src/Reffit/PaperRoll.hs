@@ -4,7 +4,7 @@ module Reffit.PaperRoll where
 
 import Reffit.Types
 import Reffit.AcidTypes
-import Reffit.Document 
+import Reffit.Document
 import Reffit.Scores
 import Reffit.Sort
 import Reffit.Search
@@ -30,55 +30,55 @@ import Data.Time
 
 
 
-paramsToStrategy :: FieldTags -> Map.Map BS.ByteString [BS.ByteString] 
+paramsToStrategy :: FieldTags -> Map.Map BS.ByteString [BS.ByteString]
                     -> PresentationStrategy
 paramsToStrategy tags params = case Map.lookup "q" params of
   Just (searchTerms:_) -> SearchBy . decodeUtf8 $ searchTerms
   Just []              -> FiltSort New []
-  Nothing -> 
-    let sortCrit = maybe New id $ do 
+  Nothing ->
+    let sortCrit = maybe New id $ do
           sortStrs <- Map.lookup "sortBy" params
           sortStr  <- listToMaybe sortStrs :: Maybe BS.ByteString
           readSort sortStr
-        filtTags = case Map.lookup "filterTag" params of 
+        filtTags = case Map.lookup "filterTag" params of
           -- not-logged-in-case with tag specified
           Just fts -> [t | t <- map (fromFullName . decodeUtf8) $ fts
                          , tagPathIsElem t tags]
-          Nothing -> 
-            [fromFullName . snd . T.breakOnEnd "filterTag." 
-             . decodeUtf8 . fst $ kv  
+          Nothing ->
+            [fromFullName . snd . T.breakOnEnd "filterTag."
+             . decodeUtf8 . fst $ kv
             | kv <- Map.toList params
             , T.isPrefixOf "filterTag." (decodeUtf8 . fst $ kv)
             , Map.lookup (fst kv) params == Just ("on":[])]
     in FiltSort sortCrit filtTags
-          
+
 
 allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do
   "paper_roll_papers" ## (renderPaperRollPapers (take 100 docs))
-  
-renderPaperRollPapers :: [Document] -> SnapletISplice App
-renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument 
 
-splicesFromDocument :: Document -> Splices (SnapletISplice App) 
+renderPaperRollPapers :: [Document] -> SnapletISplice App
+renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
+
+splicesFromDocument :: Document -> Splices (SnapletISplice App)
 splicesFromDocument doc = do
-  let (novScore, rigScore, coolScore) = documentDimScores doc 
+  let (novScore, rigScore, coolScore) = documentDimScores doc
   "idNum"               ## I.textSplice (T.pack . show $ docId doc)
   "paper_title"         ## I.textSplice (docTitle doc)
-  "paper_authors"       ## I.textSplice (T.intercalate ", " $ docAuthors doc)  
+  "paper_authors"       ## I.textSplice (T.intercalate ", " $ docAuthors doc)
   "paper_external_link" ## I.textSplice (docLink doc)
   "noveltyScore"        ## I.textSplice (T.pack $ show (novScore))
   "rigorScore"          ## I.textSplice (T.pack $ show (rigScore))
   "coolnessScore"       ## I.textSplice (T.pack $ show (coolScore))
   (allDFieldTags $ docFieldTags doc)
- 
+
 allDFieldTags :: [TagPath] -> Splices (SnapletISplice App)
 allDFieldTags tags = "fieldTags" ## renderDFieldTags fLabels
     where
       fLabels = map last tags
 
 renderDFieldTags :: [T.Text] -> SnapletISplice App
-renderDFieldTags = I.mapSplices $ I.runChildrenWith . splicesFromDTag 
+renderDFieldTags = I.mapSplices $ I.runChildrenWith . splicesFromDTag
 
 splicesFromDTag :: Monad n => T.Text -> Splices (I.Splice n)
 splicesFromDTag t = do

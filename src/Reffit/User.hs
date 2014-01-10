@@ -26,7 +26,7 @@ deriveSafeCopy 1 'extension ''UserEvent
 
 instance Serialize UserEvent where
 
-data User = User { userName       :: UserName 
+data User = User { userName       :: UserName
                  , userEmail      :: Text
                  , userFollowing  :: Set.Set UserName
                  , userFollowedBy :: Set.Set UserName
@@ -59,9 +59,9 @@ instance Migrate UserEvent where
   migrate (PostedDocument0 d)        = PostedDocument d
   migrate (FollowedUser0 un t)       = FollowedUser un t
   migrate (PinnedDoc0 d t)           = PinnedDoc d t
-   
+
 {-
-data User0 = User0 { userName0       :: UserName 
+data User0 = User0 { userName0       :: UserName
                    , userEmail0      :: Text
                    , userFollowing0  :: Set.Set UserName
                    , userFollowedBy0 :: Set.Set UserName

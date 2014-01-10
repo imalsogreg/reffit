@@ -29,7 +29,7 @@ data OverviewComment = OverviewComment { ocPoster :: Maybe UserName
                                        , ocResponse :: [UpDownVote]
                                        , ocPostTime :: UTCTime
                                          -- (coming soon, threaded Discussions!)
-                                         -- ocDiscussions :: Forrest DiscussionComment 
+                                         -- ocDiscussions :: Forrest DiscussionComment
                                        } deriving (Show, Generic)
 deriveSafeCopy 0 'base ''OverviewComment
 
@@ -41,18 +41,18 @@ data Summary = Summary { summaryPoster   :: Maybe UserName
                        , summaryPostTime :: UTCTime
                        } deriving (Show, Generic)
 deriveSafeCopy 0 'base ''Summary
-          
+
 -- TODO: Are these covered by migrate?
 summToOComment :: Summary -> OverviewComment
-summToOComment (Summary un pr reacs t) = 
+summToOComment (Summary un pr reacs t) =
   OverviewComment un pr Nothing reacs t
-  
+
 critToOComment :: Critique -> OverviewComment
-critToOComment (Critique pr un qDim val reacs t) = 
-  OverviewComment un pr (Just (qDim,val)) reacs t 
+critToOComment (Critique pr un qDim val reacs t) =
+  OverviewComment un pr (Just (qDim,val)) reacs t
 
 instance Serialize Summary where
- 
+
 
 data Critique = Critique { critiqueProse     :: Text
                          , critiquePoster    :: Maybe UserName

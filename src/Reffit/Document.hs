@@ -22,7 +22,7 @@ import           Snap.Snaplet.Heist
 import           Heist
 import qualified Heist.Interpreted as I
 
-                     
+
 data Document = Document { docUploader  :: Maybe UserName
                          , docId        :: DocumentId
                          , docTitle     :: T.Text
@@ -33,7 +33,7 @@ data Document = Document { docUploader  :: Maybe UserName
                          , docOComments :: Map.Map OverviewCommentId OverviewComment
                          , docPostTime  :: UTCTime
                          } deriving (Show, Generic, Typeable)
-deriveSafeCopy 1 'extension ''Document 
+deriveSafeCopy 1 'extension ''Document
 
 
 data Document0 = Document0 { docUploader0  :: Maybe UserName
@@ -51,7 +51,7 @@ deriveSafeCopy 0 'base ''Document0
 
 instance Migrate Document where
   type MigrateFrom Document = Document0
-  migrate (Document0 u i title a l c tags sums crits t) = 
+  migrate (Document0 u i title a l c tags sums crits t) =
     Document u i title a l c tags oComs t
     where
       -- Possible bug here: we're doing a Map.union.  If a summary shares

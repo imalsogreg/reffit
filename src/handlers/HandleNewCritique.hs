@@ -2,7 +2,7 @@
 {-# LANGUAGE TupleSections     #-}
 
 module HandleNewCritique(
---  newCritiqueView, 
+--  newCritiqueView,
 --  newCritiqueForm,
 --  handleNewCritique,
   newOCommentView,
@@ -18,7 +18,7 @@ import           Reffit.OverviewComment
 import           Reffit.User
 
 import           Safe
-import           Application 
+import           Application
 import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          HasAcid (getAcidStore),
                                          makeAcidic,
@@ -38,7 +38,7 @@ import           Text.Digestive
 import           Text.Digestive.Blaze.Html5
 import qualified Text.Blaze.Html5             as H
 import           Text.Digestive.Snap (runForm)
-import           Text.Digestive.Heist  
+import           Text.Digestive.Heist
 import qualified Data.ByteString.Char8        as BS
 import           Control.Monad
 import           Heist
@@ -52,7 +52,7 @@ newOCommentForm formUser ocType t =
   <*> "prose"     .: check "Not a valid entry" (not . T.null) (text Nothing)
   <*> ocVoteVal
   <*> pure []
-  <*> pure t 
+  <*> pure t
   where
     posterOpts = [(Just (userName formUser), userName formUser)
                  ,(Nothing, "Anonymous")]
@@ -62,7 +62,7 @@ newOCommentForm formUser ocType t =
       Praise    -> (Just . (,UpVote)  ) <$> critiqueVoteVal
       Criticism -> (Just . (,DownVote)) <$> critiqueVoteVal
     critiqueVoteVal = "dimension" .: choice dimOpts Nothing
-    
+
 newCritiqueForm :: (Monad m) => User -> UpDownVote -> UTCTime -> Form Text m Critique
 newCritiqueForm formUser critValue t =
   Critique
@@ -72,7 +72,7 @@ newCritiqueForm formUser critValue t =
   <*> pure critValue
   <*> pure []
   <*> pure t
-  where 
+  where
     posterOpts = [(Just (userName formUser), userName formUser)
                  ,(Nothing,"Anonymous")]
     dimOpts = [(Novelty,"Novelty"),(Rigor,"Rigor"),(Coolness,"Coolness")]
@@ -82,10 +82,10 @@ newCritiqueView :: View H.Html -> H.Html
 newCritiqueView view = do
   label       "poster" view "Post as: "
   inputSelect "poster" view
-  
+
   label       "dimension" view "Critique dimension: "
-  inputSelect "dimension" view 
-  
+  inputSelect "dimension" view
+
   errorList "prose" view
   label     "prose" view "Article Critique"
   inputText "prose" view
@@ -96,30 +96,30 @@ newOCommentView :: View H.Html -> H.Html
 newOCommentView = undefined
 
 {-
-handleNewCritique :: UpDownVote -> Handler App (AuthManager App) ()  
-handleNewCritique critVal = do 
+handleNewCritique :: UpDownVote -> Handler App (AuthManager App) ()
+handleNewCritique critVal = do
   userMap   <- query QueryAllUsers
   pId'      <- getParam "paperid"
   authUser' <- currentUser
   t         <- liftIO $ getCurrentTime
-  case join $ readMay . T.unpack . decodeUtf8 <$> pId' of  
+  case join $ readMay . T.unpack . decodeUtf8 <$> pId' of
     Nothing -> writeText "paperid error" --TODO proper error message
-    Just pId -> 
+    Just pId ->
       case join $ (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
         Nothing -> writeBS "didn't find user in database"
         Just user -> do
           (vw,rs) <- runForm "newCritiqueForm" $ newCritiqueForm user critVal t
-          case rs of 
+          case rs of
             Just critique -> do
               let user' = maybe Nothing (const $ Just user) (critiquePoster critique)
-              _ <- update $ AddCritique user' pId critique 
+              _ <- update $ AddCritique user' pId critique
               --let a = sId :: SummaryId  -- TODO: Must vote for
               -- Vote for own summary     -- user's summary automatically
               redirect . BS.pack $ "/view_article/" ++ show pId
-            Nothing -> do 
+            Nothing -> do
               heistLocal (bindDigestiveSplices vw) $ render "new_critique"
 -}
- 
+
 handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
 handleNewOComment commentType = do
 
@@ -138,7 +138,7 @@ handleNewOComment commentType = do
           case rs of
             Just comment -> do
               let user' = maybe Nothing (const $ Just user) (ocPoster comment)
-              _ <- update $ AddOComment user' pId comment 
+              _ <- update $ AddOComment user' pId comment
               redirect . BS.pack $ "/view_article/" ++ show pId
             Nothing -> do
               heistLocal (bindDigestiveSplices vw) $

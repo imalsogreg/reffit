@@ -12,7 +12,7 @@ import           Reffit.Document
 import           Reffit.OverviewComment
 
 import           Safe
-import           Application 
+import           Application
 import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          HasAcid (getAcidStore),
                                          makeAcidic,
@@ -31,19 +31,19 @@ import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)
 import           Text.Digestive
 import           Text.Digestive.Blaze.Html5
-import           Heist 
+import           Heist
 import qualified Heist.Interpreted            as I
 import           Application
 import qualified Text.Blaze.Html5             as H
 import           Text.Digestive.Snap (runForm)
-import           Text.Digestive.Heist  
+import           Text.Digestive.Heist
 import qualified Data.ByteString.Char8        as BS
 import           GHC.Int
 import           Control.Monad (join)
 
 {-
-handleSummaryVote :: UpDownVote -> Handler App (AuthManager App) ()  
-handleSummaryVote voteDir = do 
+handleSummaryVote :: UpDownVote -> Handler App (AuthManager App) ()
+handleSummaryVote voteDir = do
   userMap   <- query QueryAllUsers
   docs      <- query QueryAllDocs
   ft        <- query QueryAllFieldTags
@@ -60,10 +60,10 @@ handleSummaryVote voteDir = do
         (Nothing,Nothing) -> writeText "problem spliting idParam"
         (_,Nothing) -> writeText "problem finding summaryId"
         (Nothing,_) -> writeText "problem finding paperId"
-        (Just pId,Just sId) -> 
+        (Just pId,Just sId) ->
           case Map.lookup pId docs of
             Nothing -> writeText "paperid not in database"
-            Just doc -> 
+            Just doc ->
               case Map.lookup sId (docSummaries doc) of
                 Nothing -> writeText "summaryId not in database"
                 Just summary ->
@@ -71,12 +71,12 @@ handleSummaryVote voteDir = do
                         <*> pure userMap) of
                     Nothing -> writeText "Need to log in."
                     Just Nothing -> writeText "userlookup Just Nothing."
-                    Just (Just u) -> do 
-                      _ <- update (CastSummaryVote u False pId 
-                                   doc sId summary voteDir t)  
+                    Just (Just u) -> do
+                      _ <- update (CastSummaryVote u False pId
+                                   doc sId summary voteDir t)
                       redirect $ BS.concat ["/view_article/",BS.pack . show $ pId]
 -}
- 
+
 -- TODO: Handle anonymity of votes
 handleOCommentVote :: UpDownVote -> Handler App (AuthManager App) ()
 handleOCommentVote voteDir = do
@@ -90,12 +90,12 @@ handleOCommentVote voteDir = do
     Just idParam ->
       let (pId',cId') = (T.breakOn "." . decodeUtf8) $ idParam
           (pIdM,cIdM) = (readMay $ T.unpack pId', readMay .T.unpack . T.tail $ cId')
-      in 
-       case (pIdM, cIdM) of 
+      in
+       case (pIdM, cIdM) of
         (Nothing,Nothing) -> writeText $ T.concat ["paperid formatting error"
                                             ," idParam' :",  T.pack . show $ idParam'
                                             ,"  pId' :", T.pack . show $ pId'
-                                            ,"  cId' IS :", T.pack . show $ T.tail cId'] 
+                                            ,"  cId' IS :", T.pack . show $ T.tail cId']
         (Nothing,_) -> writeText "paperid formatting error"
         (_,Nothing) -> writeText "critiqueid formatting error here"
         (Just pId, Just cId) -> case Map.lookup pId docs of

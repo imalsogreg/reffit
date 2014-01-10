@@ -21,7 +21,7 @@ import Snap.Core (writeText)
 import Snap.Snaplet (Handler)
 import Snap.Snaplet.AcidState (query)
 import Snap.Snaplet.Heist
-import Snap.Snaplet.Auth 
+import Snap.Snaplet.Auth
 import Application
 import Heist
 import qualified Heist.Interpreted as I
@@ -31,7 +31,7 @@ import Data.Text.Encoding (decodeUtf8)
 import Control.Lens
 import Control.Monad
 import Control.Monad.Trans
-   
+
 handleViewPaper :: Handler App (AuthManager App) ()
 handleViewPaper = do
   us <- query QueryAllUsers
@@ -39,27 +39,27 @@ handleViewPaper = do
   aUser <- currentUser
   t     <- liftIO $ getCurrentTime
   let u = join $ (flip Map.lookup) us <$> userLogin <$> aUser  :: Maybe User
-  case readMay . T.unpack . decodeUtf8 <$> pId' of  
+  case readMay . T.unpack . decodeUtf8 <$> pId' of
     Nothing -> writeText "Need paperid parameter"  -- TODO: Proper error page
-    Just Nothing -> writeText "Just Nothing!  Odd." 
+    Just Nothing -> writeText "Just Nothing!  Odd."
     Just (Just pId) ->  do  -- just just again!
       docs <- query QueryAllDocs
-      case Map.lookup pId docs of 
-        Nothing   -> writeText $ 
+      case Map.lookup pId docs of
+        Nothing   -> writeText $
                      T.concat ["You entered: "
-                              , T.pack (show pId) 
+                              , T.pack (show pId)
                               ," Document wasn't found in the database."]
-        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u doc t)        
+        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u doc t)
 
 --TODO Move all this score stuff into the Scores module
-  
+
 -- |Count positive and negative votes for a summary
 summaryUpsDowns :: Summary -> (Int,Int)
 summaryUpsDowns s = over both length $
   List.partition (==UpVote) . summaryVotes $ s
 
 critiqueUpsDowns :: Critique -> (Int,Int)
-critiqueUpsDowns c = over both length $ 
+critiqueUpsDowns c = over both length $
   List.partition (==UpVote) . critiqueReactions $ c
 
 compareSummaryNetVote :: Summary -> Summary -> Ordering
@@ -70,21 +70,21 @@ compareSummaryNetVote a b = netA `compare` netB
         netB = upB - downB
 
 summarySummary :: Document -> T.Text
-summarySummary doc = 
+summarySummary doc =
   T.unwords [T.pack (show nVotes),"votes /"
-            , T.pack (show  nSummaries), "summaries"] 
+            , T.pack (show  nSummaries), "summaries"]
   where nSummaries = documentNSummaries doc
         sums       = documentSummaries doc
         nVotes     = sum . map (length . ocResponse) . Map.elems $ sums
 
 critiqueSummary :: Document -> UpDownVote -> T.Text
-critiqueSummary doc critType = 
+critiqueSummary doc critType =
   T.concat [T.pack (show concensusPct),"% consensus on "
-           , T.pack (show $ (nUps+nDowns)), " points"] 
-  where 
+           , T.pack (show $ (nUps+nDowns)), " points"]
+  where
     (nUps,nDowns) = documentNCritiques doc
     concensusPct = if (nUps + nDowns > 0)
-                   then floor (fI nUps/ fI (nUps+nDowns) * (100::Double)) 
+                   then floor (fI nUps/ fI (nUps+nDowns) * (100::Double))
                    else (0 :: Int)
 
 fI :: (Integral a, Real b) => a -> b
@@ -96,10 +96,10 @@ nSummaries doc = Map.size . Map.filter ((==Nothing).ocVote) . docOComments $ doc
 
 -- This should be in Reffit.Scores
 nCritique :: UpDownVote -> Document -> Int
-nCritique vDir doc = Map.size . Map.filter ((==vDir) . snd . fromJust . ocVote) 
+nCritique vDir doc = Map.size . Map.filter ((==vDir) . snd . fromJust . ocVote)
                      . Map.filter ((/=Nothing) . ocVote)
-                     $ docOComments doc 
-  
+                     $ docOComments doc
+
 allArticleViewSplices :: Maybe User -> Document -> UTCTime -> Splices (SnapletISplice App)
 allArticleViewSplices u doc t = do
   "articleSummarySummary"   ## I.textSplice (summarySummary doc) :: Splices (SnapletISplice App)
@@ -108,26 +108,26 @@ allArticleViewSplices u doc t = do
   "nSummaries"              ## I.textSplice (T.pack . show $ nSummaries doc)
   "nPraise"                 ## I.textSplice (T.pack . show $ nCritique UpVote doc)
   "nCriticisms"             ## I.textSplice (T.pack . show $ nCritique DownVote doc)
-  "docType"                 ## I.textSplice (docClassName . docClass $ doc)  
+  "docType"                 ## I.textSplice (docClassName . docClass $ doc)
   "docId"                   ## I.textSplice (T.pack . show $ docId doc)
   "docTitle"                ## I.textSplice (docTitle doc)
-  "timeSince"               ## I.textSplice (T.pack . sayTimeDiff t . docPostTime $ doc) 
+  "timeSince"               ## I.textSplice (T.pack . sayTimeDiff t . docPostTime $ doc)
   let (pinUrl, pinBtn) = pinText u
   "pinUrl"                  ## I.textSplice pinUrl
   "pinboardBtnTxt"          ## I.textSplice pinBtn
 --  (allSummarySplices t u doc . Map.toList . documentSummaries $ doc)
-  (allOCommentSplices t Summary' "articleSummaries" u doc)  
+  (allOCommentSplices t Summary' "articleSummaries" u doc)
 --  (allCritiqueSplices t UpVote   "articlePraise"     u doc (Map.toList praise) )
   (allOCommentSplices t Praise "articlePraise" u doc)
 --  (allCritiqueSplices t DownVote "articleCriticism" u doc (Map.toList criticism) )
   (allOCommentSplices t Criticism "articleCriticisms" u doc)
-   where 
+   where
      pinText :: Maybe User -> (T.Text, T.Text)
      pinText Nothing = ("","")
      pinText (Just user)
           | Set.member (docId doc) (userPinboard user) = ("unpin", "Unpin")
           | otherwise                                  = ("pin",   "Pinboard")
-                         
+
 
 data UserProseRelation = UpVoted | DownVoted | AnonVoted | NotVoted
 
@@ -140,13 +140,13 @@ userCommentRelation u doc cId =
     [VotedOnOComment _ _ Nothing _ ]         -> Just AnonVoted
     [VotedOnOComment _ _ (Just UpVote) _]    -> Just UpVoted
     [VotedOnOComment _ _ (Just DownVote) _ ] -> Just DownVoted
-    _ -> Nothing -- <- in these cases something went wrong w/ filtering, 
+    _ -> Nothing -- <- in these cases something went wrong w/ filtering,
                  -- or a doublevote happened
 
 allOCommentSplices :: UTCTime -> OverviewCommentType -> T.Text -> Maybe User
                       -> Document
                       -> Splices (SnapletISplice App)
-allOCommentSplices t commType tagText u doc = 
+allOCommentSplices t commType tagText u doc =
   tagText ## renderOComments t commType u doc (Map.toList cs')
  where (p,c) = documentCritiques doc
        cs' = case commType of
@@ -154,14 +154,14 @@ allOCommentSplices t commType tagText u doc =
          Praise    -> p
          Criticism -> c
 
-renderOComments :: UTCTime -> OverviewCommentType -> Maybe User -> Document 
-                   -> [(OverviewCommentId, OverviewComment)] 
+renderOComments :: UTCTime -> OverviewCommentType -> Maybe User -> Document
+                   -> [(OverviewCommentId, OverviewComment)]
                    -> SnapletISplice App
-renderOComments t ct u doc = I.mapSplices $ I.runChildrenWith . 
+renderOComments t ct u doc = I.mapSplices $ I.runChildrenWith .
                              splicesFromOComment t ct u doc
 
-splicesFromOComment :: Monad n => UTCTime -> OverviewCommentType 
-                       -> Maybe User -> Document 
+splicesFromOComment :: Monad n => UTCTime -> OverviewCommentType
+                       -> Maybe User -> Document
                        -> (OverviewCommentId, OverviewComment)
                        -> Splices (I.Splice n)
 splicesFromOComment t ct u doc (cId,c) = do
@@ -170,7 +170,7 @@ splicesFromOComment t ct u doc (cId,c) = do
   "proseText"    ## I.textSplice (ocText c)
   reBlock
   "proseTimeSince"    ## I.textSplice (T.pack . sayTimeDiff t . ocPostTime $ c)
-  case ocPoster c of 
+  case ocPoster c of
     Nothing -> do
       "prosePoster"            ## I.textSplice "Anonymous"
       "prosePosterDestination" ## I.textSplice "#"
@@ -215,8 +215,7 @@ splicesFromOComment t ct u doc (cId,c) = do
 --      Summary' -> "reBlock" ## I.textSplice . T.pack . show $ Summary'
 --      _        -> "reBlock" ## I.textSplice . T.pack . show $ ct
       Summary' -> "reBlock" ## I.textSplice "" -- chop out the 're:' block
-      _        -> "critiqueDim" ## 
-                  I.textSplice (T.pack . show . fst . 
+      _        -> "critiqueDim" ##
+                  I.textSplice (T.pack . show . fst .
                                 fromJust . ocVote $ c)
     (nUp,nDown) = commentScores c
-    

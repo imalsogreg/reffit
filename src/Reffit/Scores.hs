@@ -18,7 +18,7 @@ summaryScores s =
   in (length upVotes, length downVotes)
 
 critiqueScores :: Critique -> (Int,Int)
-critiqueScores c = let (upVotes, downVotes) 
+critiqueScores c = let (upVotes, downVotes)
                          = List.partition (==UpVote) $ critiqueReactions c
                   in (length upVotes, length downVotes)
 
@@ -40,7 +40,7 @@ documentDimScores doc =
       listCritiques       = filter ((/=Nothing) . ocVote) . Map.elems $ docOComments doc
       dimensionScore d    = (length . filtDim d . filtQuality $ filtPraise    listCritiques) -
                             (length . filtDim d . filtQuality $ filtCriticism listCritiques)
-  in (dimensionScore Novelty, dimensionScore Rigor, dimensionScore Coolness) 
+  in (dimensionScore Novelty, dimensionScore Rigor, dimensionScore Coolness)
 
 documentSummaries :: Document -> Map.Map OverviewCommentId OverviewComment
 documentSummaries = Map.filter ((==Nothing) . ocVote) . docOComments
@@ -57,7 +57,7 @@ documentNCritiques :: Document -> (Int,Int)
 documentNCritiques d = (length praise, length criticism)
   where
     critiques = List.filter ((/=Nothing).ocVote) . Map.elems $ docOComments d
-    (praise,criticism) = List.partition ((==UpVote) . snd . fromJust . ocVote) critiques 
+    (praise,criticism) = List.partition ((==UpVote) . snd . fromJust . ocVote) critiques
 
 qualityScore :: Document -> Int
 qualityScore doc = let (n,r,c) = documentDimScores doc in n + r + c
@@ -68,11 +68,11 @@ hotnessScore now doc = qualityScore doc -
   where
     secsOld = toRational $ diffUTCTime now (docPostTime doc) :: Rational
     ptsPerSec = 0.001 :: Rational
-    
+
 controversyScore :: Document -> Int
-controversyScore doc = 
+controversyScore doc =
   let (p,c) = documentNCritiques doc
-  in (p + c) * (10 - (abs $ p - c))   -- TODO this is a pretty weak controversy score 
+  in (p + c) * (10 - (abs $ p - c))   -- TODO this is a pretty weak controversy score
 
 
 lookupOComment :: DocumentId -> OverviewCommentId -> Map.Map DocumentId Document
@@ -90,21 +90,21 @@ data UserStats = UserStats { userNPosts     :: Int
 
 -- TODO : This isn't too nice on the eyes
 userUsageStats :: Map.Map DocumentId Document -> User -> UserStats
-userUsageStats docs user = UserStats 
-                           nDoc 
+userUsageStats docs user = UserStats
+                           nDoc
                            (nSum,sumUp,sumDown)
                            (nPraises,nPUps,nPDowns)
                            (nCrits,  nCUps,nCDowns)
-                           (nUp,nDown) 
+                           (nUp,nDown)
   where
-    h = userHistory user 
+    h = userHistory user
     nDoc = length [x | x@(PostedDocument {}) <- h]
     comments = catMaybes [lookupOComment dId sId docs | (WroteOComment dId sId) <- h]
     sums = filter ((==Nothing) . ocVote) comments
-    nSum  = length sums 
+    nSum  = length sums
     (sumUp,sumDown) = foldl (\(a,b) (c,d) -> (a+b,c+d)) (0,0) (map commentScores sums)
     critiques = filter ((/=Nothing).ocVote) comments
-    (praises,crits) = List.partition ((==UpVote) . snd . fromJust . ocVote) critiques 
+    (praises,crits) = List.partition ((==UpVote) . snd . fromJust . ocVote) critiques
     nPraises     = length praises
     praiseVotes = concat . map ocResponse $ praises
     (pUps, pDowns) = List.partition (==UpVote) praiseVotes
@@ -116,7 +116,7 @@ userUsageStats docs user = UserStats
     allUserVotes = catMaybes $ [vd|(VotedOnOComment _ _ vd _)  <- h]
     (allUps,allDowns) = List.partition (==UpVote) allUserVotes
     (nUp,nDown) = (length allUps, length allDowns)
-    
+
 userReputation :: Map.Map DocumentId Document -> User -> Int
 userReputation docs user =
   case userUsageStats docs user of

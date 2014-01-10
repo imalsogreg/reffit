@@ -1,4 +1,4 @@
-{-# LANGUAGE OverloadedStrings #-} 
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
@@ -48,7 +48,7 @@ import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
 import           Snap.Snaplet.Auth.Backends.JsonFile
-import           Snap.Snaplet.Heist 
+import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Snaplet.AcidState
@@ -58,7 +58,7 @@ import qualified Heist.Interpreted as I
 import qualified Text.Blaze.Html5  as H
 import           Text.Digestive
 import           Text.Digestive.Snap (runForm)
-import           Text.Digestive.Heist  
+import           Text.Digestive.Heist
 import           Text.Digestive.Blaze.Html5
 
 import           Control.Monad.CatchIO (throw)
@@ -118,12 +118,12 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
               _ <- registerUser "login" "password"
               _ <- update $ AddUser uname email t
               _ <- loginByUsername uname (ClearText pw) True --TODO remember by default
-              redirect "/" 
+              redirect "/"
             Just _ -> do
               writeText "Username is taken" -- TODO - give a helpful error message: uname is taken
 
 handleDumpState :: Handler App (AuthManager App) ()
-handleDumpState = do 
+handleDumpState = do
   d <- query QueryAllDocs
   u <- query QueryAllUsers
   dc <- query QueryAllDocClasses
@@ -138,52 +138,52 @@ routes = [
       ("login",         with auth handleLoginSubmit)
     , ("logout",        with auth handleLogout)
     , ("new_user",      with auth handleNewUser)
-    , ("search",    
+    , ("search",
        -- TODO: Is this the right way to refresh the session on every action??
-       withSession sess (with sess touchSession) >> 
-       with auth  handleIndex)
-    , ("new_article",   
        withSession sess (with sess touchSession) >>
-       with auth handleNewArticle) 
-    , ("new_article/:doi",   
-       withSession sess (with sess touchSession) >> 
+       with auth  handleIndex)
+    , ("new_article",
+       withSession sess (with sess touchSession) >>
        with auth handleNewArticle)
-    , ("new_summary/:paperid", 
+    , ("new_article/:doi",
+       withSession sess (with sess touchSession) >>
+       with auth handleNewArticle)
+    , ("new_summary/:paperid",
        withSession sess (with sess touchSession) >>
        with auth (handleNewOComment Summary'))
-    , ("new_praise/:paperid", 
-       withSession sess (with sess touchSession) >> 
-       with auth (handleNewOComment Praise)) 
-    , ("new_criticism/:paperid", 
+    , ("new_praise/:paperid",
+       withSession sess (with sess touchSession) >>
+       with auth (handleNewOComment Praise))
+    , ("new_criticism/:paperid",
        withSession sess (with sess touchSession) >>
        with auth (handleNewOComment Criticism))
-    , ("view_article/:paperid", 
+    , ("view_article/:paperid",
        withSession sess (with sess touchSession) >>
-       with auth handleViewPaper) 
-    , ("cast_ocomment_upvote/:idParam",    
+       with auth handleViewPaper)
+    , ("cast_ocomment_upvote/:idParam",
        withSession sess (with sess touchSession) >>
        with auth (handleOCommentVote  UpVote))
-    , ("cast_ocomment_downvote/:idParam",  
+    , ("cast_ocomment_downvote/:idParam",
        withSession sess (with sess touchSession) >>
        with auth (handleOCommentVote  DownVote))
-    , ("user/:username", 
+    , ("user/:username",
        withSession sess (with sess touchSession) >>
        with auth handleViewUser)
-    , ("follow/:username", 
+    , ("follow/:username",
        withSession sess (with sess touchSession) >>
        with auth (handleFollow True))
-    , ("unfollow/:username", 
+    , ("unfollow/:username",
        withSession sess (with sess touchSession) >>
        with auth (handleFollow False))
-    , ("pin/:paperid",   
+    , ("pin/:paperid",
        withSession sess (with sess touchSession) >>
-       with auth (handlePin True)) 
-    , ("unpin/:paperid", 
+       with auth (handlePin True))
+    , ("unpin/:paperid",
        withSession sess (with sess touchSession) >>
        with auth (handlePin False))
-    , ("/add_usertag/:fieldtag", 
+    , ("/add_usertag/:fieldtag",
        withSession sess (with sess touchSession) >>
-       with auth (handleAddTag True))  
+       with auth (handleAddTag True))
     , ("/delete_usertag/:fieldtag",
        withSession sess (with sess touchSession) >>
        with auth (handleAddTag False))
@@ -193,18 +193,18 @@ routes = [
     , ("/:params" ,
        withSession sess (with sess touchSession) >>
        with auth handleIndex)
-    
+
     , ("stateToDisk",   with auth handleStateToDisk)
     , ("stateFromDisk", with auth handleStateFromDisk)
     , ("checkpoint",    with auth handleCheckpoint)
 --    , ("migrateStateFromDisk", with auth handleMigrateStateFromDisk)
-      
+
     , ("/",
        withSession sess (with sess touchSession) >>
        with auth handleIndex)
 
     , ("/dump_state",  with auth handleDumpState)
-    , ("/static", serveDirectory "static") 
+    , ("/static", serveDirectory "static")
     ]
 
 ------------------------------------------------------------------------------
@@ -222,7 +222,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
            initJsonFileAuthManager defAuthSettings sess "users.json"
 
     ac <- nestSnaplet "acid" acid $ acidInit convenienceReset
-    h <- nestSnaplet "" heist $ heistInit "templates"           
+    h <- nestSnaplet "" heist $ heistInit "templates"
     addRoutes routes
     addAuthSplices h auth
     return $ App h s a ac
@@ -235,4 +235,4 @@ convenienceReset :: PersistentState
 convenienceReset = PersistentState Map.empty Map.empty [] tagHierarchy
 
 testDate :: Integer -> UTCTime
-testDate d = UTCTime (ModifiedJulianDay d) (fromIntegral (0::Int)) 
+testDate d = UTCTime (ModifiedJulianDay d) (fromIntegral (0::Int))

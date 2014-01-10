@@ -14,7 +14,7 @@ module Reffit.AcidTypes where
 
 import Reffit.Types
 import Reffit.OverviewComment
-import Reffit.Document 
+import Reffit.Document
 import Reffit.User
 import Reffit.FieldTag
 
@@ -25,7 +25,7 @@ import Control.Monad.Reader (asks)
 import Data.ByteString (ByteString)
 import Control.Lens (makeLenses, view,over)
 import Data.Time
-import Data.SafeCopy 
+import Data.SafeCopy
 import qualified Data.Text as T hiding (head)
 import Data.Text.Encoding (decodeUtf8)
 import GHC.Generics
@@ -42,7 +42,7 @@ import Snap (SnapletInit, Snaplet, Handler,
              defaultConfig, makeSnaplet,
              snapletValue, writeText, modify, gets)
 import Data.Serialize
-import Snap.Snaplet.AcidState (Update, Query, Acid, 
+import Snap.Snaplet.AcidState (Update, Query, Acid,
                                 HasAcid (getAcidStore),
                                 makeAcidic, update,
                                 query, acidInit)
@@ -58,7 +58,7 @@ makeLenses ''PersistentState
 deriveSafeCopy 0 'base ''PersistentState
 
 instance Serialize PersistentState where
-  
+
 queryAllDocs :: Query PersistentState (Map.Map DocumentId Document)
 queryAllDocs = asks _documents
 
@@ -75,7 +75,7 @@ addDocument :: Maybe User -> Document -> Update PersistentState ()
 addDocument user' doc = do  -- HandleNewPaper now finds a good Id
   modify (over documents (Map.insert (docId doc) doc))
   case user' of
-    Just user -> 
+    Just user ->
       modify (over users     (Map.insert (userName user)
                               user { userHistory = PostedDocument (docId doc)
                                                    : (userHistory user) }))
@@ -90,46 +90,46 @@ addOComment user' pId comment = do
     Just doc -> do
       modify (over documents $ \docs' ->
                (Map.insert (docId doc)
-                (doc { docOComments = Map.insert cId comment (docOComments doc) }) docs')) 
+                (doc { docOComments = Map.insert cId comment (docOComments doc) }) docs'))
       case user' of
         Just user ->
           modify (over users (Map.insert (userName user)
                               (user {userHistory = WroteOComment (docId doc) cId : userHistory user })))
         Nothing -> return ()
-      return (Just cId) 
+      return (Just cId)
       where
         cId = head . filter (\k -> Map.notMember k (docOComments doc)) $
               (cHash:cInd:cAll)
-        cHash = abs . fromIntegral . hash $ T.unpack (ocText comment) ++ 
+        cHash = abs . fromIntegral . hash $ T.unpack (ocText comment) ++
                 show (ocPostTime comment)
         cInd  = fromIntegral . Map.size $ docOComments doc
-        cAll = [0..]  
+        cAll = [0..]
 
 addSummary :: Maybe User -> DocumentId -> Summary
               -> Update PersistentState (Maybe SummaryId)
-addSummary user' pId summary = do  
+addSummary user' pId summary = do
   docs <- gets _documents
   case Map.lookup pId docs of
-    Nothing -> return Nothing 
+    Nothing -> return Nothing
                -- TODO - how to signal error?
     Just doc -> do
         modify (over documents $ \docs' ->
                  (Map.insert
                   (docId doc)
                   -- TODO - POSSIBLE BUG, I'm replaying a function
-                  -- that assigns an ID, through schema migration.  
+                  -- that assigns an ID, through schema migration.
                   -- will the ID change?
-                  (doc { docOComments = 
+                  (doc { docOComments =
                             Map.insert sId (summToOComment summary)
                             (docOComments doc)})
                   docs'))
         case user' of
           Just user ->
             -- TODO POSSIBLE BUG (same as other POSSIBLE BUGS)
-            modify (over users 
+            modify (over users
                     (Map.insert (userName user)
-                     (user { userHistory = 
-                                migrate (WroteSummary0 (docId doc) sId) 
+                     (user { userHistory =
+                                migrate (WroteSummary0 (docId doc) sId)
                                 :(userHistory user) })))
           Nothing -> return ()
         return (Just sId)
@@ -154,10 +154,10 @@ castSummaryVote user isAnon dId doc sId summary voteVal t = do
            in Map.insert (userName user) u' us')
   modify (over documents $ \ds ->
            let s' = summary { summaryVotes = voteVal : summaryVotes summary }
-               d' = doc { docOComments = Map.insert sId 
+               d' = doc { docOComments = Map.insert sId
                                          (summToOComment s')
                                          (docOComments doc)}
-           in Map.insert dId d' ds) 
+           in Map.insert dId d' ds)
 
 castOCommentVote :: User -> Bool -> DocumentId -> Document
                  -> OverviewCommentId -> OverviewComment -> UpDownVote
@@ -188,14 +188,14 @@ castCritiqueVote user isAnon dId doc cId critique voteVal t = do
     -- TODO Here I'm casting Critique into Ocomment - it seems like this
     -- might change the comment id? POSSIBLE BUG
   modify (over documents $ \ds ->
-           let c' = critique { critiqueReactions = 
+           let c' = critique { critiqueReactions =
                                   voteVal : critiqueReactions critique }
                c'' = critToOComment c'
-               d' = doc { docOComments = 
-                             Map.insert cId c'' (docOComments doc) } 
-           in Map.insert dId d' ds) 
+               d' = doc { docOComments =
+                             Map.insert cId c'' (docOComments doc) }
+           in Map.insert dId d' ds)
 
-addCritique :: Maybe User -> DocumentId -> Critique 
+addCritique :: Maybe User -> DocumentId -> Critique
                -> Update PersistentState (Maybe SummaryId)
 addCritique user' pId critique = do
   docs <- gets _documents
@@ -206,22 +206,22 @@ addCritique user' pId critique = do
       modify (over documents $ \docs' ->
                (Map.insert
                 (docId doc)
-                (doc {docOComments = 
-                         Map.insert cId (critToOComment critique) 
-                         (docOComments doc)}) -- BACK HERE 
---                (doc { docCritiques0 = Map.insert cId critique 
+                (doc {docOComments =
+                         Map.insert cId (critToOComment critique)
+                         (docOComments doc)}) -- BACK HERE
+--                (doc { docCritiques0 = Map.insert cId critique
 --                                       (docCritiques0 doc)})
-                
+
                 docs'))
       case user' of
-        Just user -> 
+        Just user ->
           modify (over users $ Map.insert (userName user)
-                  (user { userHistory = migrate (WroteCritique0 pId cId) : 
+                  (user { userHistory = migrate (WroteCritique0 pId cId) :
                                         (userHistory user)}))
         Nothing -> return ()
       return (Just cId)
         where
-          cId = head . filter (\k -> Map.notMember k (docOComments doc)) $ 
+          cId = head . filter (\k -> Map.notMember k (docOComments doc)) $
                 (cHash:cInd:cAll)
           cHash = fromIntegral . hash . critiqueProse $ critique
           --cInd  = fromIntegral . Map.size $ docCritiques0 doc
@@ -250,7 +250,7 @@ addUser uName email t = do
     Nothing ->
       modify (over users ( Map.insert uName $ User uName email Set.empty Set.empty [] Set.empty Set.empty t ))
     Just _ -> do  -- This checks and refuses to overwrite, but silently
-      modify (over users id) 
+      modify (over users id)
 
 userFollow :: User -> User -> UTCTime -> Update PersistentState ()
 userFollow a b t = do
@@ -267,7 +267,7 @@ userUnfollow a b = do
       b' = b { userFollowedBy = Set.delete (userName a) (userFollowedBy b)}
   modify (over users $
           \u0 -> Map.insert (userName a') a' $
-                 Map.insert (userName b') b' u0) 
+                 Map.insert (userName b') b' u0)
 
 pin :: User -> DocumentId -> Bool -> UTCTime -> Update PersistentState ()
 pin user dId doPin t = do
@@ -290,7 +290,7 @@ updateAllDocClasses classes = modify (over docClasses (const classes))
 addDocClass :: DocClass -> Update PersistentState ()
 addDocClass dc = do
   modify (over docClasses (dc:))
-  
+
 queryAllFieldTags :: Query PersistentState FieldTags
 queryAllFieldTags = asks _fieldTags
 
@@ -321,4 +321,3 @@ makeAcidic ''PersistentState ['addDocument,         'queryAllDocs, 'updateAllDoc
                              , 'queryAllFieldTags,  'addFieldTag, 'updateAllFieldTags
                              , 'addSummary,         'addCritique
                              , 'castSummaryVote,    'castCritiqueVote]
-                                                    

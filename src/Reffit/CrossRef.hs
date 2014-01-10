@@ -5,8 +5,8 @@ module Reffit.CrossRef where
 import Reffit.Types
 import Reffit.Document
 
-import qualified Network.HTTP as H 
-import Network.URI 
+import qualified Network.HTTP as H
+import Network.URI
 import Network.Browser
 import Safe
 import qualified Data.List as L
@@ -38,31 +38,31 @@ jsonFromDOI doi = do
     let r = H.defaultGETRequest_ u
     request r
   return $ H.rspBody rsp
- 
+
 docHints :: String -> IO DocumentHints
 docHints doiStr = do
   jStringBS <- jsonFromDOI doiStr
-  let jString = T.unpack $ decodeUtf8 jStringBS  
+  let jString = T.unpack $ decodeUtf8 jStringBS
   let fullCite' = jString ^? nth 0 . key "fullCitation" . _String :: Maybe T.Text
-      asAndYear' = authorsAndYearFromFullCite <$> fullCite' 
+      asAndYear' = authorsAndYearFromFullCite <$> fullCite'
       (authors,year) = maybe ([],Nothing) id asAndYear'
   return $ DocumentHints
     (maybe "" id (jString ^? nth 0 . key "title" . _String))
     authors
     (maybe "" id (jString ^? nth 0 . key "doi" . _String))
-    year 
+    year
 
 data DocumentHints = DocumentHints { titleHint   :: T.Text
                                    , authorsHint :: [T.Text]
                                    , linkHint    :: T.Text
                                    , yearHint    :: Maybe Int
                                    } deriving (Show)
-  
+
 --authorsAndYearFromFullCite :: Maybe String -> ([T.Text], Maybe Int)
-authorsAndYearFromFullCite :: T.Text -> ([T.Text],Maybe Int) 
+authorsAndYearFromFullCite :: T.Text -> ([T.Text],Maybe Int)
 --authorsAndYearFromFullCite Nothing = ([],Nothing)
 --authorsAndYearFromFullCite (Just str) =
-authorsAndYearFromFullCite str = 
+authorsAndYearFromFullCite str =
   let tokens   = L.filter ((>1) . T.length) . map T.strip . T.splitOn "," $ str
       yearInd' = L.findIndex (T.all C.isDigit) tokens
       authors' = (\ind -> [tokens !! i | i <- [0..ind-1]]) <$> yearInd'

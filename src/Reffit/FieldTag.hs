@@ -40,12 +40,12 @@ tagHierarchy =
        ]
     , Node "ComputerScience" [
          Node "Algorithms" []
-       , Node "Compilers" [] 
-       , Node "FunctionalProgramming" [] 
-       , Node "Verification" [] 
+       , Node "Compilers" []
+       , Node "FunctionalProgramming" []
+       , Node "Verification" []
        ]
     , Node "Math" [
-         Node "AppliedMath" [] 
+         Node "AppliedMath" []
        , Node "TheoreticalMath" []
        ]
     , Node "Philosophy" [
@@ -55,7 +55,7 @@ tagHierarchy =
        , Node "Ethics" []
        ]
     , Node "Physics" [
-       Node "TheoreticalPhysics" [] 
+       Node "TheoreticalPhysics" []
        , Node "HighEnergyPhysics" []
        , Node "NuclearPhysics" []
        ]
@@ -64,13 +64,13 @@ tagHierarchy =
 {-  Supposedly, these instances overlap defaults in Data.Serialize?
 instance Serialize (Tree T.Text) where
   put (Node x nodes) = do
-    put x 
+    put x
     put nodes
   get = Node <$> get <*> get
 
 instance Serialize (Forest T.Text) where
   put [] = put (0 :: Word8)
-  put (t:ts) = do 
+  put (t:ts) = do
     put (1 :: Word8)
     put t
     put ts
@@ -101,12 +101,12 @@ insertTag (x:xs) tags = case L.elemIndex x (topLabels tags) of
   Nothing -> (Node x (insertTag xs [])) : tags
   Just ix ->
     let (preList,((Node _ tags'):postList)) = splitAt ix tags in
-    preList ++ [Node x (insertTag xs tags')] ++ postList 
+    preList ++ [Node x (insertTag xs tags')] ++ postList
 
 -- |Determine whether a reference path 'includes' a query path
 --  e.g. a document with "Biology"."Neuroscience" should be
 --  included in a query for "Biology"
-  
+
 --TODO need to clarify the meaning, better name.  which tag is first?
 tagIncludes :: TagPath -> TagPath -> Bool
 _  `tagIncludes` []     = True                     -- Query is general

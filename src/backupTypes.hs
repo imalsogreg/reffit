@@ -36,7 +36,7 @@ data AttrVote = AttrVote { attrClass :: Text
 
 data FieldTag = FieldTag { fieldTagText :: Text
                          }
-                  
+
 data Document = Document { docId        :: Int32
                          , docTitle     :: Text
                          , docLink      :: Text

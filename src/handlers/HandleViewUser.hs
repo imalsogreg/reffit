@@ -27,7 +27,7 @@ import Snap.Types (writeText)
 import Snap.Snaplet (Handler)
 import Snap.Snaplet.AcidState (query,update)
 import Snap.Snaplet.Heist
-import Snap.Snaplet.Auth 
+import Snap.Snaplet.Auth
 import Application
 import Heist
 import qualified Heist.Interpreted as I
@@ -42,7 +42,7 @@ import Data.Maybe
 userPinboardDocs :: Map.Map DocumentId Document -> User -> [Document]
 userPinboardDocs docs =
   catMaybes . Prelude.map (\dId -> Map.lookup dId docs) .
-  Set.toList . userPinboard 
+  Set.toList . userPinboard
 
 handleFollow :: Bool -> Handler App (AuthManager App) ()
 handleFollow doFollow = do
@@ -65,29 +65,29 @@ handlePin doPin = do
   us <- query QueryAllUsers
   dId'  <- getParam "paperid"
   t     <- liftIO $ getCurrentTime
-  case join $ ((\uName -> Map.lookup uName us) . userLogin) <$> aUser of 
+  case join $ ((\uName -> Map.lookup uName us) . userLogin) <$> aUser of
     Nothing -> redirect "#"
     Just user -> case join $ (readMay . T.unpack . decodeUtf8) <$> dId' of
       Nothing -> writeBS "Param error" --TODO error page
       Just dId -> do
         _ <- update $ Pin user dId doPin t
         redirect . BS.pack $ "/view_article/" ++ (show dId)
-    
+
 handleViewUser :: Handler App (AuthManager App) ()
 handleViewUser = do
   userMap <- query QueryAllUsers
   docs    <- query QueryAllDocs
   cAUser' <- currentUser
-  profileName' <- getParam "username" 
+  profileName' <- getParam "username"
   t       <- liftIO $ getCurrentTime
-  case decodeUtf8 <$> profileName' of 
+  case decodeUtf8 <$> profileName' of
     Nothing -> writeText "Error decoding username"  --TODO
-    Just profileName -> case Map.lookup profileName userMap of 
-      Nothing -> writeText "User not in database."  -- TODO 
+    Just profileName -> case Map.lookup profileName userMap of
+      Nothing -> writeText "User not in database."  -- TODO
       Just profileUser -> do
         let cUser' = join $ Map.lookup <$> (userLogin <$> cAUser') <*> pure userMap :: Maybe User
-        renderWithSplices "user" (profileSplices t cUser' profileUser docs) 
- 
+        renderWithSplices "user" (profileSplices t cUser' profileUser docs)
+
 handleAddTag :: Bool -> Handler App (AuthManager App) ()
 handleAddTag doAdd = do
   aUser <- currentUser
@@ -97,16 +97,16 @@ handleAddTag doAdd = do
   case (fromFullName . T.decodeUtf8) <$> tag of
     Nothing -> writeBS "error reading fieldtag parameter" --TODO error page
     Just tp -> do
-      when (not (tp `tagPathIsElem` tags) && doAdd) 
-               $ writeBS "fieldtag wasn't in fieldtag database" 
+      when (not (tp `tagPathIsElem` tags) && doAdd)
+               $ writeBS "fieldtag wasn't in fieldtag database"
       case join $ Map.lookup <$> (userLogin <$> aUser) <*> pure us of
         Nothing -> writeBS "error user isn't in database"
         Just user -> do
-          _ <- if doAdd 
+          _ <- if doAdd
             then update $ AddUserTag user tp
             else update $ DeleteUserTag user tp
           redirect "/"
-                           
+
 
 profileSplices :: UTCTime -> Maybe User -> User -> Map.Map DocumentId Document
                -> Splices (SnapletISplice App)
@@ -118,7 +118,7 @@ profileSplices t cUser' profileUser docs = do
   "followBtnText" ## I.textSplice followBtnText
   "followBtnLink" ## I.textSplice followBtnLink
   (allEventSplices  t docs (userHistory profileUser))
-  "nPinboard"     ## I.textSplice . T.pack . show . 
+  "nPinboard"     ## I.textSplice . T.pack . show .
     length $ userPinboardDocs docs profileUser
   "nFollowing"    ## I.textSplice . T.pack . show . Set.size . userFollowing
     $ profileUser
@@ -126,23 +126,23 @@ profileSplices t cUser' profileUser docs = do
     $ profileUser
   (allPaperRollSplices $ userPinboardDocs docs profileUser)
   (allUserBlockSplices "following" docs (userFollowing  profileUser))
-  (allUserBlockSplices "followers" docs (userFollowedBy profileUser)) 
+  (allUserBlockSplices "followers" docs (userFollowedBy profileUser))
   where (followBtnText,followBtnLink) =
           case Set.member (userName profileUser) <$> (userFollowing <$> cUser') of
             Just False -> ("Follow",   T.append "follow/"  (userName profileUser))
             Just True  -> ("Unfollow", T.append "unfollow/" (userName profileUser))
             Nothing    -> ("n/a","/")
-  
-allEventSplices :: UTCTime -> Map.Map DocumentId Document 
+
+allEventSplices :: UTCTime -> Map.Map DocumentId Document
                    -> [UserEvent] -> Splices (SnapletISplice App)
 allEventSplices t docs events = do
   "userEvents" ## renderEvents t docs events
-  
-renderEvents :: UTCTime -> Map.Map DocumentId Document 
+
+renderEvents :: UTCTime -> Map.Map DocumentId Document
                 -> [UserEvent] -> SnapletISplice App
 renderEvents t docs = I.mapSplices $ I.runChildrenWith . splicesFromEvent t docs
 
-splicesFromEvent :: (Monad n) => UTCTime -> Map.Map DocumentId Document 
+splicesFromEvent :: (Monad n) => UTCTime -> Map.Map DocumentId Document
                     ->UserEvent -> Splices (I.Splice n)
 
 splicesFromEvent t docs event = do
@@ -153,8 +153,8 @@ eventSplice :: (Monad m) => UTCTime -> Map.Map DocumentId Document
 eventSplice t docs (WroteOComment dId cId)  =
   return [X.Element "p" [] [X.TextNode  "commented on "
                            , X.Element  "a" [("href",dLinkT dId docs)]
-                             [X.TextNode . shortTitle tLen $ dTitleT dId docs] 
-                           , X.TextNode $ ocTimeT t dId cId docs] ] 
+                             [X.TextNode . shortTitle tLen $ dTitleT dId docs]
+                           , X.TextNode $ ocTimeT t dId cId docs] ]
 eventSplice _ _ (VotedOnOComment _ _ _ _) = return []
 
 {-
@@ -165,7 +165,7 @@ eventSplice t docs (WroteSummary dId sId) =
                            ,X.TextNode $ sTimeT t dId sId docs] ]
 eventSplice _ _ (VotedOnSummary _ _ _ _) = return []
 -}
- 
+
 eventSplice t docs (PostedDocument dId) =
   return [X.Element "p" [] [X.TextNode "posted "
                            ,X.Element "a" [("href",dLinkT dId docs)]
@@ -174,8 +174,8 @@ eventSplice t docs (PostedDocument dId) =
 eventSplice t _ (FollowedUser uName eTime) =
   return [X.Element "p" [] [X.TextNode "followed "
                            ,X.Element "a" [("href", T.append "/user/" uName)]
-                            [X.TextNode uName] 
-                           ,X.TextNode . T.pack . sayTimeDiff t $ eTime]] 
+                            [X.TextNode uName]
+                           ,X.TextNode . T.pack . sayTimeDiff t $ eTime]]
 eventSplice t docs (PinnedDoc dId eTime) =
   return [X.Element "p" [] [X.TextNode "pinned "
                            ,X.Element "a" [("href",dLinkT dId docs)]
@@ -191,7 +191,7 @@ shortTitle n t
   | otherwise       = sTitle
   where
     tokens        = T.splitOn " " t :: [T.Text]
-    tLengths      = scanl (\s tk -> s + T.length tk) 0 tokens :: [Int] 
+    tLengths      = scanl (\s tk -> s + T.length tk) 0 tokens :: [Int]
     tLengthsS     = zipWith (+) tLengths [0..] --lngth of titles,counting spaces
     measureTokens = zip tLengthsS tokens
     keepTokens    = takeWhile ((< n - 1) . fst) measureTokens :: [(Int,T.Text)]
@@ -209,17 +209,17 @@ dTimeT t dId docs = maybe "error" T.pack $ do
   doc <- Map.lookup dId docs
   return $ sayTimeDiff t (docPostTime doc)
 
-ocTimeT :: UTCTime -> DocumentId -> OverviewCommentId 
+ocTimeT :: UTCTime -> DocumentId -> OverviewCommentId
            -> Map.Map DocumentId Document
            -> T.Text
 ocTimeT t dId cId docs = maybe "error" T.pack $ do
   doc  <- Map.lookup dId docs
   comm <- Map.lookup cId $ docOComments doc
   return $ sayTimeDiff t (ocPostTime comm)
- 
-allUserBlockSplices :: T.Text -> Map.Map DocumentId Document 
+
+allUserBlockSplices :: T.Text -> Map.Map DocumentId Document
                        -> Set.Set UserName -> Splices (SnapletISplice App)
-allUserBlockSplices nodeName docs userNames = 
+allUserBlockSplices nodeName docs userNames =
   nodeName ## renderUserBlocks docs (Set.toList userNames)
 
 renderUserBlocks :: Map.Map DocumentId Document -> [UserName] -> SnapletISplice App
@@ -227,7 +227,7 @@ renderUserBlocks docs = I.mapSplices $ I.runChildrenWith . splicesFromUserBlock 
 
 -- TODO - put users reputations in the parens (will have to take users map,
 --        or get the User in here, not just UserName
-splicesFromUserBlock :: Monad n => Map.Map DocumentId Document 
+splicesFromUserBlock :: Monad n => Map.Map DocumentId Document
                         -> UserName -> Splices (I.Splice n)
 splicesFromUserBlock docs userName = do
   "userName" ## I.textSplice userName
