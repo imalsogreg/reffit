@@ -20,6 +20,9 @@ import           Reffit.User
 import           Reffit.FieldTag
 import           Reffit.CrossRef
 import           Reffit.PaperRoll
+
+import           Reffit.Handlers
+
 import           Util.ReffitMigrate
 
 import           Control.Lens (view)
@@ -27,16 +30,6 @@ import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          HasAcid (getAcidStore),
                                          makeAcidic,
                                          update,query,acidInit)
-
-
-import           HandleIndex
-import           HandleNewPaper
-import           HandleNewDocClass
-import           HandleViewPaper
-import           HandleNewSummary
-import           HandleNewCritique
-import           HandleSummaryVote
-import           HandleViewUser
 
 import           Control.Applicative
 import qualified Data.Map as Map

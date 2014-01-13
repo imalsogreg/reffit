@@ -19,8 +19,7 @@ Flag old-base
   manual: False
 
 Executable reffit
-  hs-source-dirs: src,
-                  src/handlers
+  hs-source-dirs: src
   main-is: Main.hs
 
   Build-depends:

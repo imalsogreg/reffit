@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
  -- TODO this module needs to be renamed, we do both types of vote casting here
-module HandleSummaryVote(
+module Reffit.Handlers.HandleSummaryVote(
 --  handleSummaryVote,
   handleOCommentVote
   )
