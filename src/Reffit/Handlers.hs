@@ -8,6 +8,7 @@ module Reffit.Handlers
   ,module Reffit.Handlers.HandleSummaryVote
   ,module Reffit.Handlers.HandleViewPaper
   ,module Reffit.Handlers.HandleViewUser
+  ,module Reffit.Handlers.HandleAuthentication
 ) where
 
 import Reffit.Handlers.HandleIndex
@@ -18,3 +19,4 @@ import Reffit.Handlers.HandleNewSummary
 import Reffit.Handlers.HandleSummaryVote
 import Reffit.Handlers.HandleViewPaper
 import Reffit.Handlers.HandleViewUser
+import Reffit.Handlers.HandleAuthentication
