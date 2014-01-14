@@ -101,76 +101,33 @@ handleDumpState = do
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes = [
-      ("login",         with auth handleLoginSubmit)
-    , ("logout",        with auth handleLogout)
-    , ("new_user",      with auth handleNewUser)
-    , ("search",
-       -- TODO: Is this the right way to refresh the session on every action??
-       withSession sess (with sess touchSession) >>
-       with auth  handleIndex)
-    , ("new_article",
-       withSession sess (with sess touchSession) >>
-       with auth handleNewArticle)
-    , ("new_article/:doi",
-       withSession sess (with sess touchSession) >>
-       with auth handleNewArticle)
-    , ("new_summary/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handleNewOComment Summary'))
-    , ("new_praise/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handleNewOComment Praise))
-    , ("new_criticism/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handleNewOComment Criticism))
-    , ("view_article/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth handleViewPaper)
-    , ("cast_ocomment_upvote/:idParam",
-       withSession sess (with sess touchSession) >>
-       with auth (handleOCommentVote  UpVote))
-    , ("cast_ocomment_downvote/:idParam",
-       withSession sess (with sess touchSession) >>
-       with auth (handleOCommentVote  DownVote))
-    , ("user/:username",
-       withSession sess (with sess touchSession) >>
-       with auth handleViewUser)
-    , ("follow/:username",
-       withSession sess (with sess touchSession) >>
-       with auth (handleFollow True))
-    , ("unfollow/:username",
-       withSession sess (with sess touchSession) >>
-       with auth (handleFollow False))
-    , ("pin/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handlePin True))
-    , ("unpin/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handlePin False))
-    , ("/add_usertag/:fieldtag",
-       withSession sess (with sess touchSession) >>
-       with auth (handleAddTag True))
-    , ("/delete_usertag/:fieldtag",
-       withSession sess (with sess touchSession) >>
-       with auth (handleAddTag False))
-    , ("/about",
-       withSession sess (with sess touchSession) >>
-       render "about")
-    , ("/:params" ,
-       withSession sess (with sess touchSession) >>
-       with auth handleIndex)
-
-    , ("stateToDisk",   with auth handleStateToDisk)
-    , ("stateFromDisk", with auth handleStateFromDisk)
-    , ("checkpoint",    with auth handleCheckpoint)
---    , ("migrateStateFromDisk", with auth handleMigrateStateFromDisk)
-
-    , ("/",
-       withSession sess (with sess touchSession) >>
-       with auth handleIndex)
-
-    , ("/dump_state",  with auth handleDumpState)
-    , ("/static", serveDirectory "static")
+         ("login" , with auth handleLoginSubmit)
+       , ("logout"                          , with auth handleLogout)
+       , ("new_user"                        , with auth handleNewUser)
+       , ("search"                          , with auth  handleIndex)
+       , ("new_article"                     , with auth handleNewArticle)
+       , ("new_article/:doi"                , with auth handleNewArticle)
+       , ("new_summary/:paperid"            , with auth (handleNewOComment Summary'))
+       , ("new_praise/:paperid"             , with auth (handleNewOComment Praise))
+       , ("new_criticism/:paperid"          , with auth (handleNewOComment Criticism))
+       , ("view_article/:paperid"           , with auth handleViewPaper)
+       , ("cast_ocomment_upvote/:idParam"   , with auth (handleOCommentVote  UpVote))
+       , ("cast_ocomment_downvote/:idParam" , with auth (handleOCommentVote  DownVote))
+       , ("user/:username"                  , with auth handleViewUser)
+       , ("follow/:username"                , with auth (handleFollow True))
+       , ("unfollow/:username"              , with auth (handleFollow False))
+       , ("pin/:paperid"                    , with auth (handlePin True))
+       , ("unpin/:paperid"                  , with auth (handlePin False))
+       , ("/add_usertag/:fieldtag"          , with auth (handleAddTag True))
+       , ("/delete_usertag/:fieldtag"       , with auth (handleAddTag False))
+       , ("/about"                          , render "about")
+       , ("/:params"                        , with auth handleIndex)
+       , ("stateToDisk"                     , with auth handleStateToDisk)
+       , ("stateFromDisk"                   , with auth handleStateFromDisk)
+       , ("checkpoint"                      , with auth handleCheckpoint)
+       , ("/"                               , with auth handleIndex)
+       , ("/dump_state"                     , with auth handleDumpState)
+       , ("/static"                         , serveDirectory "static")
     ]
 
 ------------------------------------------------------------------------------
@@ -181,16 +138,20 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
 
-    -- NOTE: We're using initJsonFileAuthManager here because it's easy and
-    -- doesn't require any kind of database server to run.  In practice,
-    -- you'll probably want to change this to a more robust auth backend.
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
 
     ac <- nestSnaplet "acid" acid $ acidInit convenienceReset
     h <- nestSnaplet "" heist $ heistInit "templates"
+
     addRoutes routes
     addAuthSplices h auth
+
+    -- Touch the session on each event to reset expiry time
+    -- Not sure this is the best idea as it will generate a lot of extra traffic.
+    -- Perhaps use longer session times?
+    wrapSite (\site -> with sess touchSession >> site >> with sess commitSession)
+
     return $ App h s a ac
 
 
