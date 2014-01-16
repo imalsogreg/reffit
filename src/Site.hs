@@ -220,18 +220,15 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
 
-    ac <- nestSnaplet "acid" acid $ acidInit convenienceReset
+    ac <- nestSnaplet "acid" acid $ acidInit defaultState
     h <- nestSnaplet "" heist $ heistInit "templates"
     addRoutes routes
     addAuthSplices h auth
     return $ App h s a ac
 
+defaultState :: PersistentState
+defaultState =
+  PersistentState Map.empty Map.empty defaultDocClasses tagHierarchy
 
-factoryReset :: PersistentState
-factoryReset = PersistentState Map.empty Map.empty [] []
-
-convenienceReset :: PersistentState
-convenienceReset = PersistentState Map.empty Map.empty docTypes tagHierarchy
-
-docTypes :: [DocClass]
-docTypes = map DocClass ["Paper","Preprint","Blog Post","Video","Book"]
+defaultDocClasses :: [DocClass]
+defaultDocClasses = map DocClass ["Paper","Preprint","Blog Post","Video","Book"]
