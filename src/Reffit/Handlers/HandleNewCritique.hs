@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections     #-}
 
-module HandleNewCritique(
+module Reffit.Handlers.HandleNewCritique(
 --  newCritiqueView,
 --  newCritiqueForm,
 --  handleNewCritique,

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HandleNewDocClass(
+module Reffit.Handlers.HandleNewDocClass(
   newDocClassView,
   newDocClassForm,
   handleNewDocClass
