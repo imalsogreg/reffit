@@ -11,7 +11,6 @@ import Reffit.Search
 import Text.Printf
 import Data.List
 import Data.Time
-import Data.Time.Clock
 import qualified Data.Text as T
 import qualified Data.Map as Map
 import Data.String
@@ -55,7 +54,6 @@ sortF t s = case s of
 t0 :: UTCTime
 t0 = UTCTime (ModifiedJulianDay 0) 0
 
-
 readSort :: (IsString a,Eq a) => a -> Maybe SortBy
 readSort "New"           = Just New
 readSort "Hot"           = Just Hot
@@ -64,13 +62,13 @@ readSort "Controversial" = Just Controversial
 readSort _               = Nothing
 
 sayTimeDiff :: UTCTime -> UTCTime -> String
-sayTimeDiff a@(UTCTime aDate _) b@(UTCTime bDate _)
-  | dYear > 1  = printf "%d years ago" dYear
-  | dYear == 1 && dMonth > 11 = printf "1 year ago"
-  | dMonth > 1 = printf "%d months ago" dMonth
-  | dMonth == 1 && dDay > 27 = printf "1 month ago"
-  | dDay > 1    = printf "%d days ago" dDay
-  | dDay == 1 && dHours > 23 = printf "1 day ago"
+sayTimeDiff a b
+  | dYears > 1  = printf "%d years ago" dYears
+  | dYears == 1 && dMonths > 11 = printf "1 year ago"
+  | dMonths > 1 = printf "%d months ago" dMonths
+  | dMonths == 1 && dDays > 27 = printf "1 month ago"
+  | dDays > 1    = printf "%d days ago" dDays
+  | dDays == 1 && dHours > 23 = printf "1 day ago"
   | dHours > 1  = printf "%d hours ago" dHours
   | dHours == 1 = printf "1 hour ago"
   | dMins > 1   = printf "%d minutes ago" dMins
@@ -81,9 +79,7 @@ sayTimeDiff a@(UTCTime aDate _) b@(UTCTime bDate _)
         dSecs  = floor $ dt             :: Int
         dMins  = floor $ dt / 60        :: Int
         dHours = floor $ dt / (3600)    :: Int
-        (aYear, aMonth, aDay) = toGregorian aDate
-        (bYear, bMonth, bDay) = toGregorian bDate
-        dYear  = aYear  - bYear
-        dMonth = aMonth - bMonth
-        dDay   = aDay   - bDay
+        dDays  = floor $ dt / (3600 * 24) :: Int
+        dMonths= floor $ dt / (3600 * 24 * 7 * 4) :: Int
+        dYears = floor $ dt / (3600 * 24 * 7 * 4 * 12) :: Int
 
