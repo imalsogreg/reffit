@@ -21,7 +21,6 @@ import           Reffit.FieldTag
 import           Reffit.CrossRef
 import           Reffit.PaperRoll
 import           Util.ReffitMigrate
-
 import           Control.Lens (view)
 import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          HasAcid (getAcidStore),
@@ -232,7 +231,7 @@ factoryReset :: PersistentState
 factoryReset = PersistentState Map.empty Map.empty [] []
 
 convenienceReset :: PersistentState
-convenienceReset = PersistentState Map.empty Map.empty [] tagHierarchy
+convenienceReset = PersistentState Map.empty Map.empty docTypes tagHierarchy
 
-testDate :: Integer -> UTCTime
-testDate d = UTCTime (ModifiedJulianDay d) (fromIntegral (0::Int))
+docTypes :: [DocClass]
+docTypes = map DocClass ["Paper","Preprint","Blog Post","Video","Book"]
