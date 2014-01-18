@@ -15,37 +15,22 @@ module Reffit.AcidTypes where
 import Reffit.Types
 import Reffit.OverviewComment
 import Reffit.Document
+import Reffit.Discussion
 import Reffit.User
 import Reffit.FieldTag
 
-import Safe
-import Control.Applicative ((<$>),(<*>),pure)
-import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (asks)
-import Data.ByteString (ByteString)
-import Control.Lens (makeLenses, view,over)
 import Data.Time
 import Data.SafeCopy
 import qualified Data.Text as T hiding (head)
-import Data.Text.Encoding (decodeUtf8)
 import GHC.Generics
 import Data.Typeable (Typeable)
-import Data.List
 import qualified Data.Set as Set
-import GHC.Int
 import Data.Hashable
 import qualified Data.Map as Map
-import Snap.Core (getParam)
-import Snap.Util.FileServe (serveDirectory)
-import Snap (SnapletInit, Snaplet, Handler,
-             addRoutes, nestSnaplet, serveSnaplet,
-             defaultConfig, makeSnaplet,
-             snapletValue, writeText, modify, gets)
+import Snap (modify, gets)
 import Data.Serialize
-import Snap.Snaplet.AcidState (Update, Query, Acid,
-                                HasAcid (getAcidStore),
-                                makeAcidic, update,
-                                query, acidInit)
+import Snap.Snaplet.AcidState (Update, Query,makeAcidic)
 import Control.Lens
 
 data PersistentState = PersistentState {
@@ -80,6 +65,14 @@ addDocument user' doc = do  -- HandleNewPaper now finds a good Id
                               user { userHistory = PostedDocument (docId doc)
                                                    : (userHistory user) }))
     Nothing -> return ()
+
+addDocumentDiscussionPoint :: DiscussionPoint -> Maybe DiscussionPointId ->
+                              Document -> Update PersistentState ()
+addDocumentDiscussionPoint dp parent' doc = undefined
+
+addCommentDiscussionPoint :: DiscussionPoint -> Maybe DiscussionPointId ->
+                             OverviewComment -> Update PersistentState ()
+addCommentDiscussionPoint dp parent' doc = undefined
 
 addOComment :: Maybe User -> DocumentId -> OverviewComment
             -> Update PersistentState (Maybe OverviewCommentId)
@@ -120,7 +113,7 @@ addSummary user' pId summary = do
                   -- that assigns an ID, through schema migration.
                   -- will the ID change?
                   (doc { docOComments =
-                            Map.insert sId (summToOComment summary)
+                            Map.insert sId (migrate $ summToOComment summary)
                             (docOComments doc)})
                   docs'))
         case user' of
@@ -155,7 +148,7 @@ castSummaryVote user isAnon dId doc sId summary voteVal t = do
   modify (over documents $ \ds ->
            let s' = summary { summaryVotes = voteVal : summaryVotes summary }
                d' = doc { docOComments = Map.insert sId
-                                         (summToOComment s')
+                                         (migrate $ summToOComment s')
                                          (docOComments doc)}
            in Map.insert dId d' ds)
 
@@ -190,7 +183,7 @@ castCritiqueVote user isAnon dId doc cId critique voteVal t = do
   modify (over documents $ \ds ->
            let c' = critique { critiqueReactions =
                                   voteVal : critiqueReactions critique }
-               c'' = critToOComment c'
+               c'' = migrate $ critToOComment c'
                d' = doc { docOComments =
                              Map.insert cId c'' (docOComments doc) }
            in Map.insert dId d' ds)
@@ -207,7 +200,7 @@ addCritique user' pId critique = do
                (Map.insert
                 (docId doc)
                 (doc {docOComments =
-                         Map.insert cId (critToOComment critique)
+                         Map.insert cId (migrate $ critToOComment critique)
                          (docOComments doc)}) -- BACK HERE
 --                (doc { docCritiques0 = Map.insert cId critique
 --                                       (docCritiques0 doc)})

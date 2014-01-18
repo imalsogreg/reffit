@@ -20,6 +20,8 @@
 	 <a>Praise <span class="badge"><nPraise/></span></a></li>
      <li class="${criticismsIsActive}" id="criticismsButton">
 	 <a>Criticisms <span class="badge"><nCriticisms/></span></a></li>
+     <li class="${discussionIsActive}" id="discussionButton">
+       <a>Discussion <span class="badge"><nDiscussions/></span></a></li>
    </ul>
  </div> <!-- navbar-collapse -->
 </nav>

@@ -54,14 +54,15 @@ documentForm fromUser allDocClasses allFieldTags hints' t =
   <*> "docTags"  .: validate (validateTags allFieldTags) (text Nothing)
   <*> pure Map.empty
   <*> pure t
+  <*> pure []
     where
       posterOpts = [(Just (userName fromUser),userName fromUser)
                    ,(Nothing,"Anonymous")]
       classOpts  = [(dc,docClassName dc) | dc <- allDocClasses]
-      tempTime   = UTCTime (ModifiedJulianDay 0) (fromIntegral (0::Int))
+--      tempTime   = UTCTime (ModifiedJulianDay 0) (fromIntegral (0::Int))
       defTitle   = maybe "" titleHint hints'
       defAuthors = maybe "" (T.intercalate ", " . authorsHint) hints'
-      defYear    = maybe "" (T.pack . show . yearHint) hints'
+--      defYear    = maybe "" (T.pack . show . yearHint) hints'
       defLink    = maybe "" linkHint hints'
 
 documentView :: View H.Html -> H.Html
@@ -147,7 +148,6 @@ handleNewArticle = handleForm
                $ renderWithSplices "_new_paper" ftSplices
                where ftSplices = do
                        "tagsButton" ## tagButtonSplice tagHierarchy
-                     tagList = concat $ map RT.flatten tagHierarchy :: [FieldTag]
 
 -- These splices are for the button, which should have the 'add tag label'
 -- as a parent list-item, because tree.js shows the first list item on load.

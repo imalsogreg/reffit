@@ -39,6 +39,7 @@ type CritiqueId        = Int32
 type SummaryId         = Int32
 type DocumentId        = Int32
 type OverviewCommentId = Int32
+type DiscussionPointId = Int32
 
 instance Serialize DocClass where
 
