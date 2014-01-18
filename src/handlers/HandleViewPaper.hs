@@ -11,7 +11,7 @@ import Reffit.Sort
 import Reffit.Scores
 
 import Safe
-import Control.Applicative ((<$>),(<*>),pure)
+import Control.Applicative ((<$>))
 import qualified Data.List as List
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
