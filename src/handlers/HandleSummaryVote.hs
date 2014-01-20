@@ -78,6 +78,7 @@ handleSummaryVote voteDir = do
 -}
 
 -- TODO: Handle anonymity of votes
+-- TODO: this function is hand-parsing the url.  Use getParams instead
 handleOCommentVote :: UpDownVote -> Handler App (AuthManager App) ()
 handleOCommentVote voteDir = do
   userMap   <- query QueryAllUsers

@@ -36,6 +36,7 @@ import           HandleNewSummary
 import           HandleNewCritique
 import           HandleSummaryVote
 import           HandleViewUser
+import           HandleViewDiscussion
 
 import           Control.Applicative
 import qualified Data.Map as Map
@@ -165,6 +166,12 @@ routes = [
     , ("cast_ocomment_downvote/:idParam",
        withSession sess (with sess touchSession) >>
        with auth (handleOCommentVote  DownVote))
+    , ("view_discussion",
+       withSession sess (with sess touchSession) >>
+       with auth handleViewDiscussion)
+    , ("add_discussion",
+       withSession sess (with sess touchSession) >>
+       with auth handleAddDiscussion)
     , ("user/:username",
        withSession sess (with sess touchSession) >>
        with auth handleViewUser)

@@ -61,19 +61,27 @@ addDocument user' doc = do  -- HandleNewPaper now finds a good Id
   modify (over documents (Map.insert (docId doc) doc))
   case user' of
     Just user ->
-      modify (over users     (Map.insert (userName user)
-                              user { userHistory = PostedDocument (docId doc)
-                                                   : (userHistory user) }))
+      modify (over users (Map.insert (userName user)
+                          user { userHistory = PostedDocument (docId doc)
+                                               : (userHistory user) }))
     Nothing -> return ()
 
 addDocumentDiscussionPoint :: DiscussionPoint -> Maybe DiscussionPointId ->
                               Document -> Update PersistentState ()
-addDocumentDiscussionPoint dp parent' doc = undefined
+addDocumentDiscussionPoint dp parent' doc =
+  modify (over documents (Map.insert (docId doc)
+                          (doc {docDiscussion = insertAt dp parent' (docDiscussion doc)})))
 
 addCommentDiscussionPoint :: DiscussionPoint -> Maybe DiscussionPointId ->
-                             OverviewComment -> Update PersistentState ()
-addCommentDiscussionPoint dp parent' doc = undefined
-
+                             Document -> OverviewCommentId -> OverviewComment ->
+                             Update PersistentState ()
+addCommentDiscussionPoint dp parent' doc commentId comment =
+  modify (over documents (Map.insert (docId doc)
+                          (doc {docOComments = Map.insert commentId comment'
+                                              (docOComments doc)})))
+    where
+      comment' = comment { ocDiscussion = insertAt dp parent' (ocDiscussion comment) }
+      
 addOComment :: Maybe User -> DocumentId -> OverviewComment
             -> Update PersistentState (Maybe OverviewCommentId)
 addOComment user' pId comment = do
@@ -313,4 +321,6 @@ makeAcidic ''PersistentState ['addDocument,         'queryAllDocs, 'updateAllDoc
                              , 'queryAllDocClasses, 'addDocClass, 'updateAllDocClasses
                              , 'queryAllFieldTags,  'addFieldTag, 'updateAllFieldTags
                              , 'addSummary,         'addCritique
-                             , 'castSummaryVote,    'castCritiqueVote]
+                             , 'castSummaryVote,    'castCritiqueVote
+                             , 'addDocumentDiscussionPoint
+                             , 'addCommentDiscussionPoint]
