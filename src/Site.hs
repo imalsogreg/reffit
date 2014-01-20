@@ -16,6 +16,7 @@ import           Reffit.Types
 import           Reffit.AcidTypes
 import           Reffit.OverviewComment
 import           Reffit.Document
+import           Reffit.Discussion
 import           Reffit.User
 import           Reffit.FieldTag
 import           Reffit.CrossRef
@@ -227,7 +228,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
 
-    ac <- nestSnaplet "acid" acid $ acidInit defaultState
+    ac <- nestSnaplet "acid" acid $ acidInit defaultState'
     h <- nestSnaplet "" heist $ heistInit "templates"
     addRoutes routes
     addAuthSplices h auth
@@ -236,6 +237,16 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
 defaultState :: PersistentState
 defaultState =
   PersistentState Map.empty Map.empty defaultDocClasses tagHierarchy
+
+defaultState' :: PersistentState
+defaultState' =
+  PersistentState (Map.fromList [(10,
+                              Document (Just "Greg") 10 "Test Title" ["Greg","Ping"]
+                              "reddit.com" (DocClass "Preprint") [["Biology","Neuroscience"]]
+                              Map.empty t0 testDiscussion)])
+  Map.empty
+  defaultDocClasses
+  tagHierarchy
 
 defaultDocClasses :: [DocClass]
 defaultDocClasses = map DocClass ["Paper","Preprint","Blog Post","Video","Book"]

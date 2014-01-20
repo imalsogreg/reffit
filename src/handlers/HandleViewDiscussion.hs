@@ -87,13 +87,17 @@ allDiscussionSplices :: Document -> Maybe OverviewComment -> UTCTime -> Discussi
                         Splices (SnapletISplice App)
 allDiscussionSplices doc comment' tNow disc = do
   "discussionReNode" ## textSplice "TEST RE:"
-  mapSplices (discussionPointSplice tNow) disc 
+  "discussionNodes"  ## (bindDiscussionPoints tNow disc)
+
+bindDiscussionPoints :: UTCTime -> Discussion -> SnapletISplice App
+bindDiscussionPoints tNow = mapSplices $ runChildrenWith . (discussionPointSplice tNow)
 
 --discussionPointSplice :: UTCTime -> DiscussionPoint -> Splices (SnapletISplice App)
 discussionPointSplice :: UTCTime -> Tree.Tree DiscussionPoint -> Splices (SnapletISplice App)
 discussionPointSplice tNow (Tree.Node dp subs) = do
-  "discussionPointNode" ## runChildrenWith (discussionPointSplices tNow dp)
-  mapSplices (discussionPointSplice tNow) subs
+  "discussionNode" ## runChildrenWith (discussionPointSplices tNow dp)
+  "subDiscussions" ## (bindDiscussionPoints tNow subs)
+--  mapSplices (discussionPointSplice tNow) subs
 --  mTemplate <- callTemplate "discussion_point" splices
 --  return fromMaybe [] mTemplate
 
