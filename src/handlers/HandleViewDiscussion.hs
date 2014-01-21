@@ -90,25 +90,13 @@ allDiscussionSplices doc comment' tNow disc = do
   "discussionNodes"  ## (bindDiscussionPoints tNow disc)
 
 bindDiscussionPoints :: UTCTime -> Discussion -> SnapletISplice App
-bindDiscussionPoints tNow = mapSplices $ runChildrenWith . (discussionTreeSplices tNow)
---bindDiscussionPoints tNow disc = mapSplices (runChildrenWith ( discussionPointSplice tNow)) disc
+bindDiscussionPoints tNow discs =
+  mapSplices (callTemplate "discussion_point" . discussionTreeSplices tNow) discs
 
---discussionPointSplice :: UTCTime -> DiscussionPoint -> Splices (SnapletISplice App)
 discussionTreeSplices :: UTCTime -> Tree.Tree DiscussionPoint -> Splices (SnapletISplice App)
 discussionTreeSplices tNow (Tree.Node dp subs) = do
-  "discussionNode" ## runChildrenWith (discussionPointSplices tNow dp)
-  "subDiscussions" ## callTemplate "discussion_point" ("subDiscussions" ## (mapSplices (b tNow) subs))
---  "subDiscussions" ## (bindDiscussionPoints tNow subs)
---  "subDiscussions" ## mapSplices (runChildrenWith . callTemplate "discussion_point" . (discussionPointSplices tNow)) subs
-
-a :: UTCTime -> Discussion -> SnapletISplice App
-a tNow subs =  bindDiscussionPoints tNow subs
-
-b :: UTCTime -> Tree.Tree DiscussionPoint -> SnapletISplice App
-b tNow (Tree.Node root subs) = bindDiscussionPoints tNow subs
-
---a :: UTCTime -> Tree.Tree DiscussionPoint -> SnapletISplice App
---a tNow (Tree.Node root subs) = callTemplate "discussion_point" (discussionPointSplices tNow)
+  discussionPointSplices tNow dp
+  "subDiscussions" ## bindDiscussionPoints tNow subs
 
 discussionPointSplices :: UTCTime -> DiscussionPoint -> Splices (SnapletISplice App)
 discussionPointSplices tNow dp = do
