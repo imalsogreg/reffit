@@ -25,7 +25,14 @@ data DiscussionPoint = DiscussionPoint
                   , _dPoster   :: Maybe UserName
                   , _dText     :: T.Text
                   , _dResponse :: [UpDownVote]
-                  , _dContext  :: (DocumentId, Maybe OverviewCommentId)
+                  , _dContext  :: (DocumentId  -- TODO is the _dContext
+                                               -- field helpful? Or is it
+                                               -- mixing a 'name' into a
+                                               -- a type that should be
+                                               -- tracked from its context
+                                               -- outside?
+                                  , Maybe OverviewCommentId
+                                  , Maybe DiscussionPointId)
                   , _dPostTime :: UTCTime
                   } deriving (Eq, Show, Generic)
 
@@ -49,14 +56,14 @@ insertAt dp (Just parentId) dps = map (\t -> t {Tree.subForest = children' t}) d
 testDiscussion :: Discussion
 testDiscussion =
   [ Tree.Node
-    (DiscussionPoint 0 (Just "Greg") "That was a really cool document" [] (0,Nothing) t0)
-    [ Tree.Node (DiscussionPoint 1 (Just "Gerg") "Here here!" [] (0,Nothing) t0) []
-    , Tree.Node (DiscussionPoint 2 (Just "Bob") "You would think that, huh?" [] (0,Nothing) t0)
+    (DiscussionPoint 0 (Just "Greg") "That was a really cool document" [] (0,Nothing,Nothing) t0)
+    [ Tree.Node (DiscussionPoint 1 (Just "Gerg") "Here here!" [] (0,Nothing,Nothing) t0) []
+    , Tree.Node (DiscussionPoint 2 (Just "Bob") "You would think that, huh?" [] (0,Nothing,Nothing) t0)
       [
-        Tree.Node (DiscussionPoint 3 (Just "Greg") "Yeah, what of it?" [] (0,Nothing) t0) []
+        Tree.Node (DiscussionPoint 3 (Just "Greg") "Yeah, what of it?" [] (0,Nothing,Nothing) t0) []
       ]
     ]
-  , Tree.Node (DiscussionPoint 4 (Just "LateGuy") "Comin' in late!" [] (0,Nothing) t0) []
+  , Tree.Node (DiscussionPoint 4 (Just "LateGuy") "Comin' in late!" [] (0,Nothing,Nothing) t0) []
   ]
 
 t0 :: UTCTime

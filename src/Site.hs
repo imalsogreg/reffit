@@ -169,7 +169,7 @@ routes = [
        with auth (handleOCommentVote  DownVote))
     , ("view_discussion",
        withSession sess (with sess touchSession) >>
-       with auth handleViewDiscussion)
+       with auth (method GET handleViewDiscussion <|> method POST handleAddDiscussion))
     , ("add_discussion",
        withSession sess (with sess touchSession) >>
        with auth handleAddDiscussion)

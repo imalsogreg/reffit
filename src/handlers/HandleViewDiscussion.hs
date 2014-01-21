@@ -1,6 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HandleViewDiscussion (handleViewDiscussion, handleAddDiscussion) where
+module HandleViewDiscussion (handleViewDiscussion
+                            , handleAddDiscussion
+                            , handleDiscussion)
+       where
 
 import Reffit.Types
 import Reffit.User
@@ -32,6 +35,16 @@ import qualified Data.Tree as Tree
 --import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BS
 import Data.Serialize
+import Text.Digestive
+import Text.Digestive.Snap
+import Text.Digestive.Heist
+
+handleDiscussion :: Handler App (AuthManager App) ()
+handleDiscussion = do
+  (view,result) <- runForm "form" discussionPointForm
+  case result of
+    Just disc -> handleAddDiscussion disc
+    Nothing   -> heistLocal (bindDigestiveSplices view) $ handleViewDiscussion
 
 -- Handle adding a discussion point to a document or an overview comment
 -- Discussion point can be top-level (no dParentId param), or not
@@ -42,7 +55,7 @@ handleAddDiscussion = do
   docId'           <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "docId" -- Owch
   commentId'       <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "commentId" -- Owch
   dParentId'       <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "dParentId"
-  discussionPoint' <- fmap decode <$> getPostParam "discussionPoint" -- fmap fmap owch
+  discussionPoint' <- fmap decode <$> getPostParam "dpText" -- fmap fmap owch
   let ci = commentId'       :: Maybe OverviewCommentId
       dp = discussionPoint' :: Maybe (Either String DiscussionPoint)
   case discussionPoint' of
@@ -57,10 +70,22 @@ handleAddDiscussion = do
               Nothing -> writeText "Didn't find that comment in the database"
               Just comment -> 
                 update $ AddCommentDiscussionPoint discussionPoint dParentId' doc commentId comment
---          return ()
-      
-            
-    
+    Just (Left e) ->
+      writeText $ T.append "add discussion failure: " $ T.pack e
+    Nothing ->
+      writeBS $ BS.unwords ["docID: ", BS.pack . show $ docId'
+                           , "  commentId'", BS.pack . show $ commentId']
+
+discussionPointForm :: Monad m => User -> DocumentId -> Maybe OverviewCommentId ->
+                       Maybe DiscussionPointId ->
+                       UTCTime -> Form T.Text m DiscussionPoint
+discussionPointForm u docId ocId' parentId' tNow =
+  DiscussionPoint 0
+  <$> "dPoster" .: choice [(Just $ userName u, userName u),(Nothing,"Anonymous")] Nothing
+  <*> "dText"   .: text Nothing
+  <*> pure []
+  <*> pure (docId, ocId', parentId')
+  <*> pure tNow
 
 handleViewDiscussion :: Handler App (AuthManager App) ()
 handleViewDiscussion = do
