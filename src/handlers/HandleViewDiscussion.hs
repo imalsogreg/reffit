@@ -90,21 +90,29 @@ allDiscussionSplices doc comment' tNow disc = do
   "discussionNodes"  ## (bindDiscussionPoints tNow disc)
 
 bindDiscussionPoints :: UTCTime -> Discussion -> SnapletISplice App
-bindDiscussionPoints tNow = mapSplices $ runChildrenWith . (discussionPointSplice tNow)
+bindDiscussionPoints tNow = mapSplices $ runChildrenWith . (discussionTreeSplices tNow)
+--bindDiscussionPoints tNow disc = mapSplices (runChildrenWith ( discussionPointSplice tNow)) disc
 
 --discussionPointSplice :: UTCTime -> DiscussionPoint -> Splices (SnapletISplice App)
-discussionPointSplice :: UTCTime -> Tree.Tree DiscussionPoint -> Splices (SnapletISplice App)
-discussionPointSplice tNow (Tree.Node dp subs) = do
+discussionTreeSplices :: UTCTime -> Tree.Tree DiscussionPoint -> Splices (SnapletISplice App)
+discussionTreeSplices tNow (Tree.Node dp subs) = do
   "discussionNode" ## runChildrenWith (discussionPointSplices tNow dp)
-  "subDiscussions" ## (bindDiscussionPoints tNow subs)
---  mapSplices (discussionPointSplice tNow) subs
---  mTemplate <- callTemplate "discussion_point" splices
---  return fromMaybe [] mTemplate
+  "subDiscussions" ## callTemplate "discussion_point" ("subDiscussions" ## (mapSplices (b tNow) subs))
+--  "subDiscussions" ## (bindDiscussionPoints tNow subs)
+--  "subDiscussions" ## mapSplices (runChildrenWith . callTemplate "discussion_point" . (discussionPointSplices tNow)) subs
+
+a :: UTCTime -> Discussion -> SnapletISplice App
+a tNow subs =  bindDiscussionPoints tNow subs
+
+b :: UTCTime -> Tree.Tree DiscussionPoint -> SnapletISplice App
+b tNow (Tree.Node root subs) = bindDiscussionPoints tNow subs
+
+--a :: UTCTime -> Tree.Tree DiscussionPoint -> SnapletISplice App
+--a tNow (Tree.Node root subs) = callTemplate "discussion_point" (discussionPointSplices tNow)
 
 discussionPointSplices :: UTCTime -> DiscussionPoint -> Splices (SnapletISplice App)
 discussionPointSplices tNow dp = do
   "dpAuthor" ## textSplice (maybe "Anonymous" id $ _dPoster dp)
   "dpText"   ## textSplice $ _dText dp
   "dpTime"   ## textSplice . T.pack $ sayTimeDiff tNow ( _dPostTime dp )
-
   
