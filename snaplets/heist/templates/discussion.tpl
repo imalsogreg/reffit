@@ -9,12 +9,19 @@
     <p><apply template="new_discussion_link">Add Point</apply></p>
 
     <div class="replyFormDiv" discussionid="">
-      <input type="textarea" name="dpText" class="proseBox" value="TEXT AREA"/>
+      <textarea name="dpText" rows="4" cols="60" class="proseBox" value="TEXT AREA"/>
+      <br/>
+      <select name="posterIdSelect" class="posterIdSelect">
+	<option value="${userName}"><userName/></option>
+	<option value="">Anonymous</option>
+      </select>
       <input type="submit"/>
     </div>
-    <input type="text" name="docId" value="${docid}"/>
-    <input type="text" name="commentId" value="${commentid}"/>
-    <input type="text" name="parentId" class="parentid" value=""/>
+    <br/>
+    <input type="text" name="docId" value="${docid}" style="display:none"/>
+    <input type="text" name="commentId" value="${commentid}" style="display:none"/>
+    <input type="text" name="parentId" class="parentid" value="" style="display:none"/>
+    <input type="text" name="posterId" class="posterIdFinal" value="${userName}" style="display:none"/>
 
     <discussionNodes>
       <discussionNode/>
@@ -25,6 +32,7 @@
   <script>
     $(document).ready(function() {
      var allProseBox = $(".proseBox");
+     var posterIdFinal = $(".posterIdFinal");
      $(".raiseDiscussionInput").click(function(){
        var replyFormDiv = $( ".replyFormDiv" );
        var proseBox     = $( ".proseBox"     );
@@ -34,6 +42,10 @@
        $(this).parent().parent().children(".replyFormDiv").show();
        var pId = $(this).parent().parent().children(".replyFormDiv").attr("discussionid");
        parentIdBox.val( pId );
+     });
+     $(".posterIdSelect").click(function(){
+      posterIdFinal.val( $(this).val() );
+      $(".posterIdSelect").val( $(this).val() );
      });
     });
   </script>

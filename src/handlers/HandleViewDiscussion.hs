@@ -80,7 +80,8 @@ handleAddDiscussion = do
                   Just n  -> if n == "" then Nothing else Just n
                   Nothing -> Nothing
             _ <- update $ AddDocumentDiscussionPoint discussionPoint dParentId' doc
-            redirect "#"
+--            redirect "#"
+            writeText $ T.unwords ["posterId:", T.pack . show $ posterId']
           Just commentId ->
             case Map.lookup commentId (docOComments doc) of
               Nothing -> writeText "Didn't find that comment in the database"
