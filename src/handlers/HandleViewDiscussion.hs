@@ -58,7 +58,7 @@ handleAddDiscussion = do
   us              <- query QueryAllUsers
   docs            <- query QueryAllDocs
   docId'          <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "docId" -- Owch
-  posterId'       <- fmap (T.takeWhile (/= ' ') . decodeUtf8) <$> getPostParam "posterId"
+  posterId'       <- fmap (decodeUtf8) <$> getPostParam "posterId"
   commentId'      <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "commentId" -- Owch
   dParentId'      <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "parentId"
   discussionText' <- fmap (T.strip . decodeUtf8) <$> getPostParam "dpText" -- fmap fmap owch
