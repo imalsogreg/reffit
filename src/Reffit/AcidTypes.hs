@@ -32,6 +32,8 @@ import Snap (modify, gets)
 import Data.Serialize
 import Snap.Snaplet.AcidState (Update, Query,makeAcidic)
 import Control.Lens
+import GHC.Int
+import qualified Data.Tree as Tree
 
 data PersistentState = PersistentState {
     _documents  :: Map.Map DocumentId Document
@@ -53,8 +55,16 @@ updateAllDocs docMap = modify (over documents (const docMap ))
 
 -- TODO: addDocument, addComment, and addCritique all have
 -- the newId t = hash t <|> length docs <|> firstNotTaken...
--- Factor this out.
-
+-- Factor this out.  Now use this.
+getNewId :: T.Text -> [Int32] -> Int32
+getNewId elementText usedIds =
+  head . filter (`notElem` usedIds) $
+  (cHash:cInd:cAll)
+  where
+    cHash = abs . fromIntegral . hash $ T.unpack elementText
+    cInd  = fromIntegral . length $ usedIds
+    cAll = [0..]
+  
 -- TODO: Check that document title isn't already taken
 addDocument :: Maybe User -> Document -> Update PersistentState ()
 addDocument user' doc = do  -- HandleNewPaper now finds a good Id
@@ -70,7 +80,12 @@ addDocumentDiscussionPoint :: DiscussionPoint -> Maybe DiscussionPointId ->
                               Document -> Update PersistentState ()
 addDocumentDiscussionPoint dp parent' doc =
   modify (over documents (Map.insert (docId doc)
-                          (doc {docDiscussion = insertAt dp parent' (docDiscussion doc)})))
+                          (doc {docDiscussion = insertAt dp' parent' (docDiscussion doc)})))
+  where
+    oldIds = map _dID $ concatMap Tree.flatten (docDiscussion doc)
+    dp' = dp { _dID = getNewId (_dText dp) oldIds
+             , _dContext = ( docId doc, Nothing, parent' )
+             }
 
 addCommentDiscussionPoint :: DiscussionPoint -> Maybe DiscussionPointId ->
                              Document -> OverviewCommentId -> OverviewComment ->
@@ -80,7 +95,12 @@ addCommentDiscussionPoint dp parent' doc commentId comment =
                           (doc {docOComments = Map.insert commentId comment'
                                               (docOComments doc)})))
     where
-      comment' = comment { ocDiscussion = insertAt dp parent' (ocDiscussion comment) }
+      oldIds = map _dID $ concatMap Tree.flatten (ocDiscussion comment)
+      dp' = dp { _dID = getNewId (_dText dp) oldIds
+               , _dContext = ( docId doc, Nothing, parent' )
+               }
+      comment' = comment { ocDiscussion = insertAt dp' parent' (ocDiscussion comment) }
+
       
 addOComment :: Maybe User -> DocumentId -> OverviewComment
             -> Update PersistentState (Maybe OverviewCommentId)

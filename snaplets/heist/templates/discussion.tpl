@@ -8,13 +8,13 @@
 
     <p><apply template="new_discussion_link">Add Point</apply></p>
 
-    <div class="replyFormDiv" discussionid="TOP">
+    <div class="replyFormDiv" discussionid="">
       <input type="textarea" name="dpText" class="proseBox" value="TEXT AREA"/>
       <input type="submit"/>
     </div>
     <input type="text" name="docId" value="${docid}"/>
-    <input type="text" id="commentid" value="${commentid}"/>
-    <input type="text" id="parentid"  value=""/>
+    <input type="text" name="commentId" value="${commentid}"/>
+    <input type="text" name="parentId" class="parentid" value=""/>
 
     <discussionNodes>
       <discussionNode/>
@@ -32,7 +32,8 @@
        replyFormDiv.hide();
        proseBox.val("");
        $(this).parent().parent().children(".replyFormDiv").show();
-
+       var pId = $(this).parent().parent().children(".replyFormDiv").attr("discussionid");
+       parentIdBox.val( pId );
      });
     });
   </script>

@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module HandleViewDiscussion (handleViewDiscussion
                             , handleAddDiscussion
@@ -39,6 +40,7 @@ import Data.Serialize
 import Text.Digestive
 import Text.Digestive.Snap
 import Text.Digestive.Heist
+import GHC.Int
 
 {-
 handleDiscussion :: Handler App (AuthManager App) ()
@@ -53,28 +55,44 @@ handleDiscussion = do
 -- Discussion point can be top-level (no dParentId param), or not
 handleAddDiscussion :: Handler App (AuthManager App) ()
 handleAddDiscussion = do
-  us               <- query QueryAllUsers
-  docs             <- query QueryAllDocs
-  docId'           <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "docId" -- Owch
-  commentId'       <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "commentId" -- Owch
-  dParentId'       <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "dParentId"
-  discussionPoint' <- fmap decode <$> getPostParam "dpText" -- fmap fmap owch
-  let ci = commentId'       :: Maybe OverviewCommentId
-      dp = discussionPoint' :: Maybe (Either String DiscussionPoint)
-  case discussionPoint' of
-    Just (Right discussionPoint) -> do
-      case join $ flip Map.lookup docs <$> docId' of
-        Nothing -> writeText "Document not in database, or couldn't parse docid from url"
+  us              <- query QueryAllUsers
+  docs            <- query QueryAllDocs
+  docId'          <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "docId" -- Owch
+  posterId'       <- fmap (T.takeWhile (/= ' ') . decodeUtf8) <$> getPostParam "posterId"
+  commentId'      <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "commentId" -- Owch
+  dParentId'      <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "parentId"
+  discussionText' <- fmap (T.strip . decodeUtf8) <$> getPostParam "dpText" -- fmap fmap owch
+  tNow            <- liftIO $ getCurrentTime
+  case discussionText' of
+    Just discussionText -> do
+      case join $ flip Map.lookup docs <$> (docId' :: Maybe DocumentId) of
+        Nothing -> do
+          writeText "Document not in database, or couldn't parse docid from url"
+          let tShow = T.pack . show
+          writeText $ T.unwords ["docId", tShow (docId' :: Maybe DocumentId)
+                                , " posterId", tShow (posterId' :: Maybe T.Text)
+                                , " discussionText", tShow discussionText']
         Just doc -> case commentId' of
-          Nothing->
-            update $ AddDocumentDiscussionPoint discussionPoint dParentId' doc
+          Nothing-> do
+            let discussionPoint = DiscussionPoint 0 posterId discussionText []
+                                  (docId doc,Nothing,dParentId') tNow
+                posterId = case posterId' of
+                  Just n  -> if n == "" then Nothing else Just n
+                  Nothing -> Nothing
+            _ <- update $ AddDocumentDiscussionPoint discussionPoint dParentId' doc
+            redirect "#"
           Just commentId ->
             case Map.lookup commentId (docOComments doc) of
               Nothing -> writeText "Didn't find that comment in the database"
-              Just comment -> 
-                update $ AddCommentDiscussionPoint discussionPoint dParentId' doc commentId comment
-    Just (Left e) ->
-      writeText $ T.append "add discussion failure: " $ T.pack e
+              Just comment -> do
+                let posterId = case posterId' of
+                      Just n  -> if n == "" then Nothing else Just n
+                      Nothing -> Nothing
+                    discussionPoint = DiscussionPoint 0 posterId discussionText []
+                                      (docId doc, commentId', dParentId') tNow
+
+                _ <- update $ AddCommentDiscussionPoint discussionPoint dParentId' doc commentId comment
+                writeText "Submitted to AddCommentDiscussionPoint"
     Nothing ->
       writeBS $ BS.unwords ["docID: ", BS.pack . show $ docId'
                            , "  commentId'", BS.pack . show $ commentId']
@@ -109,12 +127,15 @@ handleViewDiscussion = do
           discussion' = maybe (docDiscussion <$> doc') (Just . ocDiscussion) comment'
       case (doc', discussion') of
         (Just doc, Just discussion) -> 
-          renderWithSplices "discussion" (allDiscussionSplices doc comment' tNow discussion)
+          renderWithSplices "discussion" (allDiscussionSplices u doc commentId' comment' tNow discussion)
 
-allDiscussionSplices :: Document -> Maybe OverviewComment -> UTCTime -> Discussion ->
+allDiscussionSplices :: Maybe User -> Document -> Maybe OverviewCommentId -> Maybe OverviewComment -> UTCTime -> Discussion ->
                         Splices (SnapletISplice App)
-allDiscussionSplices doc comment' tNow disc = do
+allDiscussionSplices user' doc commentId' comment' tNow disc = do
   "discussionReNode" ## textSplice "TEST RE:"
+  "userName"         ## textSplice $ maybe "" userName user'
+  "docid"            ## textSplice . T.pack . show . docId $ doc
+  "commentid"        ## textSplice $ maybe "nocomment" (T.pack . show) commentId'
   "discussionNodes"  ## (bindDiscussionPoints tNow disc)
 
 bindDiscussionPoints :: UTCTime -> Discussion -> SnapletISplice App
@@ -131,4 +152,5 @@ discussionPointSplices tNow dp = do
   "dpAuthor" ## textSplice (maybe "Anonymous" id $ _dPoster dp)
   "dpText"   ## textSplice $ _dText dp
   "dpTime"   ## textSplice . T.pack $ sayTimeDiff tNow ( _dPostTime dp )
+  "discussionId" ## textSplice . T.pack . show . _dID $ dp
   
