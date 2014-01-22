@@ -1,23 +1,18 @@
-<div class="discussion-point">
+<div class="discussion-point" style="border:4px solid;border-color:green;">
   <p><dpText/></p>
-  <p style="text-align:right"><dpAuthor/> <dpTime/> <replyLink/></p>
-  <div class="sub-discussions" style="border:4px solid;border-width:2px;margin-left:20px">
+  <p style="text-align:right"><dpAuthor/> <dpTime/> <apply template="new_discussion_link">REPLY</apply></p>
+  
+  <div class="replyFormDiv" style="display:none" discussionid="CHILD">
+  <input type="textarea" rows="2" cols="60" name="dpText" class="proseBox"/>
+  <br/>
+  <input type="submit"/>
+  </div>
 
+  <div class="sub-discussions" style="margin-left:20px">
+    
     <subDiscussions>
-
-      <div class="discussion-point">
-	<p><dpText/></p>
-	<p style="text-align:right"><dpAuthor/> <dpTime/> <replyLink/></p>
-	<div class="sub-discussions" style="border:4px solid;border-color:green;">
-
-	  <subDiscussions>
-	    <subDiscussion/>
-	  </subDiscussions>
-	</div>
-      </div>
-
-
+      <subDiscussion/>
     </subDiscussions>
+    
   </div>
 </div>
-

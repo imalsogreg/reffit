@@ -2,7 +2,8 @@
 
 module HandleViewDiscussion (handleViewDiscussion
                             , handleAddDiscussion
-                            , handleDiscussion)
+--                            , handleDiscussion
+                            )
        where
 
 import Reffit.Types
@@ -39,12 +40,14 @@ import Text.Digestive
 import Text.Digestive.Snap
 import Text.Digestive.Heist
 
+{-
 handleDiscussion :: Handler App (AuthManager App) ()
 handleDiscussion = do
   (view,result) <- runForm "form" discussionPointForm
   case result of
     Just disc -> handleAddDiscussion disc
     Nothing   -> heistLocal (bindDigestiveSplices view) $ handleViewDiscussion
+-}
 
 -- Handle adding a discussion point to a document or an overview comment
 -- Discussion point can be top-level (no dParentId param), or not
