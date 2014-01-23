@@ -13,6 +13,7 @@ import Reffit.User
 import Reffit.PaperRoll
 import Reffit.Sort
 import Reffit.FieldTag
+import Reffit.Scores
 
 import qualified Text.XmlHtml as X
 import Safe
@@ -38,6 +39,7 @@ import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Control.Lens
 import Control.Monad
 import Data.Maybe
+import Data.Monoid (mempty, (<>))
 
 userPinboardDocs :: Map.Map DocumentId Document -> User -> [Document]
 userPinboardDocs docs =
@@ -113,8 +115,15 @@ profileSplices :: UTCTime -> Maybe User -> User -> Map.Map DocumentId Document
 profileSplices t cUser' profileUser docs = do
   -- Conditionally splice OUT the 'follow button'
   -- TODO this is a temporary measure to prevent self-following.
-  when (cUser' == Just profileUser) $ "followButton" ## I.textSplice ""
-  "userName"         ## I.textSplice $ userName profileUser
+  case cUser' of
+    Just liUser -> do
+      "followButton" ## I.textSplice ""
+      "userRep"      ## I.textSplice . T.pack . show $
+        userReputation docs liUser
+    Nothing -> mempty
+  "userName"      ## I.textSplice $ userName profileUser
+  "profileRep"    ## I.textSplice . T.pack . show $
+    userReputation docs profileUser
   "followBtnText" ## I.textSplice followBtnText
   "followBtnLink" ## I.textSplice followBtnLink
   (allEventSplices  t docs (userHistory profileUser))

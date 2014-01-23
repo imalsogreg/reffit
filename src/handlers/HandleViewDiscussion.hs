@@ -14,6 +14,7 @@ import Reffit.Document
 import Reffit.OverviewComment
 import Reffit.AcidTypes
 import Reffit.Sort
+import Reffit.Scores
 
 import Snap.Core
 import Snap.Snaplet (Handler)
@@ -127,34 +128,45 @@ handleViewDiscussion = do
           discussion' = maybe (docDiscussion <$> doc') (Just . ocDiscussion) comment'
       case (doc', discussion') of
         (Just doc, Just discussion) -> 
-          renderWithSplices "discussion" (allDiscussionSplices u doc commentId' comment' tNow discussion)
+          renderWithSplices "discussion"
+          (allDiscussionSplices u us doc docs commentId' comment' tNow discussion)
 
-allDiscussionSplices :: Maybe User -> Document -> Maybe OverviewCommentId -> Maybe OverviewComment -> UTCTime -> Discussion ->
+allDiscussionSplices :: Maybe User -> Map.Map UserName User ->
+                        Document -> Map.Map DocumentId Document ->
+                        Maybe OverviewCommentId -> Maybe OverviewComment ->
+                        UTCTime -> Discussion ->
                         Splices (SnapletISplice App)
-allDiscussionSplices user' doc commentId' comment' tNow disc = do
+allDiscussionSplices user' us doc docs commentId' comment' tNow disc = do
   let posterText   = maybe "" (\t -> T.append t "'s") (join $ ocPoster <$> comment')
       discTypeText = maybe "document" (const "comment") comment'
+  "userRep"          ## textSplice $ maybe "" (T.pack . show . userReputation docs) user'
   "discussionType"   ## textSplice $ T.concat [posterText," ",discTypeText]
   "discussionReNode" ## textSplice $ maybe (docTitle doc) (ocText) comment'
   "userName"         ## textSplice $ maybe "" userName user'
   "docid"            ## textSplice . T.pack . show . docId $ doc
   "commentid"        ## textSplice $ maybe "nocomment" (T.pack . show) commentId'
-  "discussionNodes"  ## (bindDiscussionPoints tNow disc)
+  "discussionNodes"  ## (bindDiscussionPoints docs us tNow disc)
 
-bindDiscussionPoints :: UTCTime -> Discussion -> SnapletISplice App
-bindDiscussionPoints tNow discs =
-  mapSplices (callTemplate "discussion_point" . discussionTreeSplices tNow) discs
+bindDiscussionPoints :: Map.Map DocumentId Document -> Map.Map UserName User ->
+                        UTCTime -> Discussion -> SnapletISplice App
+bindDiscussionPoints docs us tNow discs =
+  mapSplices (callTemplate "discussion_point" . discussionTreeSplices docs us tNow) discs
 
-discussionTreeSplices :: UTCTime -> Tree.Tree DiscussionPoint -> Splices (SnapletISplice App)
-discussionTreeSplices tNow (Tree.Node dp subs) = do
-  discussionPointSplices tNow dp
-  "subDiscussions" ## bindDiscussionPoints tNow subs
+discussionTreeSplices :: Map.Map DocumentId Document -> Map.Map UserName User ->
+                         UTCTime -> Tree.Tree DiscussionPoint -> Splices (SnapletISplice App)
+discussionTreeSplices docs us tNow (Tree.Node dp subs) = do
+  discussionPointSplices docs us tNow dp
+  "subDiscussions" ## bindDiscussionPoints docs us tNow subs
 
-discussionPointSplices :: UTCTime -> DiscussionPoint -> Splices (SnapletISplice App)
-discussionPointSplices tNow dp = do
-  "dpAuthor"     ## textSplice (maybe "Anonymous" id $ _dPoster dp)
+discussionPointSplices :: Map.Map DocumentId Document -> Map.Map UserName User ->
+                          UTCTime -> DiscussionPoint -> Splices (SnapletISplice App)
+discussionPointSplices docs us tNow dp = do
+  "dpAuthor"     ## textSplice $ authorText
   "authorLink"   ## textSplice $ maybe "#" (T.append "/user/") (_dPoster dp)
   "dpText"       ## textSplice $ _dText dp
   "dpTime"       ## textSplice . T.pack $ sayTimeDiff tNow ( _dPostTime dp )
   "discussionId" ## textSplice . T.pack . show . _dID $ dp
-  
+  where
+    userRepText u = T.pack . show $ userReputation docs u
+    authorText = maybe "Anonymous" (\u -> T.concat [userName u,"(",userRepText u,")"])
+                . join $ Map.lookup <$> (_dPoster dp) <*> pure us

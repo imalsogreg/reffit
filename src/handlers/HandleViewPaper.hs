@@ -11,7 +11,7 @@ import Reffit.Sort
 import Reffit.Scores
 
 import Safe
-import Control.Applicative ((<$>))
+import Control.Applicative ((<$>),(<*>),pure)
 import qualified Data.List as List
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
@@ -33,10 +33,12 @@ import Control.Monad
 import Control.Monad.Trans
 import qualified Data.Foldable as F
 import qualified Data.Tree as Tree
+import Data.Monoid ((<>))
 
 handleViewPaper :: Handler App (AuthManager App) ()
 handleViewPaper = do
-  us <- query QueryAllUsers
+  us    <- query QueryAllUsers
+  docs  <- query QueryAllDocs
   pId'  <- getParam "paperid"
   aUser <- currentUser
   t     <- liftIO $ getCurrentTime
@@ -51,7 +53,7 @@ handleViewPaper = do
                      T.concat ["You entered: "
                               , T.pack (show pId)
                               ," Document wasn't found in the database."]
-        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u doc t)
+        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u us doc docs t)
 
 --TODO Move all this score stuff into the Scores module
 
@@ -102,8 +104,12 @@ nCritique vDir doc = Map.size . Map.filter ((==vDir) . snd . fromJust . ocVote)
                      . Map.filter ((/=Nothing) . ocVote)
                      $ docOComments doc
 
-allArticleViewSplices :: Maybe User -> Document -> UTCTime -> Splices (SnapletISplice App)
-allArticleViewSplices u doc t = do
+allArticleViewSplices :: Maybe User -> Map.Map UserName User ->
+                         Document -> Map.Map DocumentId Document ->
+                         UTCTime -> Splices (SnapletISplice App)
+allArticleViewSplices u us doc docs t = do
+  "userRep"                 ## I.textSplice $ maybe ""
+    (T.pack . show . userReputation docs) u
   "articleSummarySummary"   ## I.textSplice (summarySummary doc) :: Splices (SnapletISplice App)
   "articlePraiseSummary"    ## I.textSplice (critiqueSummary  doc UpVote) :: Splices (SnapletISplice App)
   "articleCriticismSummary" ## I.textSplice (critiqueSummary doc DownVote) :: Splices (SnapletISplice App)
@@ -122,11 +128,11 @@ allArticleViewSplices u doc t = do
   "nDiscussionPoints"       ## I.textSplice .
     T.pack . show . length . concat . map Tree.flatten . docDiscussion $ doc
 --  (allSummarySplices t u doc . Map.toList . documentSummaries $ doc)
-  (allOCommentSplices t Summary' "articleSummaries" u doc)
+  (allOCommentSplices t Summary' "articleSummaries" u us doc docs)
 --  (allCritiqueSplices t UpVote   "articlePraise"     u doc (Map.toList praise) )
-  (allOCommentSplices t Praise "articlePraise" u doc)
+  (allOCommentSplices t Praise "articlePraise" u us doc docs)
 --  (allCritiqueSplices t DownVote "articleCriticism" u doc (Map.toList criticism) )
-  (allOCommentSplices t Criticism "articleCriticisms" u doc)
+  (allOCommentSplices t Criticism "articleCriticisms" u us doc docs)
    where
      pinText :: Maybe User -> (T.Text, T.Text)
      pinText Nothing = ("","")
@@ -149,28 +155,32 @@ userCommentRelation u doc cId =
     _ -> Nothing -- <- in these cases something went wrong w/ filtering,
                  -- or a doublevote happened
 
-allOCommentSplices :: UTCTime -> OverviewCommentType -> T.Text -> Maybe User
-                      -> Document
+allOCommentSplices :: UTCTime -> OverviewCommentType -> T.Text
+                      -> Maybe User -> Map.Map UserName User
+                      -> Document -> Map.Map DocumentId Document
                       -> Splices (SnapletISplice App)
-allOCommentSplices t commType tagText u doc =
-  tagText ## renderOComments t commType u doc (Map.toList cs')
+allOCommentSplices t commType tagText u us doc docs =
+  tagText ## renderOComments t commType u us doc docs (Map.toList cs')
  where (p,c) = documentCritiques doc
        cs' = case commType of
          Summary'  -> documentSummaries doc
          Praise    -> p
          Criticism -> c
 
-renderOComments :: UTCTime -> OverviewCommentType -> Maybe User -> Document
-                   -> [(OverviewCommentId, OverviewComment)]
+renderOComments :: UTCTime -> OverviewCommentType ->
+                   Maybe User -> Map.Map UserName User ->
+                   Document -> Map.Map DocumentId Document ->
+                   [(OverviewCommentId, OverviewComment)]
                    -> SnapletISplice App
-renderOComments t ct u doc = I.mapSplices $ I.runChildrenWith .
-                             splicesFromOComment t ct u doc
+renderOComments t ct u us doc docs = I.mapSplices $ I.runChildrenWith .
+                                  splicesFromOComment t ct u us doc docs
 
 splicesFromOComment :: Monad n => UTCTime -> OverviewCommentType
-                       -> Maybe User -> Document
+                       -> Maybe User -> Map.Map UserName User
+                       -> Document -> Map.Map DocumentId Document
                        -> (OverviewCommentId, OverviewComment)
                        -> Splices (I.Splice n)
-splicesFromOComment t ct u doc (cId,c) = do
+splicesFromOComment t ct viewingU us doc docs (cId,c) = do
   "upCount"      ## I.textSplice (T.pack . show $ nUp)
   "downCount"    ## I.textSplice (T.pack . show $ nDown)
   "proseText"    ## I.textSplice (ocText c)
@@ -188,9 +198,12 @@ splicesFromOComment t ct u doc (cId,c) = do
       "prosePoster"            ## I.textSplice "Anonymous"
       "prosePosterDestination" ## I.textSplice "#"
     Just uName -> do
-      "prosePoster"            ## I.textSplice uName
+      "prosePoster"            ## I.textSplice $ maybe "unknown" userText lookupUName
       "prosePosterDestination" ## I.textSplice $ T.append "/user/" uName
-  case u of
+      where
+        userText u  = T.concat [userName u," (", T.pack . show $ userReputation docs u,")"]
+        lookupUName = Map.lookup uName us
+  case viewingU of
     Nothing -> do
       "upBtnUrl"   ## I.textSplice "/login"
       "downBtnUrl" ## I.textSplice "/login"

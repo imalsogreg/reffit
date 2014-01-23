@@ -12,6 +12,7 @@ import           Reffit.Types
 import           Reffit.AcidTypes
 import           Reffit.Document
 import           Reffit.User
+import           Reffit.Scores
 import           Reffit.FieldTag
 import           Reffit.CrossRef
 
@@ -40,6 +41,7 @@ import qualified Data.Tree                    as RT
 import           Data.Time
 import           Control.Monad
 import           Control.Monad.Trans
+import           Data.Monoid ((<>))
 
 documentForm :: (Monad m) => User -> [DocClass] -> FieldTags -> (Maybe DocumentHints)
                 -> UTCTime -> Form Text m Document
@@ -143,12 +145,12 @@ handleNewArticle = handleForm
                tNotTaken = [0..maxBound] :: [Int32]
 
            Nothing -> do
-             --heistLocal (bindDigestiveSplices vw) $ render "_new_paper"
              heistLocal (bindDigestiveSplices vw)
-               $ renderWithSplices "_new_paper" ftSplices
+               $ renderWithSplices "_new_paper" (ftSplices <> repSplices)
                where ftSplices = do
                        "tagsButton" ## tagButtonSplice tagHierarchy
-
+                     repSplices = do
+                       "userRep" ## I.textSplice $ T.pack . show $ userReputation docs user
 -- These splices are for the button, which should have the 'add tag label'
 -- as a parent list-item, because tree.js shows the first list item on load.
 tagButtonSplice :: (Monad m) => FieldTags -> I.Splice m

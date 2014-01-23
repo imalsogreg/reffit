@@ -33,7 +33,7 @@
       </ifLoggedOut>
       <ifLoggedIn>
 	<li><a href="/user/${loggedInUser}" class="${userIsActive}">
-	  <loggedInUser/>
+	  <loggedInUser/> (<userRep/>)
 	</a></li>
 	<li><a href="/logout">Logout</a></li>
       </ifLoggedIn>

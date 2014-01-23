@@ -11,6 +11,7 @@ import Reffit.OverviewComment
 import Reffit.Sort
 import Reffit.PaperRoll
 import Reffit.User
+import Reffit.Scores
 import Reffit.AcidTypes
 import Reffit.FieldTag
 import HandleNewPaper -- to get fieldTag button splices. TODO restructure
@@ -31,6 +32,7 @@ import qualified Data.ByteString.Char8 as BS
 import Control.Monad
 import Control.Monad.Trans
 import Data.Time
+import Data.Monoid ((<>))
 
 handleIndex :: Handler App (AuthManager App) ()
 --handleIndex = handlePaperRoll
@@ -54,8 +56,11 @@ allIndexSplices tNow docs user' us indexParams tags  = do
   allPaperRollSplices docsToShow
   allStatsSplices docs us
   case user' of
-    Nothing -> "tagsButton" ## tagButtonSplice tagHierarchy
-    Just user -> allFilterTagSplices (Set.toList . userTags $ user)
+    Nothing -> do
+      "tagsButton" ## tagButtonSplice tagHierarchy
+    Just user -> do
+      allFilterTagSplices (Set.toList . userTags $ user) <>
+       ("userRep" ## I.textSplice . T.pack . show $ userReputation docs user)
 
 
 allStatsSplices :: Map.Map DocumentId Document -> Map.Map UserName User -> Splices (SnapletISplice App)

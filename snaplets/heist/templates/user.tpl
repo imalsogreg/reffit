@@ -3,7 +3,7 @@
   <div class="user-info">
     
     <div class="user-top-name">
-      <h1><userName/> 
+      <h1><userName/> <span style="font-size:20pt">(<profileRep/>)</span>
 	
 	<followButton>
 	  <span class="user-top">
