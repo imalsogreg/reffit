@@ -117,10 +117,11 @@ profileSplices t cUser' profileUser docs = do
   -- TODO this is a temporary measure to prevent self-following.
   case cUser' of
     Just liUser -> do
-      "followButton" ## I.textSplice ""
       "userRep"      ## I.textSplice . T.pack . show $
         userReputation docs liUser
     Nothing -> mempty
+  when (cUser' == Just profileUser) $ 
+    "followButton" ## I.textSplice ""
   "userName"      ## I.textSplice $ userName profileUser
   "profileRep"    ## I.textSplice . T.pack . show $
     userReputation docs profileUser
