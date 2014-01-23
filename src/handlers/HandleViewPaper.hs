@@ -31,6 +31,8 @@ import Data.Text.Encoding (decodeUtf8)
 import Control.Lens
 import Control.Monad
 import Control.Monad.Trans
+import qualified Data.Foldable as F
+import qualified Data.Tree as Tree
 
 handleViewPaper :: Handler App (AuthManager App) ()
 handleViewPaper = do
@@ -115,6 +117,10 @@ allArticleViewSplices u doc t = do
   let (pinUrl, pinBtn) = pinText u
   "pinUrl"                  ## I.textSplice pinUrl
   "pinboardBtnTxt"          ## I.textSplice pinBtn
+  "discussionLink"          ## I.textSplice $ T.concat ["/view_discussion/?paperid="
+                                                        ,T.pack . show . docId $ doc]
+  "nDiscussionPoints"       ## I.textSplice .
+    T.pack . show . length . concat . map Tree.flatten . docDiscussion $ doc
 --  (allSummarySplices t u doc . Map.toList . documentSummaries $ doc)
   (allOCommentSplices t Summary' "articleSummaries" u doc)
 --  (allCritiqueSplices t UpVote   "articlePraise"     u doc (Map.toList praise) )
@@ -170,6 +176,13 @@ splicesFromOComment t ct u doc (cId,c) = do
   "proseText"    ## I.textSplice (ocText c)
   reBlock
   "proseTimeSince"    ## I.textSplice (T.pack . sayTimeDiff t . ocPostTime $ c)
+  "discussionUrl" ## I.textSplice (T.concat ["/view_discussion/?paperid="
+                                            ,T.pack . show $ docId doc
+                                            ,"&commentid="
+                                            ,T.pack . show $ cId
+                                             ])
+  "nDiscussionPoints" ## I.textSplice .
+    T.pack . show . length . concat . map Tree.flatten . ocDiscussion $ c
   case ocPoster c of
     Nothing -> do
       "prosePoster"            ## I.textSplice "Anonymous"

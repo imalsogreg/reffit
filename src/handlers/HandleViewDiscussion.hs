@@ -92,7 +92,7 @@ handleAddDiscussion = do
                                       (docId doc, commentId', dParentId') tNow
 
                 _ <- update $ AddCommentDiscussionPoint discussionPoint dParentId' doc commentId comment
-                writeText "Submitted to AddCommentDiscussionPoint"
+                redirect "#"
     Nothing ->
       writeBS $ BS.unwords ["docID: ", BS.pack . show $ docId'
                            , "  commentId'", BS.pack . show $ commentId']
@@ -132,7 +132,10 @@ handleViewDiscussion = do
 allDiscussionSplices :: Maybe User -> Document -> Maybe OverviewCommentId -> Maybe OverviewComment -> UTCTime -> Discussion ->
                         Splices (SnapletISplice App)
 allDiscussionSplices user' doc commentId' comment' tNow disc = do
-  "discussionReNode" ## textSplice "TEST RE:"
+  let posterText   = maybe "" (\t -> T.append t "'s") (join $ ocPoster <$> comment')
+      discTypeText = maybe "document" (const "comment") comment'
+  "discussionType"   ## textSplice $ T.concat [posterText," ",discTypeText]
+  "discussionReNode" ## textSplice $ maybe (docTitle doc) (ocText) comment'
   "userName"         ## textSplice $ maybe "" userName user'
   "docid"            ## textSplice . T.pack . show . docId $ doc
   "commentid"        ## textSplice $ maybe "nocomment" (T.pack . show) commentId'
@@ -149,8 +152,9 @@ discussionTreeSplices tNow (Tree.Node dp subs) = do
 
 discussionPointSplices :: UTCTime -> DiscussionPoint -> Splices (SnapletISplice App)
 discussionPointSplices tNow dp = do
-  "dpAuthor" ## textSplice (maybe "Anonymous" id $ _dPoster dp)
-  "dpText"   ## textSplice $ _dText dp
-  "dpTime"   ## textSplice . T.pack $ sayTimeDiff tNow ( _dPostTime dp )
+  "dpAuthor"     ## textSplice (maybe "Anonymous" id $ _dPoster dp)
+  "authorLink"   ## textSplice $ maybe "#" (T.append "/user/") (_dPoster dp)
+  "dpText"       ## textSplice $ _dText dp
+  "dpTime"       ## textSplice . T.pack $ sayTimeDiff tNow ( _dPostTime dp )
   "discussionId" ## textSplice . T.pack . show . _dID $ dp
   

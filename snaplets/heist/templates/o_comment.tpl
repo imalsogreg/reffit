@@ -22,17 +22,19 @@
   <p><proseText/></p>
 </div>
 
+<reBlock>
+  <p>
+    Re: <span class="label label-default"><critiqueDim/></span>     
+  </p>
+</reBlock>
+
 <div class="prose-poster">
   <p> <proseTimeSince/> by 
     <a href="${prosePosterDestination}">
-      <prosePoster/>
+      <prosePoster/>. <a href="${discussionUrl}">Discuss (<nDiscussionPoints/>)</a>
     </a>
   </p>
-  <reBlock>
-  <p>
-        Re: <span class="label label-default"><critiqueDim/></span>     
-  </p>
-  </reBlock>
+
 </div>
 
 

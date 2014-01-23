@@ -2,7 +2,7 @@
 
   <div class="discussionPointPart" style="background-color:rgba(40,60,200,0.1);">
   <p><dpText/></p>
-  <p style="text-align:right"><dpAuthor/> <dpTime/> <ifLoggedIn><apply template="new_discussion_link">Reply</apply> </ifLoggedIn></p>
+  <p style="text-align:right"><a href="${authorLink}"><dpAuthor/></a> <dpTime/> <ifLoggedIn><apply template="new_discussion_link">Reply</apply> </ifLoggedIn></p>
   </div>
 
 

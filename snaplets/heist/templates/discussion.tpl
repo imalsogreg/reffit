@@ -1,7 +1,7 @@
 <apply template="base">
 
   <div class="discussionHeader">
-    Discussion <discussionReNode/>
+    Discussion of <discussionType/>: <discussionReNode/>
   </div>
 
   <form method="POST">
