@@ -29,10 +29,11 @@
 </reBlock>
 
 <div class="prose-poster">
-  <p> <proseTimeSince/> by 
+  <p>  
     <a href="${prosePosterDestination}">
-      <prosePoster/>. <a href="${discussionUrl}">Discuss (<nDiscussionPoints/>)</a>
-    </a>
+      <prosePoster/>
+    </a> <proseTimeSince/>.
+    <a href="${discussionUrl}">Discuss (<nDiscussionPoints/>)</a>
   </p>
 
 </div>

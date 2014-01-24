@@ -7,9 +7,9 @@
   <form method="POST">
 
     <ifLoggedIn>
-      <p><span class="dummySpanToMakeDepthFromParentMatchJQueryScriptExpectation">
+      <p><span class="dummySpanToMakeDepthFromParentMatchJQueryScriptExpectation"><span class="anotherDummy">
 	  <apply template="new_discussion_link">Add Point</apply>
-      </span></p>
+      </span></span></p>
       <div class="replyFormDiv" discussionid="">
 	
 	<textarea name="dpText" rows="4" cols="60" class="proseBox" value="TEXT AREA"/>
@@ -44,8 +44,8 @@
        var parentIdBox  = $( ".parentid"     );
        replyFormDiv.hide();
        proseBox.val("");
-       $(this).parent().parent().parent().children(".replyFormDiv").show();
-       var pId = $(this).parent().parent().parent().children(".replyFormDiv").attr("discussionid");
+       $(this).parent().parent().parent().parent().children(".replyFormDiv").show();
+       var pId = $(this).parent().parent().parent().parent().children(".replyFormDiv").attr("discussionid");
        parentIdBox.val( pId );
      });
      $(".posterIdSelect").click(function(){
