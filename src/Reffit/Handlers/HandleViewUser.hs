@@ -1,9 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HandleViewUser (handleViewUser
-                      , handleFollow
-                      , handlePin
-                      , handleAddTag) where
+module Reffit.Handlers.HandleViewUser (
+      handleViewUser
+    , handleFollow
+    , handlePin
+    , handleAddTag) where
 
 import Reffit.Types
 import Reffit.AcidTypes

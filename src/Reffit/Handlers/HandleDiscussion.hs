@@ -1,10 +1,10 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-module HandleViewDiscussion (handleViewDiscussion
-                            , handleAddDiscussion
---                            , handleDiscussion
-                            )
+module Reffit.Handlers.HandleDiscussion (
+      handleViewDiscussion
+    , handleAddDiscussion
+    )
        where
 
 import Reffit.Types
@@ -21,7 +21,6 @@ import Snap.Snaplet (Handler)
 import Snap.Snaplet.Auth
 import Application
 import Snap.Snaplet.AcidState (query, update)
-import Control.Lens
 import Data.Time
 import Control.Monad (join)
 import Control.Monad.Trans (liftIO)
@@ -35,22 +34,13 @@ import Snap.Snaplet.Heist
 import Heist.Interpreted
 import Data.Maybe (fromMaybe, listToMaybe)
 import qualified Data.Tree as Tree
---import qualified Data.ByteString as BS
+
 import qualified Data.ByteString.Char8 as BS
 import Data.Serialize
 import Text.Digestive
 import Text.Digestive.Snap
 import Text.Digestive.Heist
 import GHC.Int
-
-{-
-handleDiscussion :: Handler App (AuthManager App) ()
-handleDiscussion = do
-  (view,result) <- runForm "form" discussionPointForm
-  case result of
-    Just disc -> handleAddDiscussion disc
-    Nothing   -> heistLocal (bindDigestiveSplices view) $ handleViewDiscussion
--}
 
 -- Handle adding a discussion point to a document or an overview comment
 -- Discussion point can be top-level (no dParentId param), or not

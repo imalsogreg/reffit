@@ -21,23 +21,15 @@ import           Reffit.User
 import           Reffit.FieldTag
 import           Reffit.CrossRef
 import           Reffit.PaperRoll
+
+import           Reffit.Handlers
+
 import           Util.ReffitMigrate
 import           Control.Lens (view)
 import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          HasAcid (getAcidStore),
                                          makeAcidic,
                                          update,query,acidInit)
-
-
-import           HandleIndex
-import           HandleNewPaper
-import           HandleNewDocClass
-import           HandleViewPaper
-import           HandleNewSummary
-import           HandleNewCritique
-import           HandleSummaryVote
-import           HandleViewUser
-import           HandleViewDiscussion
 
 import           Control.Applicative
 import qualified Data.Map as Map
@@ -68,33 +60,6 @@ import           Data.Text.Encoding (decodeUtf8)
 import           Data.Time
 ------------------------------------------------------------------------------
 import           Application
-
-
-------------------------------------------------------------------------------
--- | Render login form
-handleLogin :: Maybe T.Text -> Handler App (AuthManager App) ()
-handleLogin authError = heistLocal (I.bindSplices errs) $ render "login"
-  where
-    errs = maybe noSplices splice authError
-    splice err = "loginError" ## I.textSplice err
-
-
-------------------------------------------------------------------------------
--- | Handle login submit
-handleLoginSubmit :: Handler App (AuthManager App) ()
-handleLoginSubmit =
-    loginUser "login" "password" (Just "remember")
-              (\_ -> handleLogin err) (redirect "/")
-  where
-    err = Just "Unknown user or password"
-
-
-------------------------------------------------------------------------------
--- | Logs out and redirects the user to the site index.
-handleLogout :: Handler App (AuthManager App) ()
-handleLogout = logout >> redirect "/"
-
-
 
 ------------------------------------------------------------------------------
 -- | Handle new user form submit
@@ -135,84 +100,37 @@ handleDumpState = do
 ------------------------------------------------------------------------------
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
-routes = [
-      ("login",         with auth handleLoginSubmit)
-    , ("logout",        with auth handleLogout)
-    , ("new_user",      with auth handleNewUser)
-    , ("search",
-       -- TODO: Is this the right way to refresh the session on every action??
-       withSession sess (with sess touchSession) >>
-       with auth  handleIndex)
-    , ("new_article",
-       withSession sess (with sess touchSession) >>
-       with auth handleNewArticle)
-    , ("new_article/:doi",
-       withSession sess (with sess touchSession) >>
-       with auth handleNewArticle)
-    , ("new_summary/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handleNewOComment Summary'))
-    , ("new_praise/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handleNewOComment Praise))
-    , ("new_criticism/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handleNewOComment Criticism))
-    , ("view_article/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth handleViewPaper)
-    , ("cast_ocomment_upvote/:idParam",
-       withSession sess (with sess touchSession) >>
-       with auth (handleOCommentVote  UpVote))
-    , ("cast_ocomment_downvote/:idParam",
-       withSession sess (with sess touchSession) >>
-       with auth (handleOCommentVote  DownVote))
-    , ("view_discussion",
-       withSession sess (with sess touchSession) >>
-       with auth (method GET handleViewDiscussion <|> method POST handleAddDiscussion))
-    , ("add_discussion",
-       withSession sess (with sess touchSession) >>
-       with auth handleAddDiscussion)
-    , ("user/:username",
-       withSession sess (with sess touchSession) >>
-       with auth handleViewUser)
-    , ("follow/:username",
-       withSession sess (with sess touchSession) >>
-       with auth (handleFollow True))
-    , ("unfollow/:username",
-       withSession sess (with sess touchSession) >>
-       with auth (handleFollow False))
-    , ("pin/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handlePin True))
-    , ("unpin/:paperid",
-       withSession sess (with sess touchSession) >>
-       with auth (handlePin False))
-    , ("/add_usertag/:fieldtag",
-       withSession sess (with sess touchSession) >>
-       with auth (handleAddTag True))
-    , ("/delete_usertag/:fieldtag",
-       withSession sess (with sess touchSession) >>
-       with auth (handleAddTag False))
-    , ("/about",
-       withSession sess (with sess touchSession) >>
-       render "about")
-    , ("/:params" ,
-       withSession sess (with sess touchSession) >>
-       with auth handleIndex)
-
-    , ("stateToDisk",   with auth handleStateToDisk)
-    , ("stateFromDisk", with auth handleStateFromDisk)
-    , ("checkpoint",    with auth handleCheckpoint)
---    , ("migrateStateFromDisk", with auth handleMigrateStateFromDisk)
-
-    , ("/",
-       withSession sess (with sess touchSession) >>
-       with auth handleIndex)
-
-    , ("/dump_state",  with auth handleDumpState)
-    , ("/static", serveDirectory "static")
-    ]
+routes =
+  [ ("login" , with auth handleLoginSubmit)
+  , ("logout"                          , with auth handleLogout)
+  , ("new_user"                        , with auth handleNewUser)
+  , ("search"                          , with auth  handleIndex)
+  , ("new_article"                     , with auth handleNewArticle)
+  , ("new_article/:doi"                , with auth handleNewArticle)
+  , ("new_summary/:paperid"            , with auth (handleNewOComment Summary'))
+  , ("new_praise/:paperid"             , with auth (handleNewOComment Praise))
+  , ("new_criticism/:paperid"          , with auth (handleNewOComment Criticism))
+  , ("view_article/:paperid"           , with auth handleViewPaper)
+  , ("cast_ocomment_upvote/:idParam"   , with auth (handleOCommentVote  UpVote))
+  , ("cast_ocomment_downvote/:idParam" , with auth (handleOCommentVote  DownVote))
+  , ("view_discussion", with auth (method GET handleViewDiscussion <|>
+                                   method POST handleAddDiscussion))
+  , ("user/:username"                  , with auth handleViewUser)
+  , ("follow/:username"                , with auth (handleFollow True))
+  , ("unfollow/:username"              , with auth (handleFollow False))
+  , ("pin/:paperid"                    , with auth (handlePin True))
+  , ("unpin/:paperid"                  , with auth (handlePin False))
+  , ("/add_usertag/:fieldtag"          , with auth (handleAddTag True))
+  , ("/delete_usertag/:fieldtag"       , with auth (handleAddTag False))
+  , ("/about"                          , render "about")
+  , ("/:params"                        , with auth handleIndex)
+  , ("stateToDisk"                     , with auth handleStateToDisk)
+  , ("stateFromDisk"                   , with auth handleStateFromDisk)
+  , ("checkpoint"                      , with auth handleCheckpoint)
+  , ("/"                               , with auth handleIndex)
+  , ("/dump_state"                     , with auth handleDumpState)
+  , ("/static"                         , serveDirectory "static")
+  ]
 
 ------------------------------------------------------------------------------
 -- | The application initializer.
@@ -222,24 +140,24 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
 
-    -- NOTE: We're using initJsonFileAuthManager here because it's easy and
-    -- doesn't require any kind of database server to run.  In practice,
-    -- you'll probably want to change this to a more robust auth backend.
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"
 
-    ac <- nestSnaplet "acid" acid $ acidInit defaultState'
+    ac <- nestSnaplet "acid" acid $ acidInit defaultState
     h <- nestSnaplet "" heist $ heistInit "templates"
+
     addRoutes routes
     addAuthSplices h auth
+
+    -- Touch the session on each event to reset expiry time
+    -- Not sure this is the best idea as it will generate a lot of extra traffic.
+    -- Perhaps use longer session times?
+    wrapSite (\site -> with sess touchSession >> site >> with sess commitSession)
+
     return $ App h s a ac
 
 defaultState :: PersistentState
 defaultState =
-  PersistentState Map.empty Map.empty defaultDocClasses tagHierarchy
-
-defaultState' :: PersistentState
-defaultState' =
   PersistentState (Map.fromList [(10,
                               Document (Just "Greg") 10 "Test Title" ["Greg","Ping"]
                               "reddit.com" (DocClass "Preprint") [["Biology","Neuroscience"]]
@@ -250,3 +168,7 @@ defaultState' =
 
 defaultDocClasses :: [DocClass]
 defaultDocClasses = map DocClass ["Paper","Preprint","Blog Post","Video","Book"]
+
+testDate :: Integer -> UTCTime
+testDate d = UTCTime (ModifiedJulianDay d) (fromIntegral (0::Int))
+

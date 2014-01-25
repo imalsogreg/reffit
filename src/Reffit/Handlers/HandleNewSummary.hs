@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HandleNewSummary(
+module Reffit.Handlers.HandleNewSummary(
 --  newSummaryView,
 --  newSummaryForm,
 --  handleNewSummary
