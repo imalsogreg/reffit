@@ -11,6 +11,7 @@ import           Reffit.Types
 import           Reffit.AcidTypes
 import           Reffit.OverviewComment
 import           Reffit.User
+import           Reffit.Handlers.Helpers
 
 import           Safe
 import           Application
@@ -56,14 +57,13 @@ newOCommentForm formUser ocType t =
 
 handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
 handleNewOComment commentType = do
-  userMap <- query QueryAllUsers
-  pId'    <- getParam "paperid"
-  authUser' <- currentUser
+  pId'    <- getIntegralParam "paperid"
+  u'      <- currentReffitUser
   t         <- liftIO $ getCurrentTime
-  case join $ readMay . T.unpack . decodeUtf8 <$> pId' of
+  case pId' of
     Nothing -> writeText "paperid error" -- TODO proper error message
     Just pId ->
-      case join $ (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+      case u' of
         Nothing -> writeText $ "handleNewOComment - didn't find user in database"
         Just user -> do
           (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t -- What is this?

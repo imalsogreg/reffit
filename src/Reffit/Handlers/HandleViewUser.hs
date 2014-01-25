@@ -15,6 +15,7 @@ import Reffit.PaperRoll
 import Reffit.Sort
 import Reffit.FieldTag
 import Reffit.Scores
+import Reffit.Handlers.Helpers
 
 import qualified Text.XmlHtml as X
 import Safe
@@ -25,7 +26,6 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Time
 import Snap.Core (getParam, redirect, writeBS)
-import Snap.Types (writeText)
 import Snap.Snaplet (Handler)
 import Snap.Snaplet.AcidState (query,update)
 import Snap.Snaplet.Heist
@@ -37,10 +37,9 @@ import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Char8 as BS
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
-import Control.Lens
 import Control.Monad
 import Data.Maybe
-import Data.Monoid (mempty, (<>))
+
 
 userPinboardDocs :: Map.Map DocumentId Document -> User -> [Document]
 userPinboardDocs docs =

@@ -9,9 +9,9 @@ import Reffit.OverviewComment
 import Reffit.User
 import Reffit.Sort
 import Reffit.Scores
+import Reffit.Handlers.Helpers
 
 import Safe
-import Control.Applicative ((<$>),(<*>),pure)
 import qualified Data.List as List
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
@@ -29,20 +29,16 @@ import qualified Data.Text as T
 import qualified Data.Set as Set
 import Data.Text.Encoding (decodeUtf8)
 import Control.Lens
-import Control.Monad
 import Control.Monad.Trans
-import qualified Data.Foldable as F
 import qualified Data.Tree as Tree
-import Data.Monoid ((<>))
+import Control.Applicative ((<$>))
 
 handleViewPaper :: Handler App (AuthManager App) ()
 handleViewPaper = do
   us    <- query QueryAllUsers
-  docs  <- query QueryAllDocs
   pId'  <- getParam "paperid"
-  aUser <- currentUser
+  u' <- currentReffitUser
   t     <- liftIO $ getCurrentTime
-  let u = join $ (flip Map.lookup) us <$> userLogin <$> aUser  :: Maybe User
   case readMay . T.unpack . decodeUtf8 <$> pId' of
     Nothing -> writeText "Need paperid parameter"  -- TODO: Proper error page
     Just Nothing -> writeText "Just Nothing!  Odd."
@@ -53,31 +49,14 @@ handleViewPaper = do
                      T.concat ["You entered: "
                               , T.pack (show pId)
                               ," Document wasn't found in the database."]
-        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u us doc docs t)
-
---TODO Move all this score stuff into the Scores module
-
--- |Count positive and negative votes for a summary
-summaryUpsDowns :: Summary -> (Int,Int)
-summaryUpsDowns s = over both length $
-  List.partition (==UpVote) . summaryVotes $ s
-
-critiqueUpsDowns :: Critique -> (Int,Int)
-critiqueUpsDowns c = over both length $
-  List.partition (==UpVote) . critiqueReactions $ c
-
-compareSummaryNetVote :: Summary -> Summary -> Ordering
-compareSummaryNetVote a b = netA `compare` netB
-  where (upA,downA) = summaryUpsDowns a
-        netA = upA - downA
-        (upB,downB) = summaryUpsDowns b
-        netB = upB - downB
+        Just doc -> renderWithSplices "_article_view"
+                    (allArticleViewSplices u' us doc docs t)
 
 summarySummary :: Document -> T.Text
 summarySummary doc =
   T.unwords [T.pack (show nVotes),"votes /"
-            , T.pack (show  nSummaries), "summaries"]
-  where nSummaries = documentNSummaries doc
+            , T.pack (show  nSum), "summaries"]
+  where nSum = documentNSummaries doc
         sums       = documentSummaries doc
         nVotes     = sum . map (length . ocResponse) . Map.elems $ sums
 

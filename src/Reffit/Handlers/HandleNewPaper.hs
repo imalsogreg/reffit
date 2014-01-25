@@ -15,6 +15,7 @@ import           Reffit.User
 import           Reffit.Scores
 import           Reffit.FieldTag
 import           Reffit.CrossRef
+import           Reffit.Handlers.Helpers
 
 import           Application
 import           Snap.Snaplet.AcidState (update,query)
@@ -126,8 +127,8 @@ handleNewArticle = handleForm
      hints <- case doi' of
        Nothing  -> return Nothing
        Just doi -> liftIO $ Just <$> (docHints (BS.unpack doi))
-     authUser' <- currentUser
-     case join (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
+     u' <- currentReffitUser
+     case u' of
        Nothing -> writeText "Error - authUser not in app user database"
        Just user  -> do
          (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft hints t
