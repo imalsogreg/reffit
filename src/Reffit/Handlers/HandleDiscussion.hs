@@ -15,6 +15,7 @@ import Reffit.OverviewComment
 import Reffit.AcidTypes
 import Reffit.Sort
 import Reffit.Scores
+import Reffit.Handlers.Helpers
 
 import Snap.Core
 import Snap.Snaplet (Handler)
@@ -32,27 +33,20 @@ import qualified Data.Text as T
 import Heist
 import Snap.Snaplet.Heist
 import Heist.Interpreted
-import Data.Maybe (fromMaybe, listToMaybe)
 import qualified Data.Tree as Tree
-
 import qualified Data.ByteString.Char8 as BS
-import Data.Serialize
 import Text.Digestive
-import Text.Digestive.Snap
-import Text.Digestive.Heist
-import GHC.Int
 
 -- Handle adding a discussion point to a document or an overview comment
 -- Discussion point can be top-level (no dParentId param), or not
 handleAddDiscussion :: Handler App (AuthManager App) ()
 handleAddDiscussion = do
-  us              <- query QueryAllUsers
   docs            <- query QueryAllDocs
-  docId'          <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "docId" -- Owch
-  posterId'       <- fmap (decodeUtf8) <$> getPostParam "posterId"
-  commentId'      <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "commentId" -- Owch
-  dParentId'      <- fmap join (fmap $ readMay . BS.unpack) <$> getPostParam "parentId"
-  discussionText' <- fmap (T.strip . decodeUtf8) <$> getPostParam "dpText" -- fmap fmap owch
+  docId'          <- getIntegralParam "docId" -- Owch
+  posterId'       <- getTextParam "posterId"
+  commentId'      <- getIntegralParam "commentId" -- Owch
+  dParentId'      <- getIntegralParam "parentId"
+  discussionText' <- getTextParam "dpText" -- fmap fmap owch
   tNow            <- liftIO $ getCurrentTime
   case discussionText' of
     Just discussionText -> do
@@ -91,12 +85,12 @@ handleAddDiscussion = do
 discussionPointForm :: Monad m => User -> DocumentId -> Maybe OverviewCommentId ->
                        Maybe DiscussionPointId ->
                        UTCTime -> Form T.Text m DiscussionPoint
-discussionPointForm u docId ocId' parentId' tNow =
+discussionPointForm u dId ocId' parentId' tNow =
   DiscussionPoint 0
   <$> "dPoster" .: choice [(Just $ userName u, userName u),(Nothing,"Anonymous")] Nothing
   <*> "dText"   .: text Nothing
   <*> pure []
-  <*> pure (docId, ocId', parentId')
+  <*> pure (dId, ocId', parentId')
   <*> pure tNow
 
 handleViewDiscussion :: Handler App (AuthManager App) ()
@@ -105,9 +99,8 @@ handleViewDiscussion = do
   docs  <- query QueryAllDocs
   pId'  <- getQueryParam "paperid"   --TODO: Correct?
   ocId' <- getQueryParam "commentid" --TODO: Correct?
-  aUser <- currentUser
+  u'    <- currentReffitUser
   tNow  <- liftIO $ getCurrentTime
-  let u = join $ (flip Map.lookup) us <$> userLogin <$> aUser :: Maybe User
   case join $ readMay. T.unpack . decodeUtf8 <$> pId' of
     Nothing -> writeText "Need paperid parameter"
     Just pId -> do
@@ -119,7 +112,11 @@ handleViewDiscussion = do
       case (doc', discussion') of
         (Just doc, Just discussion) -> 
           renderWithSplices "discussion"
-          (allDiscussionSplices u us doc docs commentId' comment' tNow discussion)
+          (allDiscussionSplices u' us doc docs commentId' comment' tNow discussion)
+        (Nothing, Nothing) -> writeText
+                              "Neither document nor discussion found in database"
+        (Nothing,_) -> writeText "Document not found in database"
+        (_,Nothing) -> writeText "Discussion not found in database"
 
 allDiscussionSplices :: Maybe User -> Map.Map UserName User ->
                         Document -> Map.Map DocumentId Document ->

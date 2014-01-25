@@ -13,25 +13,21 @@ import           Reffit.OverviewComment
 import           Reffit.User
 import           Reffit.Handlers.Helpers
 
-import           Safe
 import           Application
-import           Snap.Snaplet.AcidState (update,query)
+import           Snap.Snaplet.AcidState (update)
 import           Snap.Core
 import           Snap.Snaplet(Handler)
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Auth
 import           Control.Applicative
 import           Control.Monad.Trans
-import qualified Data.Map                     as Map
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Data.Time
-import           Data.Text.Encoding (decodeUtf8)
 import           Text.Digestive
 import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist
 import qualified Data.ByteString.Char8        as BS
-import           Control.Monad
 import           Heist
 import qualified Heist.Interpreted as I
 
@@ -57,16 +53,18 @@ newOCommentForm formUser ocType t =
 
 handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
 handleNewOComment commentType = do
-  pId'    <- getIntegralParam "paperid"
-  u'      <- currentReffitUser
-  t         <- liftIO $ getCurrentTime
+  pId' <- getIntegralParam "paperid"
+  u'   <- currentReffitUser
+  t    <- liftIO $ getCurrentTime
   case pId' of
     Nothing -> writeText "paperid error" -- TODO proper error message
     Just pId ->
       case u' of
-        Nothing -> writeText $ "handleNewOComment - didn't find user in database"
+        Nothing -> writeText $
+                   "handleNewOComment - didn't find user in database"
         Just user -> do
-          (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t -- What is this?
+          (vw,rs) <- runForm "newOCommentForm" $
+                     newOCommentForm user commentType t -- What is this?
           case rs of
             Just comment -> do
               let user' = maybe Nothing (const $ Just user) (ocPoster comment)
