@@ -39,9 +39,8 @@ lookupDoc dId = do
 
 getTextParam :: MonadSnap m => BS.ByteString -> m (Maybe T.Text)
 getTextParam name = do
-  pText <- fmap (map decodeUtf8 . BS.words) <$> getParam name
-  return . join $ (headMay <$> pText)
-
+  fmap decodeUtf8 <$> getParam name
+  
 getTextParams :: MonadSnap m => BS.ByteString -> m [T.Text]
 getTextParams name = do
   pText <- fmap (map decodeUtf8 . BS.words) <$> getParam name

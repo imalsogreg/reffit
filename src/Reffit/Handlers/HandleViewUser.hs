@@ -39,6 +39,8 @@ import qualified Data.ByteString.Char8 as BS
 import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Control.Monad
 import Data.Maybe
+import Snap.Core (writeText)
+import Data.Monoid (mempty)
 
 
 userPinboardDocs :: Map.Map DocumentId Document -> User -> [Document]
