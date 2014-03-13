@@ -54,6 +54,22 @@ Features I want
   * Better user profiles - photos and self-blurbs.
   * Opt-in linking paper author identity with user identity, some verification scheme (photo proof like in a Reddit AMA?)
 
+Todo
+----
+
+[Add Paper -> Search Box], Searching first should search reffit to see if that paper's in the database - if so show it.  If not search google scholar for title / DOI / whatever user put in the box, show a link to tha paper with "Discuss this" button"  (Post as User or Anonymous here)
+
+Add big plus sign graphic next to "Add Paper" Button.
+
+Nice splash screen "Discuss papers, mini-review bla bla.  Discuss Science Together" (next line, sub catchphrase) "Join the water-cooler conversation about your and your peers' papers"
+
+Reffit: Online commentary on published science.
+
+Topline: Reffit: Water-cooler peer review
+Subline: Online commentary for published science - join the discussion.
+
+
+
 Some more rationale for the project
 -----------------------------------
 

@@ -2,9 +2,6 @@
 
   <div class="form-group">
     
-    <h2>Submit a Paper</h2>
-
-
 	<div class="row form-horizontal">
 	    <label ref="doi" for="doi" class="col-sm-2 control-label">DOI</label>
 
