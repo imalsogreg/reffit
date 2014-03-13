@@ -1,4 +1,4 @@
-<nav class="navbar navbar-default" role="navigation">
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
   <!-- Brand and toggle get grouped for better mobile display -->
   <div class="navbar-header">
     <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#navbar-collapse-1">
@@ -13,7 +13,8 @@
   <div class="collapse navbar-collapse" id="navbar-collapse-1">
     <ul class="nav navbar-nav">
       <ifLoggedIn>
-	<li><a href="/new_article" class="${newArticleIsActive}">New Article
+	<li><a href="/new_article" class="${newArticleIsActive}">
+<button type="button" class="btn btn-default ">Add Article</button>
 	</a></li>
       </ifLoggedIn>
     </ul>

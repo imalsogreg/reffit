@@ -4,8 +4,9 @@ html {
    font-family: Verdana, Helvetica, sans-serif;
 }
 body {
-   background-color: #ffffff;
-   padding: 0;
+   background-color: #aaaaaa;
+   padding: 10px;
+   padding-top:70px;
    margin: 0;
    width:100%;
 }
@@ -88,9 +89,9 @@ h3 .button{
 
 .pr_paper {
     text-align: left;
-    margin: 4px auto;
-    background-color:white;
-    border-style:solid;
+    margin: 10px auto;
+    background-color:rgba(255, 255, 255, 0.8);
+    border-style:none;
     border-width:1px;
     border-color:#4f9fcf;
     border-radius:10px;

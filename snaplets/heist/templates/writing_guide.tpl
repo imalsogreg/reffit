@@ -31,5 +31,6 @@ Point out something noteworthy about the paper - regarding its Rigor, Novelty, o
 In constructive tones, point out what's unrigorous, not-novel, or uncool about said paper.
 
 <h3>Coda</h3>
-When you prepare for talks, you want to hold in mind: Who is my audience?  When you write a Reffit review, you want to hold in mind: What does this review do for the community? Our goal is to democritize the peer-review process, and we can only do that if we hold ourselves to very high standards in our reviews. Whether your personal goal is to advocate for a particular best-practice in data analysis, or to make ubiquitous peer-review a reality, the best way to accomplish that is to write the best content you can on Reffit.</p>
+When you prepare for talks, you want to hold in mind: Who is my audience?  When you write a Reffit review, you want to hold in mind: What does this review do for the community? Our goal is to democritize the peer-review process, and we can only do that if we hold ourselves to very high standards in our reviews. Whether your personal goal is to advocate for a particular best-practice in data analysis, or to make ubiquitous peer-review a reality, the best way to accomplish that is to write the best content you can on Reffit.
 
+</apply>
