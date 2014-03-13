@@ -1,8 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TupleSections     #-}
 
-module HandleNewCritique(
---  newOCommentView,
+module Reffit.Handlers.HandleNewOComment(
   newOCommentForm,
   handleNewOComment
   )
@@ -28,7 +27,6 @@ import qualified Data.Text                    as T
 import           Data.Time
 import           Data.Text.Encoding (decodeUtf8)
 import           Text.Digestive
-import qualified Text.Blaze.Html5             as H
 import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist
 import qualified Data.ByteString.Char8        as BS
@@ -55,14 +53,6 @@ newOCommentForm formUser ocType t =
       Praise    -> (Just . (,UpVote)  ) <$> critiqueVoteVal
       Criticism -> (Just . (,DownVote)) <$> critiqueVoteVal
     critiqueVoteVal = "dimension" .: choice dimOpts Nothing
-
-
--- I write the form in a .tpl rather than digestive-functors
--- So that I can style it with twitter bootstrap
-{-
-newOCommentView :: View H.Html -> H.Html
-newOCommentView = undefined
--}
 
 handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
 handleNewOComment commentType = do

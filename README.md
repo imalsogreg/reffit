@@ -11,10 +11,21 @@ Installation
 Non-haskell dependency on the [icu](http://site.icu-project.org/) library (libicu-dev in Ubuntu).
 <pre>
 cabal sandbox init
+cabal install --dependencies-only
 cabal install
-.cabal-sandbox/bin/reffit -p 8000
 </pre>
-Then browse to localhost:8000
+
+Running Locally
+===============
+
+Install your distribution's postgresql package (postgresql and postgresql-libs on arch.  How about Ubuntu, OSX, & Windows?)
+
+After setting its password, become the postgres system user. Start the postgresql server before reffit:
+```
+cd ~
+pg_ctl -D /var/lib/postgres/data -p /usr/bin/postmaster -l logfile start```
+.cabal-sandbox/bin/reffit -p 8000
+```
 
 Reffit is a [Snap](snapframework.com) application using [heist](http://hackage.haskell.org/package/heist) for most of its content and [acid-state](http://hackage.haskell.org/package/acid-state) for a backend database.  Layout is done by Twitter [bootstrap](http://getbootstrap.com/), and there is some use of [jquery](http://jquery.com/) for dynamic behavior, for now.
 

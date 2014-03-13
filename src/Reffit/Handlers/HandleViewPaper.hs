@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HandleViewPaper (handleViewPaper) where
+module Reffit.Handlers.HandleViewPaper (handleViewPaper) where
 
 import Reffit.Types
 import Reffit.AcidTypes

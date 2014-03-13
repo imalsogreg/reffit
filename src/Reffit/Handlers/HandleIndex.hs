@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HandleIndex(
+module Reffit.Handlers.HandleIndex(
   handleIndex
   )
 where
@@ -14,7 +14,8 @@ import Reffit.User
 import Reffit.Scores
 import Reffit.AcidTypes
 import Reffit.FieldTag
-import HandleNewPaper -- to get fieldTag button splices. TODO restructure
+
+import Reffit.Handlers.HandleNewPaper -- to get fieldTag button splices. TODO restructure
 
 import Control.Applicative
 import Snap.Core (getParams, writeText)

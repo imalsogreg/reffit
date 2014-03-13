@@ -1,6 +1,22 @@
 <apply template="base">
 
   <h2>What is Reffit?</h2>
+  <p>Scientists discuss other scientists' papers all the time, in journal clubs, conferences, and informal chats. Rather than letting all those words just heat up air, we want to bottle them, and distill them into a summary of how the community feels about a science paper.</p>
+
+  <h2>Is that necessary? Can't scientist's just read the papers and decide for themselves?</h2>
+  <p>That's how it works now.  And we're seeing that 80% of high-profile papers fail to replicate. It may be a culture problem. Scientists are rewarded for the name of the journal they publish in. Science is complicated - it can be hard for reviewers to understand what's methodologically wrong with a complicated paper.</p>
+<p>But people talking around the water-cooler often <em>do</em> know. Sometimes <em>you</em> know.  Reffit wants you to help build the consensus, and to help identify other people building the consensus.</p>
+
+<h2>How does it work?</h2>
+<p>Read a paper on your own, or with a journal club. If you find something praiseworthy in it, write about it on Reffit.  If there is a problem with the statistics or interpretation, write about it on Reffit. Read other people's comments and vote on them. The most informative praise and criticism will rise to the top, and we will have a summary that gives every scientist the insider's insight. Your reputation will grow as you write praises and criticisms that win votes.</p>
+
+<h2>Who has time for that?</h2>
+<p>Take some of your Facebook time, and put it toward Reffit. Follow your friends, help popularize your papers, draw attention to <em>the right way to do that experiment</em>, discover new papers. If you're going to be social on the internet, do some good for science at the same time!</p>
+
+<h2>If I criticise my neighbor's paper, I'll be kicked out of science</h2>
+<p>Wow, don't get kicked out of science! Be kind and constructive. And if you want, write your comment anonymously - Reffit gives you that option on every post. We want you to get credit for your thoughts, but respect your anonymity when you want that.</p>
+
+  <h2>What is Reffit?</h2>
   <p><strong>Reffit</strong> is an online community of science enthusiasts and scientists trying to improve the way research is evaluated and shared.  Joining us on Reffit means shaping the public conversation around research you care about.  The fruit of your labor will be </p>
 
   <ul>

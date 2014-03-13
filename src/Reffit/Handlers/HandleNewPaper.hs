@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module HandleNewPaper(
+module Reffit.Handlers.HandleNewPaper(
   documentView,
   documentForm,
   handleNewArticle,
