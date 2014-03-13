@@ -1,0 +1,38 @@
+Reffit is hosted on an AWS EC2 instance.  Updating reffit requires a private key.
+
+Get the new code
+
+ * ```ssh -i path/to/key ubuntu@reffit.com```
+ * If possible (not possible yet) put a
+   "down for maintenance in a few minutes" note up on the site
+ * git pull
+ * cabal install (during installation, reffit.com will be 
+   very sluggish.  Building takes ~ 10 minutes)
+ * In stagingReffit
+ * git pull
+ * cabal install
+
+Check that the new code can run
+
+ * Frow a browser on any machine: http://reffit.com/checkpoint
+ * Quickly copy state/ and users.json from ~/reffit to stagingReffit
+   (may have to briefly stop reffit.com to do this)
+ * Start the stagingReffit server to make sure that the new reffit
+   code can load the old data.  Use a port other than 8000.
+
+Start up the new server
+
+ * ```ps aux | grep reffit``` make sure there's only one
+ * ```pidof reffit``` and remember this number
+ * From a browser on any machine: http://reffit.com/state_to_disk  
+   This is kind of a backup - it runs the current PersistentState
+   through Data.Serial.put and saves it on the disk on the EC2
+   instance.
+ * From a browser on any machine: http://reffit.com/checkpoint
+   This (as far as I understand) takes all queued Acid-State
+   transactions in the log and applies them.
+ * Immediately after state_to_disk and checkpoint, kill the server
+   ```sudo kill -9 theReffidPID
+ * Now restart the server
+   ```sudo nohup .cabal-sandbox/bin/reffit -p 80 &```
+ * Go to reffit.com, pray :)
