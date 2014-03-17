@@ -21,6 +21,7 @@ import           Reffit.User
 import           Reffit.FieldTag
 import           Reffit.CrossRef
 import           Reffit.PaperRoll
+import           Reffit.Model
 
 import           Reffit.Handlers
 
