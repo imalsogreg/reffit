@@ -2,10 +2,12 @@
 
   <div class="row">
     <!-- Left paper-roll column -->
-    <div class="col-sm-8">
+    <div class="col-sm-8" style="margin:20px 0px 24px 0px;padding-right:25px;">
       <apply template="_paper_roll"/>
     </div>
     
+
+
     <!-- Right misc column (community stats, user feed, filtering) -->
     <div class="col-sm-4">
       

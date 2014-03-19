@@ -1,7 +1,7 @@
 <div id="new_paper">
 
   <div class="form-group">
-    
+    <h3 style="font-family:helvetica">Find Paper by DOI</h3>
 	<div class="row form-horizontal">
 	    <label ref="doi" for="doi" class="col-sm-2 control-label">DOI</label>
 
@@ -14,7 +14,6 @@
 	    </div>
 	</div>
 	<br/>
-
 	<div class="alert alert-danger doiError" style="display:none;">
 	  <p>There was a problem with the DOI search.</p>
 	</div>
@@ -30,6 +29,9 @@
               <dfInputSelect ref="poster" class="form-control"/>
             </div>
 	  </div>
+
+	  <hr/>
+
 	  <div class="form-group">
             <label ref="title" for="title" class="col-sm-2 control-label">Title</label>
             <div class="col-sm-10">
@@ -62,6 +64,8 @@
               <dfInputText ref="docTags" size="80" class="form-control" id="fieldTagsHidden"/>
             </div>
 	  </div>
+
+	  <hr style="color:black;"/>
 	  
 	  <div class="form-group">
 	    <label class="col-sm-2 control-label">Field Tags</label>
