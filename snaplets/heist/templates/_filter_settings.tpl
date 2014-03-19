@@ -33,13 +33,14 @@
 	<div class="row form-horizontal">
           
 	  
-          <script>
+            <script>
             $(document).ready(function(){
-            $('.addTagBtn').click(function(){
-            var r = $('#fieldTagsHidden').val();
-            window.location.href = "/add_usertag/" + encodeURIComponent(r);
-            return false;
-            });
+              $('.addTagBtn').click(function(){
+                var r = $('#fieldTagsHidden').val();
+                window.location.href = "/add_usertag/" + encodeURIComponent(r);
+                return false;
+              });
+              $('.tree-top').click();
             });
 	    
           </script>
@@ -71,9 +72,11 @@
 	  
 	  <div class="form-group">
 	    <div class="col-sm-12">
+
 	      <div class="tree">
 		<tagsButton/>
 	      </div>	     
+
 	    </div>
 	  </div>
 	  

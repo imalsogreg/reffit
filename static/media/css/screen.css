@@ -95,7 +95,7 @@ h3 .button{
     background-color:rgba(255, 255, 255, 0.8);
     border-style:solid;
     border-width:1px;
-    border-color:#4f9fcf;
+    border-color:#000;
     border-radius:10px;
     opacity:1;
     overflow:auto;
@@ -103,7 +103,7 @@ h3 .button{
     padding-right:4px;
     padding-top:4px;
     padding-bottom:10px;
-    box-shadow:4px 7px 7px rgba(0,0,0,0.3);
+    box-shadow:2px 2px 4px rgba(0,0,0,0.3);
 }
 .pr_paper:hover {
   opacity:0.9;
