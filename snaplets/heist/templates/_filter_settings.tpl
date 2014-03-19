@@ -31,20 +31,7 @@
 	</ul>
         
 	<div class="row form-horizontal">
-          
-	  
-            <script>
-            $(document).ready(function(){
-              $('.addTagBtn').click(function(){
-                var r = $('#fieldTagsHidden').val();
-                window.location.href = "/add_usertag/" + encodeURIComponent(r);
-                return false;
-              });
-              $('.tree-top').click();
-            });
-	    
-          </script>
-	  
+         	  
 	  <!-- The old way.
 	       <input type="text" class="col-sm-offset-2 col-sm-6 control-label addTagText"/>
 	       <div class="col-sm-4"><a class="addTagBtn">
@@ -72,11 +59,11 @@
 	  
 	  <div class="form-group">
 	    <div class="col-sm-12">
-
+	      
 	      <div class="tree">
 		<tagsButton/>
 	      </div>	     
-
+	      
 	    </div>
 	  </div>
 	  
@@ -95,10 +82,10 @@
       
     </ifLoggedIn>
     
-
+    
     <ifLoggedOut>
       <form class="form-horizontal">
-
+	
 	<div class="form-group">
 	  <div class="col-sm-12">
 	    <div class="tree">
@@ -106,15 +93,15 @@
 	    </div>	     
 	  </div>
 	</div>
-	  
+	
 	<div class="form-group" style="display:none;">
-	<input type="text" class="form-control" id="fieldTagsHidden" value=""/>
+	  <input type="text" class="form-control" id="fieldTagsHidden" value=""/>
 	</div>
-
+	
 	<div class="form-group col-sm-offset-2 col-sm-12">
 	  <input type="text" name="filterTag" id="fieldTagsView" value="" class="form-control" />
 	</div>
-
+	
 	<select class="form-control col-sm-12" name="sortBy">
           <option>New</option>
           <option>Hot</option>
@@ -123,13 +110,24 @@
 	</select>
 	
 	<button type="submit" class="btn btn-default">Sort</button>
-
-
+	
+	
       </form>
     </ifLoggedOut>
-
+    
     
     
   </div>
   
 </div>
+
+<script>
+  $(document).ready(function(){
+  $('.addTagBtn').click(function(){
+  var r = $('#fieldTagsHidden').val();
+  window.location.href = "/add_usertag/" + encodeURIComponent(r);
+  return false;
+  });
+  $('.tree-top').click();
+  });
+</script>
