@@ -9,14 +9,10 @@
     </button>
     <a class="navbar-brand" href="/">Reffit</a>
   </div>
-
-  <div class="collapse navbar-collapse" id="navbar-collapse-1">
+  
+  <div class="collapse navbar-collapse" id="navbar-collapse-1" style="padding:0px 50px 10px 50px">
     <ul class="nav navbar-nav">
-      <ifLoggedIn>
-	<li><a href="/new_article" class="${newArticleIsActive}">
-<button type="button" class="btn btn-default ">Add Article</button>
-	</a></li>
-      </ifLoggedIn>
+      
     </ul>
     <form class="navbar-form navbar-left" role="search" action="/search/" method="GET">
       <div class="form-group">
@@ -25,6 +21,11 @@
       <button type="submit" class="btn btn-default">Submit</button>
     </form>
     <ul class="nav navbar-nav navbar-right">
+      <ifLoggedIn>
+	<li><a href="/new_article" class="${newArticleIsActive}">
+	    <button type="button" class="btn btn-default btn-xs"><span class="glyphicon glyphicon-plus"></span> Add Article</button>
+	</a></li>
+      </ifLoggedIn>
       <li><a href="/about" class="${aboutIsActive}">About</a></li>
       <ifLoggedOut>
 	<li><a href="/new_user" class="${newUserIsActive}">Sign Up
@@ -34,7 +35,7 @@
       </ifLoggedOut>
       <ifLoggedIn>
 	<li><a href="/user/${loggedInUser}" class="${userIsActive}">
-	  <loggedInUser/> (<userRep/>)
+	    <loggedInUser/> (<userRep/>)
 	</a></li>
 	<li><a href="/logout">Logout</a></li>
       </ifLoggedIn>

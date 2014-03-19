@@ -33,13 +33,14 @@
 	<div class="row form-horizontal">
           
 	  
-          <script>
+            <script>
             $(document).ready(function(){
-            $('.addTagBtn').click(function(){
-            var r = $('#fieldTagsHidden').val();
-            window.location.href = "/add_usertag/" + encodeURIComponent(r);
-            return false;
-            });
+              $('.addTagBtn').click(function(){
+                var r = $('#fieldTagsHidden').val();
+                window.location.href = "/add_usertag/" + encodeURIComponent(r);
+                return false;
+              });
+              $('.tree-top').click();
             });
 	    
           </script>
@@ -56,8 +57,8 @@
 	       fill them w/ field labels on tree clicks. -->
 	  
 	  <div class="form-group">
-	    <div class="col-sm-8">
-	      <input type="text" class="col-sm-5 control-label" id="fieldTagsView"/>
+	    <div class="col-sm-7">
+	      <input type="text" class="col-sm-5 control-label" id="fieldTagsView" style="display:none"/>
 	    </div>
 	    <div class="col-sm-4"><a class="addTagBtn">
 		<button class="btn btn-default form-control">Apply</button></a>
@@ -71,9 +72,11 @@
 	  
 	  <div class="form-group">
 	    <div class="col-sm-12">
+
 	      <div class="tree">
 		<tagsButton/>
 	      </div>	     
+
 	    </div>
 	  </div>
 	  

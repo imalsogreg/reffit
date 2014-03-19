@@ -1,12 +1,12 @@
 <div id="new_paper">
 
   <div class="form-group">
-    
+    <h3 style="font-family:helvetica">Find Paper by DOI</h3>
 	<div class="row form-horizontal">
 	    <label ref="doi" for="doi" class="col-sm-2 control-label">DOI</label>
 
 	    <div class="col-sm-8">
-	      <input type="text" size="20" class="form-control doiText" placeholder="10.1037/0003-066X.49.12.997"/>
+	      <input type="text" size="20" class="form-control doiText" placeholder="e.g.: 10.1037/0003-066X.49.12.997"/>
 	    </div>
 
 	    <div class="col-sm-2">
@@ -14,7 +14,6 @@
 	    </div>
 	</div>
 	<br/>
-
 	<div class="alert alert-danger doiError" style="display:none;">
 	  <p>There was a problem with the DOI search.</p>
 	</div>
@@ -30,19 +29,22 @@
               <dfInputSelect ref="poster" class="form-control"/>
             </div>
 	  </div>
-	  <div class="form-group">
+
+	  <hr/>
+
+	  <div class="form-group control-title">
             <label ref="title" for="title" class="col-sm-2 control-label">Title</label>
             <div class="col-sm-10">
               <dfInputText ref="title" size="50" class="form-control" placeholder="The Earth is Round (p < .05)"/>
             </div>
 	  </div>
-	  <div class="form-group">
+	  <div class="form-group control-authors">
             <label ref="authors" for="authors" class="col-sm-2 control-label">Authors</label>
             <div class="col-sm-10">
               <dfInputText ref="authors" size="50" class="form-control" placeholder="Jacob Cohen"/>
             </div>
 	  </div>
-	  <div class="form-group">
+	  <div class="form-group control-link">
             <label ref="link" for="link" class="col-sm-2 control-label">Link to Article</label>
             <div class="col-sm-10">
               <dfInputText ref="link" size="50" class="form-control" placeholder="http://www.unt.edu/rss/class/mike/5030/articles/Cohen1994.pdf‎"/>
@@ -62,6 +64,8 @@
               <dfInputText ref="docTags" size="80" class="form-control" id="fieldTagsHidden"/>
             </div>
 	  </div>
+
+	  <hr style="color:black;"/>
 	  
 	  <div class="form-group">
 	    <label class="col-sm-2 control-label">Field Tags</label>
@@ -95,7 +99,10 @@
     var r = $(".doiButton").click(function(){
       var doi = $('.doiText').val();
       window.location.href = "/new_article/" + encodeURIComponent(doi);
+  
     });
+
+    $('.tree-top').click();
 
   });
 

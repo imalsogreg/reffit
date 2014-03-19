@@ -4,7 +4,7 @@ html {
    font-family: Verdana, Helvetica, sans-serif;
 }
 body {
-   background-color: #aaaaaa;
+   background-color: #FAFCFF;
    padding: 10px;
    padding-top:70px;
    margin: 0;
@@ -21,7 +21,9 @@ img {
    border: none;
 }
 #content {
+   margin-top:70px;
    padding-left: 1em;
+   padding-right:14px;
 }
 #info {
    font-size: 60%;
@@ -89,23 +91,29 @@ h3 .button{
 
 .pr_paper {
     text-align: left;
-    margin: 10px auto;
+    margin-top: 0px;
+    margin-bottom: 20px;
     background-color:rgba(255, 255, 255, 0.8);
-    border-style:none;
+    border-style:solid;
     border-width:1px;
-    border-color:#4f9fcf;
+    border-color:#000;
     border-radius:10px;
     opacity:1;
     overflow:auto;
+    padding-left:10px;
+    padding-right:4px;
+    padding-top:4px;
+    padding-bottom:10px;
+    box-shadow:2px 2px 4px rgba(0,0,0,0.3);
 }
 .pr_paper:hover {
   opacity:0.9;
   border-color:#2f7faf;
 }
 .paper_roll a:link{text-decoration:none;}
-.paper_roll a:link {color:#4f9fcf;}
-.paper_roll a:visited{color:#4f9fcf;}
-.paper_roll a:hover{color:#4f9fcf;}
+.paper_roll a:link {color:#1c5e86;}
+.paper_roll a:visited{color:#4488b2;}
+.paper_roll a:hover{color:#1c5e86;}
 .paper_roll a:active{color:#2f6fcf;}
 
 
@@ -152,7 +160,8 @@ h3 .button{
 }
 
 .filter_settings{
- margin: 10 auto;
+ margin: 10px 0px 10px 10px;
+ padding:20px 20px 20px 20px;
  border-style:solid;
  border-width:1px;
  border-radius: 3px;

@@ -156,7 +156,8 @@ handleNewArticle = handleForm
 tagButtonSplice :: (Monad m) => FieldTags -> I.Splice m
 tagButtonSplice tags = return $ [X.Element "ul"  [] $
                                  [X.Element "li" [] $
-                                 [X.Element "a" [] [X.TextNode "Choose Tag"]
+                                 [X.Element "a" [("class","tree-top")]
+                                  [X.TextNode "Choose Tag"]
                                  , tagTreeButtonNode [] tags]]]
 
 tagTreeButtonNode :: TagPath -> FieldTags -> X.Node
