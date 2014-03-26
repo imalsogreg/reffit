@@ -9,14 +9,17 @@ import Database.Persist.Postgresql (runSqlite, runMigration)
 import Database.Persist.TH (mkPersist, mkMigrate, persistLowerCase,
                             share, sqlSettings)
 
+data FlagType = FlagOffensive
+              | FlagMisleadingEdit
+              | FlagMisleadingUser
+              | FlagSpam
+              deriving (Read, Show)
+
+data
+
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 User
   UserName      Text
-  realNames     Text -- comma-separated list
-  emails        Text -- comma-separated list
-  claimedEmails Text -- comma-separated list
-  affil         Text
-  following     Text -- comma-separated list of usernames
   userPic
 UserRealName
   userRealName     Text
@@ -65,7 +68,7 @@ DocAuthorUserClaim
   docAuthorUserVerified Bool
 DocFlag
   docFlagDoc  DocumentID
-  docFlagType DocFlagEnum -- TODO: How to derive sum type here?
+  docFlagType FlagType -- TODO: How to derive sum type here?
   docFlagUser UserID
   docFlagTime UTCTime
 
