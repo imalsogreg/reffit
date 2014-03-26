@@ -129,6 +129,7 @@ routes =
   , ("checkpoint"                      , with auth handleCheckpoint)
   , ("/"                               , with auth handleIndex)
   , ("/dump_state"                     , with auth handleDumpState)
+  , ("/splashscreen"                   , render "splashscreen")
   , ("/static"                         , serveDirectory "static")
   ]
 

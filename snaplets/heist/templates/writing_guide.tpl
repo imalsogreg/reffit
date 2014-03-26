@@ -19,18 +19,18 @@
 <p>For now, you're encouraged to post reviews for your own paper, but please disclose that you're the author. Your comments will be upvoted or downvoted according to the quality of your comment or its apparent bias.</p>
 
 <h3>Hearsay</h3>
-<p>Under Summaries, Praise, and Criticisms, only post things that an educated reader could deduce from the publication. Insider information is off limits on Reffit, simply because there's no way to verify it, so it's too easy to make up. We recognize that sometimes insider information is important - please limit those comments to a Discussion leaf, where the authors will have a chance to respond to them. Or better yet, write a blog post about what you know. This policy is our attempt to balance between giving whistle-blowers a platform and protecting people against character attacks.
+<p>Under Summaries, Praise, and Criticisms, only post things that an educated reader could deduce from the publication. Insider information is off limits on Reffit, simply because there's no way to verify it, so it's too easy to make up. We recognize that sometimes insider information is important - please limit those comments to a Discussion leaf, where the authors will have a chance to respond to them. Or better yet, write a blog post about what you know. This policy is our attempt to balance between giving whistle-blowers a platform and protecting people against character attacks.</p>
 
 <h3>Summaries</h3>
-Your goal is to boil the author's point of view down into 1-3 clear sentences. Vote on summaries according to how well the summarized meets this goal (you may have to read the paper to judge this!)
+<p>Your goal is to boil the author's point of view down into 1-3 clear sentences. Vote on summaries according to how well the summarized meets this goal (you may have to read the paper to judge this!)</p>
 
 <h3>Praise</h3>
-Point out something noteworthy about the paper - regarding its Rigor, Novelty, or Coolness.
+<p>Point out something noteworthy about the paper - regarding its Rigor, Novelty, or Coolness.</p>
 
 <h3>Criticism</h3>
-In constructive tones, point out what's unrigorous, not-novel, or uncool about said paper.
+<p>In constructive tones, point out what's unrigorous, not-novel, or uncool about said paper.</p>
 
 <h3>Coda</h3>
-When you prepare for talks, you want to hold in mind: Who is my audience?  When you write a Reffit review, you want to hold in mind: What does this review do for the community? Our goal is to democritize the peer-review process, and we can only do that if we hold ourselves to very high standards in our reviews. Whether your personal goal is to advocate for a particular best-practice in data analysis, or to make ubiquitous peer-review a reality, the best way to accomplish that is to write the best content you can on Reffit.
+<p>When you prepare for talks, you want to hold in mind: Who is my audience?  When you write a Reffit review, you want to hold in mind: What does this review do for the community? Our goal is to democritize the peer-review process, and we can only do that if we hold ourselves to very high standards in our reviews. Whether your personal goal is to advocate for a particular best-practice in data analysis, or to make ubiquitous peer-review a reality, the best way to accomplish that is to write the best content you can on Reffit.</p>
 
 </apply>
