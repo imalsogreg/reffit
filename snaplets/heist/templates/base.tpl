@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title>Reffit!</title>
+    <title>Reffit! (Alpha)</title>
     <script src="/static/media/js/jquery-1.10.2.js"></script>
     
     <link rel="stylesheet" type="text/css" href="/static/media/css/screen.css"/>    
@@ -20,7 +20,7 @@
   <body>
 
     <apply template="nav"/>
-    
+
     
     <div id="content">
       <apply-content/>

@@ -2,6 +2,9 @@
 
 <bind tag="postAction">/login</bind>
 <bind tag="submitText">Login</bind>
+
+<apply template="alpha_warning"/>
+
 <apply template="userlogin"/>
 
 <div style="margin: 0px auto; width:40%">
