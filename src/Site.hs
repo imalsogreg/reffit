@@ -94,7 +94,14 @@ handleDumpState = do
   u <- query QueryAllUsers
   dc <- query QueryAllDocClasses
   ft <- query QueryAllFieldTags
-  writeText . T.pack . show $ PersistentState d u dc ft
+  aUser <- currentUser
+  case userLogin <$> aUser of
+    Just "imalsogreg" ->
+      writeText . T.pack . show $ PersistentState d u dc ft
+    Just n ->
+      writeText $ T.append n ", only the admin can dump_state."
+    Nothing ->
+      writeText $ "Only admin can dump_state."
 
 
 ------------------------------------------------------------------------------
