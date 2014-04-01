@@ -1,5 +1,6 @@
 <apply template="base">
 
+<div id="content">
 <h2>The Reffit Style Guide</h2>
 <p>Here's how you can make Reffit a nicer corner of the internet. When you see others following these guidelines, give them an upvote.</p>
 
@@ -32,5 +33,6 @@
 
 <h3>Coda</h3>
 <p>When you prepare for talks, you want to hold in mind: Who is my audience?  When you write a Reffit review, you want to hold in mind: What does this review do for the community? Our goal is to democritize the peer-review process, and we can only do that if we hold ourselves to very high standards in our reviews. Whether your personal goal is to advocate for a particular best-practice in data analysis, or to make ubiquitous peer-review a reality, the best way to accomplish that is to write the best content you can on Reffit.</p>
+</div>
 
 </apply>
