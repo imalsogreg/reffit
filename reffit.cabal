@@ -56,7 +56,8 @@ Executable reffit
     xmlhtml                   >= 0.1,
     persistent,
     persistent-template,
-    persistent-postgresql
+    persistent-postgresql,
+    postgresql-simple
 
   if flag(old-base)
     build-depends:
