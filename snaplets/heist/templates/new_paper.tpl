@@ -6,7 +6,7 @@
 	    <label ref="doi" for="doi" class="col-sm-2 control-label">DOI</label>
 
 	    <div class="col-sm-8">
-	      <input type="text" size="20" class="form-control doiText" placeholder="e.g.: 10.1037/0003-066X.49.12.997"/>
+	      <input type="text" size="20" class="form-control doiText"/>
 	    </div>
 
 	    <div class="col-sm-2">

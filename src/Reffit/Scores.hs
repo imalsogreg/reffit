@@ -97,7 +97,7 @@ userUsageStats docs user = UserStats
                            (nCrits,  nCUps,nCDowns)
                            (nUp,nDown)
   where
-    h = userHistory user
+    h = _userHistory user
     nDoc = length [x | x@(PostedDocument {}) <- h]
     comments = catMaybes [lookupOComment dId sId docs | (WroteOComment dId sId) <- h]
     sums = filter ((==Nothing) . ocVote) comments

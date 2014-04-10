@@ -58,7 +58,7 @@ documentForm fromUser allDocClasses allFieldTags hints' t =
   <*> pure t
   <*> pure []
     where
-      posterOpts = [(Just (userName fromUser),userName fromUser)
+      posterOpts = [(Just (_userName fromUser),_userName fromUser)
                    ,(Nothing,"Anonymous")]
       classOpts  = [(dc,docClassName dc) | dc <- allDocClasses]
 --      tempTime   = UTCTime (ModifiedJulianDay 0) (fromIntegral (0::Int))

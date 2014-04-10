@@ -60,7 +60,7 @@ allIndexSplices tNow docs user' us indexParams tags  = do
     Nothing -> do
       "tagsButton" ## tagButtonSplice tagHierarchy
     Just user -> do
-      allFilterTagSplices (Set.toList . userTags $ user) <>
+      allFilterTagSplices (Set.toList . _userTags $ user) <>
        ("userRep" ## I.textSplice . T.pack . show $ userReputation docs user)
 
 

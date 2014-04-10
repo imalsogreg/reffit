@@ -137,15 +137,15 @@ allArticleViewSplices u us doc docs t = do
      pinText :: Maybe User -> (T.Text, T.Text)
      pinText Nothing = ("","")
      pinText (Just user)
-          | Set.member (docId doc) (userPinboard user) = ("unpin", "Unpin")
-          | otherwise                                  = ("pin",   "Pinboard")
+          | Set.member (docId doc) (_userPinboard user) = ("unpin", "Unpin")
+          | otherwise                                   = ("pin",   "Pinboard")
 
 
 data UserProseRelation = UpVoted | DownVoted | AnonVoted | NotVoted
 
 userCommentRelation :: User -> Document -> OverviewCommentId -> Maybe UserProseRelation
 userCommentRelation u doc cId =
-  let relevantActivity = [x | x@(VotedOnOComment dId' cId' _ _) <- userHistory u
+  let relevantActivity = [x | x@(VotedOnOComment dId' cId' _ _) <- _userHistory u
                             , dId' == docId doc && cId == cId']
   in case relevantActivity of
     []                                       -> Just NotVoted
@@ -201,7 +201,7 @@ splicesFromOComment t ct viewingU us doc docs (cId,c) = do
       "prosePoster"            ## I.textSplice $ maybe "unknown" userText lookupUName
       "prosePosterDestination" ## I.textSplice $ T.append "/user/" uName
       where
-        userText u  = T.concat [userName u," (", T.pack . show $ userReputation docs u,")"]
+        userText u  = T.concat [_userName u," (", T.pack . show $ userReputation docs u,")"]
         lookupUName = Map.lookup uName us
   case viewingU of
     Nothing -> do

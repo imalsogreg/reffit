@@ -45,7 +45,7 @@ import Data.Monoid (mempty, (<>))
 userPinboardDocs :: Map.Map DocumentId Document -> User -> [Document]
 userPinboardDocs docs =
   catMaybes . Prelude.map (\dId -> Map.lookup dId docs) .
-  Set.toList . userPinboard
+  Set.toList . _userPinboard
 
 handleFollow :: Bool -> Handler App (AuthManager App) ()
 handleFollow doFollow = do
@@ -57,7 +57,7 @@ handleFollow doFollow = do
     Nothing -> redirect "#"
     Just thisUser -> case join $ ((\uName -> Map.lookup uName us) . decodeUtf8) <$> fUser' of
       Nothing -> writeBS "username Param error" -- TODO error page
-      Just fUser -> let toPath = encodeUtf8 $ T.append "/user/" (userName fUser) in
+      Just fUser -> let toPath = encodeUtf8 $ T.append "/user/" (_userName fUser) in
         case doFollow of
              True  -> update (UserFollow   thisUser fUser t) >>= \_ -> redirect toPath
              False -> update (UserUnfollow thisUser fUser  ) >>= \_ -> redirect toPath
@@ -123,25 +123,25 @@ profileSplices t cUser' profileUser docs = do
     Nothing -> mempty
   when (cUser' == Just profileUser) $ 
     "followButton" ## I.textSplice ""
-  "userName"      ## I.textSplice $ userName profileUser
+  "userName"      ## I.textSplice $ _userName profileUser
   "profileRep"    ## I.textSplice . T.pack . show $
     userReputation docs profileUser
   "followBtnText" ## I.textSplice followBtnText
   "followBtnLink" ## I.textSplice followBtnLink
-  (allEventSplices  t docs (userHistory profileUser))
+  (allEventSplices  t docs (_userHistory profileUser))
   "nPinboard"     ## I.textSplice . T.pack . show .
     length $ userPinboardDocs docs profileUser
-  "nFollowing"    ## I.textSplice . T.pack . show . Set.size . userFollowing
+  "nFollowing"    ## I.textSplice . T.pack . show . Set.size . _userFollowing
     $ profileUser
-  "nFollowers"    ## I.textSplice . T.pack . show . Set.size . userFollowedBy
+  "nFollowers"    ## I.textSplice . T.pack . show . Set.size . _userFollowedBy
     $ profileUser
   (allPaperRollSplices $ userPinboardDocs docs profileUser)
-  (allUserBlockSplices "following" docs (userFollowing  profileUser))
-  (allUserBlockSplices "followers" docs (userFollowedBy profileUser))
+  (allUserBlockSplices "following" docs (_userFollowing  profileUser))
+  (allUserBlockSplices "followers" docs (_userFollowedBy profileUser))
   where (followBtnText,followBtnLink) =
-          case Set.member (userName profileUser) <$> (userFollowing <$> cUser') of
-            Just False -> ("Follow",   T.append "follow/"  (userName profileUser))
-            Just True  -> ("Unfollow", T.append "unfollow/" (userName profileUser))
+          case Set.member (_userName profileUser) <$> (_userFollowing <$> cUser') of
+            Just False -> ("Follow",   T.append "follow/"  (_userName profileUser))
+            Just True  -> ("Unfollow", T.append "unfollow/" (_userName profileUser))
             Nothing    -> ("n/a","/")
 
 allEventSplices :: UTCTime -> Map.Map DocumentId Document

@@ -93,7 +93,7 @@ discussionPointForm :: Monad m => User -> DocumentId -> Maybe OverviewCommentId 
                        UTCTime -> Form T.Text m DiscussionPoint
 discussionPointForm u docId ocId' parentId' tNow =
   DiscussionPoint 0
-  <$> "dPoster" .: choice [(Just $ userName u, userName u),(Nothing,"Anonymous")] Nothing
+  <$> "dPoster" .: choice [(Just $ _userName u, _userName u),(Nothing,"Anonymous")] Nothing
   <*> "dText"   .: text Nothing
   <*> pure []
   <*> pure (docId, ocId', parentId')
@@ -132,7 +132,7 @@ allDiscussionSplices user' us doc docs commentId' comment' tNow disc = do
   "userRep"          ## textSplice $ maybe "" (T.pack . show . userReputation docs) user'
   "discussionType"   ## textSplice $ T.concat [posterText," ",discTypeText]
   "discussionReNode" ## textSplice $ maybe (docTitle doc) (ocText) comment'
-  "userName"         ## textSplice $ maybe "" userName user'
+  "userName"         ## textSplice $ maybe "" _userName user'
   "docid"            ## textSplice . T.pack . show . docId $ doc
   "commentid"        ## textSplice $ maybe "nocomment" (T.pack . show) commentId'
   "discussionNodes"  ## (bindDiscussionPoints docs us tNow disc)
@@ -158,5 +158,5 @@ discussionPointSplices docs us tNow dp = do
   "discussionId" ## textSplice . T.pack . show . _dID $ dp
   where
     userRepText u = T.pack . show $ userReputation docs u
-    authorText = maybe "Anonymous" (\u -> T.concat [userName u,"(",userRepText u,")"])
+    authorText = maybe "Anonymous" (\u -> T.concat [_userName u,"(",userRepText u,")"])
                 . join $ Map.lookup <$> (_dPoster dp) <*> pure us

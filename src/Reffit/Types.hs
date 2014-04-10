@@ -16,7 +16,7 @@ import           Data.Serialize
 import           Data.Time
 import Data.SafeCopy (base, deriveSafeCopy)
 import qualified Data.Set as Set
-
+import qualified Data.Aeson as A
 
 -- Orphan instances for types used all over
 instance Serialize UTCTime where
@@ -46,5 +46,7 @@ instance Serialize DocClass where
 data UpDownVote = DownVote | UpVote
                 deriving (Show, Eq, Ord, Generic, Typeable)
 deriveSafeCopy 0 'base ''UpDownVote
+
+instance A.ToJSON UpDownVote where
 
 instance Serialize UpDownVote where

@@ -130,6 +130,7 @@ routes =
   , ("/"                               , with auth handleIndex)
   , ("/dump_state"                     , with auth handleDumpState)
   , ("/splashscreen"                   , render "splashscreen")
+  , ("/update_profile"                 , with auth handleUpdateProfile)
   , ("/static"                         , serveDirectory "static")
   ]
 

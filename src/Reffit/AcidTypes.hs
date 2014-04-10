@@ -71,9 +71,9 @@ addDocument user' doc = do  -- HandleNewPaper now finds a good Id
   modify (over documents (Map.insert (docId doc) doc))
   case user' of
     Just user ->
-      modify (over users (Map.insert (userName user)
-                          user { userHistory = PostedDocument (docId doc)
-                                               : (userHistory user) }))
+      modify (over users (Map.insert (_userName user)
+                          user { _userHistory = PostedDocument (docId doc)
+                                               : (_userHistory user) }))
     Nothing -> return ()
 
 addDocumentDiscussionPoint :: DiscussionPoint -> Maybe DiscussionPointId ->
@@ -114,8 +114,8 @@ addOComment user' pId comment = do
                 (doc { docOComments = Map.insert cId comment (docOComments doc) }) docs'))
       case user' of
         Just user ->
-          modify (over users (Map.insert (userName user)
-                              (user {userHistory = WroteOComment (docId doc) cId : userHistory user })))
+          modify (over users (Map.insert (_userName user)
+                              (user {_userHistory = WroteOComment (docId doc) cId : _userHistory user })))
         Nothing -> return ()
       return (Just cId)
       where
@@ -148,10 +148,10 @@ addSummary user' pId summary = do
           Just user ->
             -- TODO POSSIBLE BUG (same as other POSSIBLE BUGS)
             modify (over users
-                    (Map.insert (userName user)
-                     (user { userHistory =
+                    (Map.insert (_userName user)
+                     (user { _userHistory =
                                 migrate (WroteSummary0 (docId doc) sId)
-                                :(userHistory user) })))
+                                :(_userHistory user) })))
           Nothing -> return ()
         return (Just sId)
         where
@@ -171,8 +171,8 @@ castSummaryVote user isAnon dId doc sId summary voteVal t = do
   modify (over users $ \us' ->
            let vRecord = if isAnon then Nothing else Just voteVal
                histItem = migrate (VotedOnSummary0 dId sId vRecord t) -- NOTE Added migrate here
-               u' = user { userHistory = histItem : userHistory user }
-           in Map.insert (userName user) u' us')
+               u' = user { _userHistory = histItem : _userHistory user }
+           in Map.insert (_userName user) u' us')
   modify (over documents $ \ds ->
            let s' = summary { summaryVotes = voteVal : summaryVotes summary }
                d' = doc { docOComments = Map.insert sId
@@ -189,8 +189,8 @@ castOCommentVote user isAnon dId doc cId comment voteVal t = do
   modify (over users $ \us' ->
            let vRecord = if isAnon then Nothing else Just voteVal
                histItem = VotedOnOComment dId cId vRecord t
-               u' = user { userHistory = histItem : userHistory user }
-           in Map.insert (userName user) u' us')
+               u' = user { _userHistory = histItem : _userHistory user }
+           in Map.insert ( _userName user) u' us')
   modify (over documents $ \ds ->
            let c' = comment { ocResponse = voteVal : ocResponse comment }
                d' = doc {docOComments = Map.insert cId c' (docOComments doc) }
@@ -204,8 +204,8 @@ castCritiqueVote user isAnon dId doc cId critique voteVal t = do
   modify (over users $ \us' ->
            let vRecord = if isAnon then Nothing else Just voteVal
                histItem = migrate $ VotedOnCritique0 dId cId vRecord t
-               u' = user { userHistory = histItem : userHistory user }
-           in Map.insert (userName user) u' us')
+               u' = user { _userHistory = histItem : _userHistory user }
+           in Map.insert ( _userName user) u' us')
     -- TODO Here I'm casting Critique into Ocomment - it seems like this
     -- might change the comment id? POSSIBLE BUG
   modify (over documents $ \ds ->
@@ -236,9 +236,9 @@ addCritique user' pId critique = do
                 docs'))
       case user' of
         Just user ->
-          modify (over users $ Map.insert (userName user)
-                  (user { userHistory = migrate (WroteCritique0 pId cId) :
-                                        (userHistory user)}))
+          modify (over users $ Map.insert (_userName user)
+                  (user { _userHistory = migrate (WroteCritique0 pId cId) :
+                                        (_userHistory user)}))
         Nothing -> return ()
       return (Just cId)
         where
@@ -269,26 +269,39 @@ addUser uName email t = do
   allUsers <- gets _users
   case Map.lookup uName allUsers of
     Nothing ->
-      modify (over users ( Map.insert uName $ User uName email Set.empty Set.empty [] Set.empty Set.empty t ))
+      modify (over users ( Map.insert uName $ user' ))
+      where
+        user' = User { _userName      = uName
+                     , _userRealName  = ""
+                     , _userEmail     = email
+                     , _userFollowing = Set.empty
+                     , _userFollowedBy = Set.empty
+                     , _userPinboard = Set.empty
+                     , _userHistory = []
+                     , _userTags = Set.empty
+                     , _userWebsite = ""
+                     , _userDescriptionText = ""
+                     , _userJoinTime = t
+                     }
     Just _ -> do  -- This checks and refuses to overwrite, but silently
       modify (over users id)
 
 userFollow :: User -> User -> UTCTime -> Update PersistentState ()
 userFollow a b t = do
-  let a' = a { userFollowing  = Set.insert (userName b) (userFollowing a)
-             , userHistory    = FollowedUser (userName b) t : (userHistory a)}
-      b' = b { userFollowedBy = Set.insert (userName a) (userFollowedBy b) }
+  let a' = a { _userFollowing  = Set.insert (_userName b) (_userFollowing a)
+             , _userHistory    = FollowedUser (_userName b) t : (_userHistory a)}
+      b' = b { _userFollowedBy = Set.insert (_userName a) (_userFollowedBy b) }
   modify (over users $
-          \u0 ->  Map.insert (userName a') a' $
-                  Map.insert (userName b') b' u0)
+          \u0 ->  Map.insert (_userName a') a' $
+                  Map.insert (_userName b') b' u0)
 
 userUnfollow :: User -> User -> Update PersistentState ()
 userUnfollow a b = do
-  let a' = a { userFollowing  = Set.delete (userName b) (userFollowing a) }
-      b' = b { userFollowedBy = Set.delete (userName a) (userFollowedBy b)}
+  let a' = a { _userFollowing  = Set.delete (_userName b) (_userFollowing a) }
+      b' = b { _userFollowedBy = Set.delete (_userName a) (_userFollowedBy b)}
   modify (over users $
-          \u0 -> Map.insert (userName a') a' $
-                 Map.insert (userName b') b' u0)
+          \u0 -> Map.insert (_userName a') a' $
+                 Map.insert (_userName b') b' u0)
 
 pin :: User -> DocumentId -> Bool -> UTCTime -> Update PersistentState ()
 pin user dId doPin t = do
@@ -296,9 +309,9 @@ pin user dId doPin t = do
         True  -> Set.insert dId board0
         False -> Set.delete dId board0
   modify (over users $
-          \u0 -> Map.insert (userName user)
-                 (user { userPinboard = board' (userPinboard user)
-                       , userHistory = PinnedDoc dId t : (userHistory user)})
+          \u0 -> Map.insert (_userName user)
+                 (user { _userPinboard = board' (_userPinboard user)
+                       , _userHistory = PinnedDoc dId t : (_userHistory user)})
                  u0)
 
 queryAllDocClasses :: Query PersistentState [DocClass]
@@ -321,16 +334,19 @@ updateAllFieldTags tags = modify (over fieldTags (const tags))
 
 addUserTag :: User -> TagPath -> Update PersistentState ()
 addUserTag user tp =
-  modify (over users (Map.insert (userName user)
-                      (user { userTags = Set.insert tp (userTags user) })))
+  modify (over users (Map.insert (_userName user)
+                      (user { _userTags = Set.insert tp (_userTags user) })))
 
 deleteUserTag :: User -> TagPath -> Update PersistentState ()
 deleteUserTag user tp =
-  modify (over users (Map.insert (userName user)
-                      (user {userTags = Set.delete tp (userTags user) } )))
+  modify (over users (Map.insert (_userName user)
+                      (user {_userTags = Set.delete tp (_userTags user) } )))
 
 addFieldTag :: TagPath -> Update PersistentState ()
 addFieldTag tp = modify (over fieldTags (insertTag tp))
+
+updateProfile :: User -> Update PersistentState ()
+updateProfile user = modify (over users (Map.insert (_userName user) user))
 
 makeAcidic ''PersistentState ['addDocument,         'queryAllDocs, 'updateAllDocs
                              , 'queryAllUsers,      'addUser,      'updateAllUsers
@@ -343,4 +359,5 @@ makeAcidic ''PersistentState ['addDocument,         'queryAllDocs, 'updateAllDoc
                              , 'addSummary,         'addCritique
                              , 'castSummaryVote,    'castCritiqueVote
                              , 'addDocumentDiscussionPoint
-                             , 'addCommentDiscussionPoint]
+                             , 'addCommentDiscussionPoint
+                             , 'updateProfile]

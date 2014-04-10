@@ -45,7 +45,7 @@ newOCommentForm formUser ocType t =
   <*> pure t
   <*> pure []
   where
-    posterOpts = [(Just (userName formUser), userName formUser)
+    posterOpts = [(Just (_userName formUser), _userName formUser)
                  ,(Nothing, "Anonymous")]
     dimOpts = [(Novelty,"Novelty"),(Rigor,"Rigor"),(Coolness,"Coolness")]
     ocVoteVal = case ocType of

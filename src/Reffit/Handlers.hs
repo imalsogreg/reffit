@@ -9,6 +9,7 @@ module Reffit.Handlers
   ,module Reffit.Handlers.HandleViewUser
   ,module Reffit.Handlers.HandleAuthentication
   ,module Reffit.Handlers.HandleDiscussion
+  ,module Reffit.Handlers.HandleUpdateProfile
 ) where
 
 import Reffit.Handlers.HandleIndex
@@ -20,3 +21,4 @@ import Reffit.Handlers.HandleViewPaper
 import Reffit.Handlers.HandleViewUser
 import Reffit.Handlers.HandleAuthentication
 import Reffit.Handlers.HandleDiscussion
+import Reffit.Handlers.HandleUpdateProfile
