@@ -50,8 +50,11 @@ updateProfileForm u = (\u p -> (u,p)) <$>
        <*> "website"        .: validate validateWebsite (text (Nothing))
        <*> "userInfoText"   .: validate validateInfo    (text (Nothing))
        <*> pure (u ^. userJoinTime)) <*>
-  ("profilePicFile" .: file)
---  let a = fp :: FilePath
+  ("profilePicFile" .: maybeFile)
+  where
+    maybeFile :: Form T.Text m (Maybe FilePath)
+    maybeFile = undefined
+    --  let a = fp :: FilePath
 --  return (u,fp)
 
 
@@ -65,6 +68,10 @@ updateProfileForm u = (\u p -> (u,p)) <$>
                                        (text (Just ""))
    undefined -- TODO
 -}
+
+validateFilePath :: T.Text -> Result T.Text (FilePath)
+validateFilePath "" = Error "Empty FilePath"
+
 
 validateRealName :: T.Text -> Result T.Text (T.Text)
 validateRealName = Success -- TODO
@@ -97,13 +104,10 @@ handleUpdateProfile = do
       (vw,rs) <- runForm "updateProfile" $ updateProfileForm u
       case rs of
         Just (u',maybePath) -> do
+          
           -- TODO: upload photo somewhere. Render personal info from md
           _ <- update $ UpdateProfile u'
-          liftIO $ print maybePath
-          handleFileUploads "tmp" defaultUploadPolicy
-            (\_ -> allowWithMaximumSize 100000) $ \xs -> do
-                let a = rights (map snd xs) :: [FilePath]
-                writeBS . BS.pack $ Prelude.concat a
+          writeText . T.pack . show $ rs
         Nothing -> do
           heistLocal (bindDigestiveSplices vw) $
             renderWithSplices "_edit_profile" (updateProfileSplices u)

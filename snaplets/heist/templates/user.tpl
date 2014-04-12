@@ -4,7 +4,7 @@
     
     <div class="user-top-name">
       <h1><userName/> <span style="font-size:20pt">(<profileRep/>)</span>
-	
+	<img src="${picFile}"/>
 	<followButton>
 	  <span class="user-top">
 	    <ifLoggedIn> 
@@ -20,6 +20,7 @@
 	</followButton>
 	
       </h1>
+      <h3><userRealName/></h3>
     </div>
 
     <ul class="nav nav-tabs">

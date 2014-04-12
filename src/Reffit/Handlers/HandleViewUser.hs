@@ -124,6 +124,7 @@ profileSplices t cUser' profileUser docs = do
   when (cUser' == Just profileUser) $ 
     "followButton" ## I.textSplice ""
   "userName"      ## I.textSplice $ _userName profileUser
+  "userRealName"  ## I.textSplice $ _userRealName profileUser
   "profileRep"    ## I.textSplice . T.pack . show $
     userReputation docs profileUser
   "followBtnText" ## I.textSplice followBtnText
