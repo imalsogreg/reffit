@@ -76,11 +76,11 @@
 	      </a>
 	    </span>
 	  </pinBoardBtn>
-	  <button class="btn btn-default btn-xs">
-	    <a href="new_article?paperid=${paperid}">Edit
+	  <a href="new_article?paperid=${paperid}">
+	    <button class="btn btn-default btn-xs">Edit
 	      <span class="glyphicon glyphicon-pencil"></span>
-	    </a>
-	  </button>
+	    </button>
+	  </a>
 	</ifLoggedIn> <timeSince/>
       </p>
     </div>
@@ -107,10 +107,10 @@
     <div class="col-sm-4" id="praise-div">
       <div class="article_praise">
 	<h3>Praise  
-<ifLoggedIn>
-<a href="/new_praise?paperid=${docId}"><button type="button" class="btn btn-success btn-xs">New</button></a>
-</ifLoggedIn>
-</h3>
+	  <ifLoggedIn>
+	    <a href="/new_praise?paperid=${docId}"><button type="button" class="btn btn-success btn-xs">New</button></a>
+	  </ifLoggedIn>
+	</h3>
 	<articlePraise>
 	  <apply template="o_comment"/>
 	</articlePraise>
@@ -120,8 +120,13 @@
     <div class="col-sm-4" id="criticisms-div">
       <div class="article_criticisms">
 	<h3>Criticism 
-<ifLoggedIn>
-<a href="/new_criticism?paperid=${docId}"><button type="button" class="btn btn-warning btn-xs">New</button></a></ifLoggedIn></h3>
+	  <ifLoggedIn>
+	    <a href="/new_criticism?paperid=${docId}">
+	      <button type="button" class="btn btn-warning btn-xs">New
+	      </button>
+	    </a>
+	  </ifLoggedIn>
+	</h3>
 	<articleCriticisms>
 	  <apply template="o_comment"/>
 	</articleCriticisms>
