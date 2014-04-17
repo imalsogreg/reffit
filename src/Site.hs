@@ -88,6 +88,8 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
             Just _ -> do
               writeText "Username is taken" -- TODO - give a helpful error message: uname is taken
 
+
+------------------------------------------------------------------------------
 handleDumpState :: Handler App (AuthManager App) ()
 handleDumpState = do
   d <- query QueryAllDocs
@@ -107,10 +109,11 @@ routes =
   , ("search"                          , with auth  handleIndex)
   , ("new_article"                     , with auth handleNewArticle)
   , ("new_article/:doi"                , with auth handleNewArticle)
-  , ("new_summary/:paperid"            , with auth (handleNewOComment Summary'))
-  , ("new_praise/:paperid"             , with auth (handleNewOComment Praise))
-  , ("new_criticism/:paperid"          , with auth (handleNewOComment Criticism))
-  , ("view_article/:paperid"           , with auth handleViewPaper)
+  , ("new_summary/"                    , with auth (handleNewOComment Summary'))
+  , ("edit_summary/"                   , with auth (handleNewOComment Summary'))
+  , ("new_praise/"                     , with auth (handleNewOComment Praise))
+  , ("new_criticism/"                  , with auth (handleNewOComment Criticism))
+  , ("view_article/"                   , with auth handleViewPaper)
   , ("cast_ocomment_upvote/:idParam"   , with auth (handleOCommentVote  UpVote))
   , ("cast_ocomment_downvote/:idParam" , with auth (handleOCommentVote  DownVote))
   , ("view_discussion", with auth (method GET handleViewDiscussion <|>
@@ -118,8 +121,8 @@ routes =
   , ("user/:username"                  , with auth handleViewUser)
   , ("follow/:username"                , with auth (handleFollow True))
   , ("unfollow/:username"              , with auth (handleFollow False))
-  , ("pin/:paperid"                    , with auth (handlePin True))
-  , ("unpin/:paperid"                  , with auth (handlePin False))
+  , ("pin/"                            , with auth (handlePin True))
+  , ("unpin/"                          , with auth (handlePin False))
   , ("/add_usertag/:fieldtag"          , with auth (handleAddTag True))
   , ("/delete_usertag/:fieldtag"       , with auth (handleAddTag False))
   , ("/about"                          , render "about")

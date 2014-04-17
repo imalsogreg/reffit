@@ -32,7 +32,7 @@ data OverviewComment = OverviewComment
                        , ocResponse :: [UpDownVote]
                        , ocPostTime :: UTCTime
                        , ocDiscussion :: Discussion
-                       } deriving (Show, Generic)
+                       } deriving (Eq, Show, Generic)
 deriveSafeCopy 1 'extension ''OverviewComment
 
 instance Serialize OverviewComment where

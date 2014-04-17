@@ -136,7 +136,7 @@ handleNewArticle = handleForm
              let doc' = doc {docId = newId}
                  user' = maybe Nothing (const $ Just user) (docUploader doc')
              _ <- update $ AddDocument user' doc'
-             redirect . BS.pack $ "/view_article/" ++ (show . docId $ doc')
+             redirect . BS.pack $ "/view_article?paperid=" ++ (show . docId $ doc')
              where
                newId = head . filter (\k -> Map.notMember k docs)
                        $ (tHash: tLen: tNotTaken)

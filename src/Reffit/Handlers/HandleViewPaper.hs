@@ -111,6 +111,7 @@ allArticleViewSplices u us doc docs t = do
   "userRep"                 ## I.textSplice $ maybe ""
     (T.pack . show . userReputation docs) u
   "articleSummarySummary"   ## I.textSplice (summarySummary doc) :: Splices (SnapletISplice App)
+  "articleURL"              ## I.textSplice (docLink doc)
   "articlePraiseSummary"    ## I.textSplice (critiqueSummary  doc UpVote) :: Splices (SnapletISplice App)
   "articleCriticismSummary" ## I.textSplice (critiqueSummary doc DownVote) :: Splices (SnapletISplice App)
   "nSummaries"              ## I.textSplice (T.pack . show $ nSummaries doc)
@@ -205,9 +206,20 @@ splicesFromOComment t ct viewingU us doc docs (cId,c) = do
         lookupUName = Map.lookup uName us
   case viewingU of
     Nothing -> do
-      "upBtnUrl"   ## I.textSplice "/login"
-      "downBtnUrl" ## I.textSplice "/login"
-    Just user ->
+      "upBtnUrl"   ## I.textSplice "#"
+      "downBtnUrl" ## I.textSplice "#"
+      "editBlock"  ## I.textSplice ""
+    Just user -> do
+      when (Just (userName user) /= ocPoster c)
+        ("editBlock" ## I.textSplice "")
+      when (Just (userName user) == ocPoster c) $ do
+        let commTypeStr = case ocVote c of
+              Nothing ->           "summary"
+              Just (_,DownVote) -> "criticism"
+              Just (_,UpVote)   -> "praise"
+            pIdText = T.pack . show . docId $ doc :: T.Text
+            cIdText = T.pack . show $ cId :: T.Text
+        "editURL" ## I.textSplice (T.concat ["new_", commTypeStr, "?paperid=", pIdText, "&commentid=", cIdText])
       case userCommentRelation user doc cId of
         (Just AnonVoted) -> do
           "upBtnUrl" ## I.textSplice "#"

@@ -103,8 +103,8 @@ addCommentDiscussionPoint dp parent' doc commentId comment =
 
       
 addOComment :: Maybe User -> DocumentId -> OverviewComment
-            -> Update PersistentState (Maybe OverviewCommentId)
-addOComment user' pId comment = do
+            -> Maybe OverviewCommentId -> Update PersistentState (Maybe OverviewCommentId)
+addOComment user' pId comment cId' = do
   docs <- gets _documents
   case Map.lookup pId docs of
     Nothing -> return Nothing -- TODO - how to signal error?
@@ -119,8 +119,10 @@ addOComment user' pId comment = do
         Nothing -> return ()
       return (Just cId)
       where
-        cId = head . filter (\k -> Map.notMember k (docOComments doc)) $
-              (cHash:cInd:cAll)
+        cId = case cId' of 
+          Just n -> n
+          Nothing -> head . filter (\k -> Map.notMember k (docOComments doc)) $
+                     (cHash:cInd:cAll)
         cHash = abs . fromIntegral . hash $ T.unpack (ocText comment) ++
                 show (ocPostTime comment)
         cInd  = fromIntegral . Map.size $ docOComments doc

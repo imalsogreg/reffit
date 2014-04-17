@@ -9,6 +9,7 @@ where
 
 import           Reffit.Types
 import           Reffit.AcidTypes
+import           Reffit.Document
 import           Reffit.OverviewComment
 import           Reffit.User
 
@@ -54,10 +55,18 @@ newOCommentForm formUser ocType t =
       Criticism -> (Just . (,DownVote)) <$> critiqueVoteVal
     critiqueVoteVal = "dimension" .: choice dimOpts Nothing
 
-handleNewOComment :: OverviewCommentType -> Handler App (AuthManager App) ()
+handleNewOComment :: OverviewCommentType ->
+                     Handler App (AuthManager App) ()
 handleNewOComment commentType = do
   userMap <- query QueryAllUsers
+  docMap  <- query QueryAllDocs
   pId'    <- getParam "paperid"
+  cId'    <- getParam "commentid"
+  let oldComment' = join $ join $ 
+                    liftA2 (\dId cId -> (Map.lookup cId . docOComments) <$>
+                                        (Map.lookup dId docMap))
+                    (join $ readMay . BS.unpack <$> pId' :: (Maybe DocumentId))
+                    (join $ readMay . BS.unpack <$> cId' :: Maybe OverviewCommentId)
   authUser' <- currentUser
   t         <- liftIO $ getCurrentTime
   case join $ readMay . T.unpack . decodeUtf8 <$> pId' of
@@ -66,17 +75,29 @@ handleNewOComment commentType = do
       case join $ (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
         Nothing -> writeText $ "handleNewOComment - didn't find user in database"
         Just user -> do
-          (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t -- What is this?
+          (vw,rs) <- runForm "newOCommentForm" $ newOCommentForm user commentType t
           case rs of
             Just comment -> do
-              let user' = maybe Nothing (const $ Just user) (ocPoster comment)
-              _ <- update $ AddOComment user' pId comment
-              redirect . BS.pack $ "/view_article/" ++ show pId
+              let user' = maybe Nothing (const $ Just user) (ocPoster comment) -- TODO what's this?
+              _ <- update $ AddOComment user' pId comment (join $ readMay . BS.unpack <$> cId')
+              redirect . BS.pack $ "/view_article?paperid=" ++ show pId
             Nothing -> do
-              heistLocal (bindDigestiveSplices vw) $
-                renderWithSplices "new_o_comment" (oCommentFormSplices commentType)
+              case ( ((join $ ocPoster <$> oldComment') == Just (userName user)) ||
+                     (oldComment' == Nothing) ) of
+                True -> 
+                  heistLocal (bindDigestiveSplices vw) $
+                  renderWithSplices "new_o_comment"
+                  (oCommentFormSplices commentType oldComment' (userName user))
+                False ->
+                  writeText "Author editor name mismatch"
 
-oCommentFormSplices :: Monad m => OverviewCommentType -> Splices (I.Splice m)
-oCommentFormSplices Summary' = do
-  "reBlock" ## I.textSplice ""
-oCommentFormSplices _ = return ()
+oCommentFormSplices :: Monad m => OverviewCommentType -> Maybe OverviewComment -> UserName ->
+                       Splices (I.Splice m)
+oCommentFormSplices commentType oldComment' uname = do
+  when (commentType == Summary') ("reBlock" ## I.textSplice "")
+  "poster" ## I.textSplice (maybe "TEST" (\oc -> maybe "Anonymous" id (ocPoster oc)) oldComment')
+  "posterDisabled" ## I.textSplice (maybe "" (const "disabled") oldComment')
+  "value" ## I.textSplice (maybe "Novelty"
+                           (\oc -> maybe "IMPOSSIBLE" (T.pack . show . fst) (ocVote oc))
+                           oldComment')
+  "prose" ## I.textSplice (maybe "" ocText oldComment')

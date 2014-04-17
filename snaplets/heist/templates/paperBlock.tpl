@@ -1,4 +1,4 @@
-<a href="/view_article/${idNum}">
+<a href="/view_article?paperid=${idNum}">
   <div class="pr_paper">
     
     <apply template="score_block"/>

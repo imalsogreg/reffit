@@ -60,14 +60,19 @@
 
     <div class="article_view_header">
       <h2>
-	<docTitle/>
+	<a href="${articleURL}">
+	  <docTitle/>
+	</a>
       </h2>
       <p class="header-post-time">
 	<ifLoggedIn>
 	  <pinBoardBtn>
 	    <span> 
-	      <a href="/${pinUrl}/${docId}">
-		<button class="btn btn-primary btn-xs"><pinboardBtnTxt/></button>
+	      <a href="/${pinUrl}?paperid=${docId}">
+		<button class="btn btn-primary btn-xs">
+		  <span class="glyphicon glyphicon-pushpin"></span>
+		  <pinboardBtnTxt/>
+		</button>
 	      </a>
 	    </span>
 	  </pinBoardBtn>
@@ -82,7 +87,7 @@
 	<h3>Summaries 
 
           <ifLoggedIn>
-          <a href="/new_summary/${docId}">
+          <a href="/new_summary?paperid=${docId}">
             <button type="button" class="btn btn-primary btn-xs">New</button>
           </a>
           </ifLoggedIn>
@@ -98,7 +103,7 @@
       <div class="article_praise">
 	<h3>Praise  
 <ifLoggedIn>
-<a href="/new_praise/${docId}"><button type="button" class="btn btn-success btn-xs">New</button></a>
+<a href="/new_praise?paperid=${docId}"><button type="button" class="btn btn-success btn-xs">New</button></a>
 </ifLoggedIn>
 </h3>
 	<articlePraise>
@@ -111,7 +116,7 @@
       <div class="article_criticisms">
 	<h3>Criticism 
 <ifLoggedIn>
-<a href="/new_criticism/${docId}"><button type="button" class="btn btn-warning btn-xs">New</button></a></ifLoggedIn></h3>
+<a href="/new_criticism?paperid=${docId}"><button type="button" class="btn btn-warning btn-xs">New</button></a></ifLoggedIn></h3>
 	<articleCriticisms>
 	  <apply template="o_comment"/>
 	</articleCriticisms>

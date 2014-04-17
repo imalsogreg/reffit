@@ -74,7 +74,7 @@ handlePin doPin = do
       Nothing -> writeBS "Param error" --TODO error page
       Just dId -> do
         _ <- update $ Pin user dId doPin t
-        redirect . BS.pack $ "/view_article/" ++ (show dId)
+        redirect . BS.pack $ "/view_article?paperid=" ++ (show dId)
 
 handleViewUser :: Handler App (AuthManager App) ()
 handleViewUser = do

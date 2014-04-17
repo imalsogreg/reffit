@@ -28,12 +28,23 @@
   </p>
 </reBlock>
 
+
+
 <div class="prose-poster">
   <p>  
     <a href="${prosePosterDestination}">
       <prosePoster/>
-    </a> <proseTimeSince/>.
-    <a href="${discussionUrl}">Discuss (<nDiscussionPoints/>)</a>
+    </a> <proseTimeSince/>
+    <editBlock>
+      <button class="btn btn-default btn-xs">
+      <a href="${editURL}">Edit <span class="glyphicon glyphicon-pencil"></span></a>
+      </button>
+    </editBlock>
+    <button class="btn btn-default btn-xs">
+      <a href="${discussionUrl}">Discuss (<nDiscussionPoints/>)
+	<span class="glyphicon glyphicon-comment"></span>
+      </a>
+    </button>
   </p>
 
 </div>
