@@ -61,7 +61,7 @@
 	  <div class="form-group" style="display:none;">
             <label ref="docTags" for="docTags" class="col-sm-2 control-label">Field Tags</label>
             <div class="col-sm-10">
-              <dfInputText ref="docTags" size="80" class="form-control" id="fieldTagsHidden"/>
+              <dfInputText ref="docTags" size="80" class="form-control" id="fieldTagsHidden" value="${doctags}"/>
             </div>
 	  </div>
 
@@ -70,7 +70,7 @@
 	  <div class="form-group">
 	    <label class="col-sm-2 control-label">Field Tags</label>
 	    <div class="col-sm-8">
-	      <input  class="form-control disabledInput" id="fieldTagsView" disabled/>
+	      <input  class="form-control disabledInput" id="fieldTagsView" disabled value="${doctagsvisible}"/>
 	    </div>
 	    <div class="col-sm-2">
 	      <button class="btn btn-default btn-xs form-control btn-clear" href="#">Clear</button>

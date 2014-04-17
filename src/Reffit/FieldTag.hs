@@ -85,6 +85,10 @@ toFullName = T.intercalate "."
 fromFullName :: T.Text -> TagPath
 fromFullName = T.splitOn "."
 
+toShortName :: TagPath -> FieldTag
+toShortName [] = ""
+toShortName tp = last tp
+
 tagPathIsElem :: TagPath -> FieldTags -> Bool
 tagPathIsElem tp tagsTop = not (L.null tp) && aux tp tagsTop
   where

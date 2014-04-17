@@ -13,7 +13,7 @@ import           Reffit.AcidTypes
 import           Reffit.Document
 import           Reffit.User
 import           Reffit.Scores
-import           Reffit.FieldTag
+import           Reffit.FieldTag (FieldTags, FieldTag, TagPath, toFullName, tagPathIsElem, showPath, tagHierarchy, toShortName)
 import           Reffit.CrossRef
 
 import           Application
@@ -142,7 +142,15 @@ handleNewArticle = handleForm
              let docId' = case (join $ (readMay . BS.unpack) <$> pId') of
                    Nothing  -> newId
                    Just pId -> pId
-                 doc' = doc {docId = docId'}
+--                 docFieldTags'  = maybe [] docFieldTags oldDoc'
+                 docOComments'  = maybe Map.empty docOComments oldDoc'
+                 docDiscussion' = maybe [] docDiscussion oldDoc'
+                 docPostTime' = maybe t docPostTime oldDoc'
+                 doc' = doc {docId = docId'
+--                            , docFieldTags =docFieldTags'
+                            , docOComments = docOComments'
+                            , docPostTime  = docPostTime'
+                            , docDiscussion = docDiscussion'}
                  user' = maybe Nothing (const $ Just user) (docUploader doc')
              _ <- update $ AddDocument user' doc'
              redirect . BS.pack $ "/view_article?paperid=" ++ (show . docId $ doc')
@@ -166,6 +174,10 @@ handleNewArticle = handleForm
                        "url" ## I.textSplice $ maybe "" docLink oldDoc'
                        "docclass" ## I.textSplice $ maybe "Paper"
                          (T.pack . show . docClass) oldDoc'
+                       "doctags" ## I.textSplice $ maybe ""
+                         (T.intercalate ", " . map toFullName . docFieldTags) oldDoc'
+                       "doctagsvisible" ## I.textSplice $ maybe ""
+                         (T.intercalate ", " . map toShortName . filter (/= []) . docFieldTags) oldDoc'
                      repSplices = do
                        "userRep" ## I.textSplice $ T.pack . show $ userReputation docs user
 -- These splices are for the button, which should have the 'add tag label'
