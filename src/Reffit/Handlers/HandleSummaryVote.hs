@@ -109,4 +109,4 @@ handleOCommentVote voteDir = do
                   Just u -> do
                 --TODO handle vote anonymity
                     _ <- update (CastOCommentVote u False pId doc cId comment voteDir t)
-                    redirect $ BS.concat ["/view_article/",BS.pack . show $ pId]
+                    redirect $ BS.concat ["/view_article?paperid=",BS.pack . show $ pId]
