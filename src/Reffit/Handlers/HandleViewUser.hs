@@ -40,7 +40,7 @@ import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Control.Lens
 import Control.Monad
 import Data.Maybe
-import Data.Monoid (mempty, (<>))
+import Data.Monoid (mempty)
 
 userPinboardDocs :: Map.Map DocumentId Document -> User -> [Document]
 userPinboardDocs docs =
@@ -168,15 +168,6 @@ eventSplice t docs (WroteOComment dId cId)  =
                            , X.TextNode $ ocTimeT t dId cId docs] ]
 eventSplice _ _ (VotedOnOComment _ _ _ _) = return []
 
-{-
-eventSplice t docs (WroteSummary dId sId) =
-  return [X.Element "p" [] [X.TextNode "write a summary of "
-                           ,X.Element "a" [("href",dLinkT dId docs)]
-                            [X.TextNode . shortTitle tLen $ dTitleT dId docs]
-                           ,X.TextNode $ sTimeT t dId sId docs] ]
-eventSplice _ _ (VotedOnSummary _ _ _ _) = return []
--}
-
 eventSplice t docs (PostedDocument dId) =
   return [X.Element "p" [] [X.TextNode "posted "
                            ,X.Element "a" [("href",dLinkT dId docs)]
@@ -212,8 +203,7 @@ dTitleT :: DocumentId -> Map.Map DocumentId Document -> T.Text
 dTitleT dId docs = maybe "error" docTitle (Map.lookup dId docs)
 
 dLinkT :: DocumentId -> Map.Map DocumentId Document -> T.Text
-dLinkT dId _    = T.append "/view_article/" (T.pack . show $ dId)
---dLinkT dId docs = maybe "#" (T.append "/view_article/") (docLink <$> Map.lookup dId docs)
+dLinkT dId _    = T.append "/view_article?paperid=" (T.pack . show $ dId)
 
 dTimeT :: UTCTime -> DocumentId -> Map.Map DocumentId Document -> T.Text
 dTimeT t dId docs = maybe "error" T.pack $ do
