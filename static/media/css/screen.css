@@ -6,7 +6,6 @@ html {
 body {
    background-color: #FAFCFF;
    padding: 10px;
-
    margin: 0;
    width:100%;
 }
@@ -96,7 +95,7 @@ h3 .button{
     background-color:rgba(255, 255, 255, 0.8);
     border-style:solid;
     border-width:1px;
-    border-color:#000;
+    border-color:#88e;
     border-radius:10px;
     opacity:1;
     overflow:auto;

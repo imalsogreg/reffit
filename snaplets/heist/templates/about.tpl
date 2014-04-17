@@ -3,7 +3,7 @@
   <h2>What is Reffit?</h2>
   <p>Scientists discuss other scientists' papers all the time, in journal clubs, conferences, and informal chats. Rather than letting all those words just heat up air, we want to bottle them, and distill them into a summary of how the community feels about a science paper.</p>
 
-  <h2>Is that necessary? Can't scientist's just read the papers and decide for themselves?</h2>
+  <h2>Is that necessary? Can't scientists just read the papers and decide for themselves?</h2>
   <p>That's how it works now.  And we're seeing that 80% of high-profile papers fail to replicate. It may be a culture problem. Scientists are rewarded for the name of the journal they publish in. Science is complicated - it can be hard for reviewers to understand what's methodologically wrong with a complicated paper.</p>
 <p>But people talking around the water-cooler often <em>do</em> know. Sometimes <em>you</em> know.  Reffit wants you to help build the consensus, and to help identify other people building the consensus.</p>
 
@@ -31,7 +31,7 @@
 
   <h2>What does that mean, concretely?</h2>
 
-  <p>The idea is to collect a large number of individual bits of praise and criticism for scientific works.  Readers click on the summaries they find helpful, and the praise and criticism they agree with.  We collect and sort that invormation to build a quick overview of what a paper means, what's good about it, and how trustworthy it is.  Noone can be an expert in every field, so these overviews can give you a more informed perspective on a paper that before you could only appreciate from a distance.</p>
+  <p>The idea is to collect a large number of individual bits of praise and criticism for scientific works.  Readers click on the summaries they find helpful, and the praise and criticism they agree with.  We collect and sort that invormation to build a quick overview of what a paper means, what's good about it, and how trustworthy it is.  No one can be an expert in every field, so these overviews can give you a more informed perspective on a paper that before you could only appreciate from a distance.</p>
 
  <h2>Isn't that system sensitive to vote-rigging?</h2>
 
