@@ -76,6 +76,11 @@
 	      </a>
 	    </span>
 	  </pinBoardBtn>
+	  <button class="btn btn-default btn-xs">
+	    <a href="new_article?paperid=${paperid}">Edit
+	      <span class="glyphicon glyphicon-pencil"></span>
+	    </a>
+	  </button>
 	</ifLoggedIn> <timeSince/>
       </p>
     </div>

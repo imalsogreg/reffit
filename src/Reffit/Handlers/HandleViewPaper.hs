@@ -53,7 +53,7 @@ handleViewPaper = do
                      T.concat ["You entered: "
                               , T.pack (show pId)
                               ," Document wasn't found in the database."]
-        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u us doc docs t)
+        Just doc -> renderWithSplices "_article_view" (allArticleViewSplices u us pId doc docs t)
 
 --TODO Move all this score stuff into the Scores module
 
@@ -104,10 +104,10 @@ nCritique vDir doc = Map.size . Map.filter ((==vDir) . snd . fromJust . ocVote)
                      . Map.filter ((/=Nothing) . ocVote)
                      $ docOComments doc
 
-allArticleViewSplices :: Maybe User -> Map.Map UserName User ->
+allArticleViewSplices :: Maybe User -> Map.Map UserName User -> DocumentId ->
                          Document -> Map.Map DocumentId Document ->
                          UTCTime -> Splices (SnapletISplice App)
-allArticleViewSplices u us doc docs t = do
+allArticleViewSplices u us pId doc docs t = do
   "userRep"                 ## I.textSplice $ maybe ""
     (T.pack . show . userReputation docs) u
   "articleSummarySummary"   ## I.textSplice (summarySummary doc) :: Splices (SnapletISplice App)
@@ -123,16 +123,14 @@ allArticleViewSplices u us doc docs t = do
   "timeSince"               ## I.textSplice (T.pack . sayTimeDiff t . docPostTime $ doc)
   let (pinUrl, pinBtn) = pinText u
   "pinUrl"                  ## I.textSplice pinUrl
+  "paperid"                 ## I.textSplice (T.pack . show $ pId)
   "pinboardBtnTxt"          ## I.textSplice pinBtn
   "discussionLink"          ## I.textSplice $ T.concat ["/view_discussion/?paperid="
                                                         ,T.pack . show . docId $ doc]
   "nDiscussionPoints"       ## I.textSplice .
     T.pack . show . length . concat . map Tree.flatten . docDiscussion $ doc
---  (allSummarySplices t u doc . Map.toList . documentSummaries $ doc)
   (allOCommentSplices t Summary' "articleSummaries" u us doc docs)
---  (allCritiqueSplices t UpVote   "articlePraise"     u doc (Map.toList praise) )
   (allOCommentSplices t Praise "articlePraise" u us doc docs)
---  (allCritiqueSplices t DownVote "articleCriticism" u doc (Map.toList criticism) )
   (allOCommentSplices t Criticism "articleCriticisms" u us doc docs)
    where
      pinText :: Maybe User -> (T.Text, T.Text)

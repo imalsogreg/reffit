@@ -1,7 +1,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 
 module Reffit.Handlers.HandleNewPaper(
-  documentView,
+--  documentView,
   documentForm,
   handleNewArticle,
   tagButtonSplice
@@ -42,6 +42,7 @@ import           Data.Time
 import           Control.Monad
 import           Control.Monad.Trans
 import           Data.Monoid ((<>))
+import           Safe (readMay)
 
 documentForm :: (Monad m) => User -> [DocClass] -> FieldTags -> (Maybe DocumentHints)
                 -> UTCTime -> Form Text m Document
@@ -67,6 +68,7 @@ documentForm fromUser allDocClasses allFieldTags hints' t =
 --      defYear    = maybe "" (T.pack . show . yearHint) hints'
       defLink    = maybe "" linkHint hints'
 
+{-
 documentView :: View H.Html -> H.Html
 documentView view = do
 
@@ -91,6 +93,7 @@ documentView view = do
   errorList "tags" view
   label     "tags" view "Field Tags: "
   inputText "tags" view
+-}
 
 validateAuthors :: Text -> Result Text [Text]
 validateAuthors authorsText
@@ -122,10 +125,13 @@ handleNewArticle = handleForm
      dc      <- query QueryAllDocClasses
      ft      <- query QueryAllFieldTags
      doi'    <- getParam "doi"
+     pId'    <- getParam "paperid"
      t       <- liftIO $ getCurrentTime
      hints <- case doi' of
        Nothing  -> return Nothing
        Just doi -> liftIO $ Just <$> (docHints (BS.unpack doi))
+     let oldDoc' = join $ liftA (flip Map.lookup docs)
+                   (join $ (readMay . BS.unpack) <$> pId') 
      authUser' <- currentUser
      case join (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
        Nothing -> writeText "Error - authUser not in app user database"
@@ -133,13 +139,16 @@ handleNewArticle = handleForm
          (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft hints t
          case rs of
            Just doc -> do
-             let doc' = doc {docId = newId}
+             let docId' = case (join $ (readMay . BS.unpack) <$> pId') of
+                   Nothing  -> newId
+                   Just pId -> pId
+                 doc' = doc {docId = docId'}
                  user' = maybe Nothing (const $ Just user) (docUploader doc')
              _ <- update $ AddDocument user' doc'
              redirect . BS.pack $ "/view_article?paperid=" ++ (show . docId $ doc')
              where
                newId = head . filter (\k -> Map.notMember k docs)
-                       $ (tHash: tLen: tNotTaken)
+                      $ (tHash: tLen: tNotTaken)
                tHash = fromIntegral . hash . docTitle $ doc:: Int32
                tLen  = fromIntegral (Map.size docs)  :: Int32
                tNotTaken = [0..maxBound] :: [Int32]
@@ -149,6 +158,14 @@ handleNewArticle = handleForm
                $ renderWithSplices "_new_paper" (ftSplices <> repSplices)
                where ftSplices = do
                        "tagsButton" ## tagButtonSplice tagHierarchy
+                       "poster"     ## I.textSplice $ maybe "Anonymous" id
+                         (join (docUploader <$> oldDoc'))
+                       "title" ## I.textSplice $ maybe "" docTitle oldDoc'
+                       "authors"    ## I.textSplice $
+                         maybe "" (T.intercalate ", " . docAuthors) oldDoc'
+                       "url" ## I.textSplice $ maybe "" docLink oldDoc'
+                       "docclass" ## I.textSplice $ maybe "Paper"
+                         (T.pack . show . docClass) oldDoc'
                      repSplices = do
                        "userRep" ## I.textSplice $ T.pack . show $ userReputation docs user
 -- These splices are for the button, which should have the 'add tag label'
