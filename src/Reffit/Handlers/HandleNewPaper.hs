@@ -8,13 +8,13 @@ module Reffit.Handlers.HandleNewPaper(
   )
 where
 
-import           Reffit.Types
+import           Reffit.Types (DocClass(..))
 import           Reffit.AcidTypes
 import           Reffit.Document
 import           Reffit.User
 import           Reffit.Scores
 import           Reffit.FieldTag (FieldTags, FieldTag, TagPath, toFullName, tagPathIsElem, showPath, tagHierarchy, toShortName)
-import           Reffit.CrossRef
+import           Reffit.CrossRef (docHints,DocumentHints(..))
 
 import           Application
 import           Snap.Snaplet.AcidState (update,query)
@@ -68,33 +68,6 @@ documentForm fromUser allDocClasses allFieldTags hints' t =
 --      defYear    = maybe "" (T.pack . show . yearHint) hints'
       defLink    = maybe "" linkHint hints'
 
-{-
-documentView :: View H.Html -> H.Html
-documentView view = do
-
-  label       "poster" view "Post as: "
-  inputSelect "poster" view
-
-  errorList "title" view
-  label     "title" view "Title: "
-  inputText "title" view
-
-  errorList "authors" view
-  label     "authors" view "Authors: "
-  inputText "authors" view
-
-  errorList "link" view
-  label     "link" view "Link to paper: "
-  inputText "link" view
-
-  label       "docClass" view "Document Type: "
-  inputSelect "docClass" view
-
-  errorList "tags" view
-  label     "tags" view "Field Tags: "
-  inputText "tags" view
--}
-
 validateAuthors :: Text -> Result Text [Text]
 validateAuthors authorsText
   | T.null authorsText = Error "Authors required"
@@ -142,12 +115,11 @@ handleNewArticle = handleForm
              let docId' = case (join $ (readMay . BS.unpack) <$> pId') of
                    Nothing  -> newId
                    Just pId -> pId
---                 docFieldTags'  = maybe [] docFieldTags oldDoc'
+
                  docOComments'  = maybe Map.empty docOComments oldDoc'
                  docDiscussion' = maybe [] docDiscussion oldDoc'
                  docPostTime' = maybe t docPostTime oldDoc'
                  doc' = doc {docId = docId'
---                            , docFieldTags =docFieldTags'
                             , docOComments = docOComments'
                             , docPostTime  = docPostTime'
                             , docDiscussion = docDiscussion'}
@@ -180,6 +152,7 @@ handleNewArticle = handleForm
                          (T.intercalate ", " . map toShortName . filter (/= []) . docFieldTags) oldDoc'
                      repSplices = do
                        "userRep" ## I.textSplice $ T.pack . show $ userReputation docs user
+
 -- These splices are for the button, which should have the 'add tag label'
 -- as a parent list-item, because tree.js shows the first list item on load.
 tagButtonSplice :: (Monad m) => FieldTags -> I.Splice m

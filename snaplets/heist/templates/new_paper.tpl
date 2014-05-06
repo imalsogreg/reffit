@@ -98,7 +98,7 @@
 
     var r = $(".doiButton").click(function(){
       var doi = $('.doiText').val();
-      window.location.href = "/new_article/" + encodeURIComponent(doi);
+      window.location.href = "/new_article?doi=" + encodeURIComponent(doi);
   
     });
 
