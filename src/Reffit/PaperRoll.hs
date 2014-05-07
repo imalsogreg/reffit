@@ -2,20 +2,20 @@
 
 module Reffit.PaperRoll where
 
-import Reffit.Types
-import Reffit.AcidTypes
+--import Reffit.Types
+--import Reffit.AcidTypes
 import Reffit.Document
 import Reffit.Scores
 import Reffit.Sort
-import Reffit.Search
+--import Reffit.Search
 import Reffit.FieldTag
 
-import Control.Applicative
-import qualified Data.List as L
+--import Control.Applicative
+--import qualified Data.List as L
 import Data.Maybe (listToMaybe)
-import Snap.Snaplet (Handler)
-import Snap.Core
-import Snap.Snaplet.AcidState (query)
+--import Snap.Snaplet (Handler)
+--import Snap.Core
+--import Snap.Snaplet.AcidState (query)
 import Snap.Snaplet.Heist
 import Application
 import Heist
@@ -24,9 +24,9 @@ import qualified Data.Text as T
 import Data.Text.Encoding (decodeUtf8)
 import qualified Data.Map as Map
 import qualified Data.ByteString.Char8 as BS
-import Control.Monad (join)
-import Control.Monad.Trans (liftIO)
-import Data.Time
+--import Control.Monad (join)
+--import Control.Monad.Trans (liftIO)
+--import Data.Time
 
 
 
