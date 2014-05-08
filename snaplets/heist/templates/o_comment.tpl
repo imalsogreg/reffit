@@ -36,15 +36,16 @@
       <prosePoster/>
     </a> <proseTimeSince/>
     <editBlock>
+      <a href="${editURL}">
       <button class="btn btn-default btn-xs">
-      <a href="${editURL}">Edit <span class="glyphicon glyphicon-pencil"></span></a>
-      </button>
+	Edit <span class="glyphicon glyphicon-pencil"></span>
+      </button></a>
     </editBlock>
+    <a href="${discussionUrl}">
     <button class="btn btn-default btn-xs">
-      <a href="${discussionUrl}">Discuss (<nDiscussionPoints/>)
+      Discuss (<nDiscussionPoints/>)
 	<span class="glyphicon glyphicon-comment"></span>
-      </a>
-    </button>
+    </button>      </a>
   </p>
 
 </div>

@@ -187,7 +187,7 @@ splicesFromOComment t ct viewingU us doc docs (cId,c) = do
   "proseTimeSince"    ## I.textSplice (T.pack . sayTimeDiff t . ocPostTime $ c)
   "discussionUrl" ## I.textSplice (T.concat ["/view_discussion/?paperid="
                                             ,T.pack . show $ docId doc
-                                            ,"&commentid="
+                                            ,"&amp;commentid="
                                             ,T.pack . show $ cId
                                              ])
   "nDiscussionPoints" ## I.textSplice .
@@ -217,7 +217,7 @@ splicesFromOComment t ct viewingU us doc docs (cId,c) = do
               Just (_,UpVote)   -> "praise"
             pIdText = T.pack . show . docId $ doc :: T.Text
             cIdText = T.pack . show $ cId :: T.Text
-        "editURL" ## I.textSplice (T.concat ["new_", commTypeStr, "?paperid=", pIdText, "&commentid=", cIdText])
+        "editURL" ## I.textSplice (T.concat ["new_", commTypeStr, "?paperid=", pIdText, "&amp;commentid=", cIdText])
       case userCommentRelation user doc cId of
         (Just AnonVoted) -> do
           "upBtnUrl" ## I.textSplice "#"
