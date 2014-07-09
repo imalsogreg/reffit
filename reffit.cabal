@@ -8,7 +8,7 @@ Maintainer:          maintainer@example.com
 Stability:           Experimental
 Category:            Web
 Build-type:          Simple
-Cabal-version:       >=1.8
+Cabal-version:       >=1.10
 
 Flag development
   Description: Whether to build the server in development (interpreted) mode
@@ -18,11 +18,37 @@ Flag old-base
   default: False
   manual: False
 
-Executable reffit
+Library
+  default-language: Haskell2010
   hs-source-dirs: src
-  main-is: Main.hs
+  exposed-modules:
+    Reffit.AcidTypes,
+    Reffit.CrossRef,
+    Reffit.Discussion,
+    Reffit.Document,
+    Reffit.FieldTag,
+    Reffit.Filter,
+    Reffit.Handlers,
+    Reffit.Handlers.HandleAuthentication,
+    Reffit.Handlers.HandleDiscussion,
+    Reffit.Handlers.HandleIndex,
+    Reffit.Handlers.HandleNewDocClass,
+    Reffit.Handlers.HandleNewOComment,
+    Reffit.Handlers.HandleNewPaper,
+    Reffit.Handlers.HandleNewSummary,
+    Reffit.Handlers.HandleSummaryVote,
+    Reffit.Handlers.HandleViewPaper,
+    Reffit.Handlers.HandleViewUser,
+    Reffit.OverviewComment,
+    Reffit.PaperRoll,
+    Reffit.Scores,
+    Reffit.Search,
+    Reffit.Sort,
+    Reffit.Types,
+    Reffit.User
 
-  Build-depends:
+  build-depends:    
+    base >= 4.4 && < 5,
     containers,
     acid-state,
     safecopy,
@@ -33,58 +59,164 @@ Executable reffit
     digestive-functors-snap,
     blaze-html,
     digestive-functors-blaze,
-    transformers,
+    transformers-compat,
     safe,
     text-icu,
     HTTP,
     network,
     aeson,
-    lens-aeson,
     unordered-containers,
     cereal,
-    bytestring                >= 0.9.1   && < 0.11,
-    heist                     >= 0.13    && < 0.14,
-    snaplet-acid-state        >= 0.2.5   && < 0.3,
-    MonadCatchIO-transformers >= 0.2.1   && < 0.4,
-    mtl                       >= 2       && < 3,
-    snap                      >= 0.13    && < 0.14,
-    snap-core                 >= 0.9     && < 0.11,
-    snap-server               >= 0.9     && < 0.11,
-    snap-loader-static        >= 0.9     && < 0.10,
-    text                      >= 0.11    && < 0.12,
-    time                      >= 1.1     && < 1.5,
-    xmlhtml                   >= 0.1,
-    snap-extras               >= 0.9     && < 0.10
+    haskell-src-exts >= 1.14.0 && < 1.15,
+    haskell-src-meta >= 0.6 && < 0.7,
+    bytestring >= 0.9.1 && < 0.11,
+    heist >= 0.13 && < 0.14,
+    snaplet-acid-state >= 0.2.5 && < 0.3,
+    MonadCatchIO-transformers >= 0.3.1.0 && < 0.4,
+    mtl >= 2 && < 3,
+    snap >= 0.13 && < 0.14,
+    snap-core >= 0.9 && < 0.11,
+    snap-server >= 0.9 && < 0.11,
+    snap-loader-static >= 0.9 && < 0.10,
+    text,
+    time >= 1.1 && < 1.5,
+    xmlhtml >= 0.1,
+    snap-extras >= 0.9 && < 1,
+    lens        >= 4.0,
+    postgresql-simple
 
-  if flag(old-base)
-    build-depends:
-      base                      >= 4        && < 4.4,
-      lens                      >= 3.7.6    && < 3.8
-  else
-    build-depends:
-      base                      >= 4.4      && < 5,
-      lens                      >= 3.7.6    && < 3.11
+Executable reffit
+  default-language: Haskell2010
+  hs-source-dirs: src
+  main-is: Main.hs
+  other-modules:
+    Reffit.AcidTypes,
+    Reffit.CrossRef,
+    Reffit.Discussion,
+    Reffit.Document,
+    Reffit.FieldTag,
+    Reffit.Filter,
+    Reffit.Handlers,
+    Reffit.Handlers.HandleAuthentication,
+    Reffit.Handlers.HandleDiscussion,
+    Reffit.Handlers.HandleIndex,
+    Reffit.Handlers.HandleNewDocClass,
+    Reffit.Handlers.HandleNewOComment,
+    Reffit.Handlers.HandleNewPaper,
+    Reffit.Handlers.HandleNewSummary,
+    Reffit.Handlers.HandleSummaryVote,
+    Reffit.Handlers.HandleViewPaper,
+    Reffit.Handlers.HandleViewUser,
+    Reffit.OverviewComment,
+    Reffit.PaperRoll,
+    Reffit.Scores,
+    Reffit.Search,
+    Reffit.Sort,
+    Reffit.Types,
+    Reffit.User
 
-  extra-libraries: icuuc
-  if os(mingw32)
-    extra-libraries: icuin icudt
-  else
-    extra-libraries: icui18n icudata
+  build-depends:    
+    base >= 4.4 && < 5,
+    containers,
+    acid-state,
+    safecopy,
+    hashable,
+    snaplet-acid-state,
+    digestive-functors,
+    digestive-functors-heist,
+    digestive-functors-snap,
+    blaze-html,
+    digestive-functors-blaze,
+    transformers-compat,
+    safe,
+    text-icu,
+    HTTP,
+    network,
+    aeson,
+    unordered-containers,
+    cereal,
+    haskell-src-exts >= 1.14.0 && < 1.15,
+    haskell-src-meta >= 0.6 && < 0.7,
+    bytestring >= 0.9.1 && < 0.11,
+    heist >= 0.13 && < 0.14,
+    snaplet-acid-state >= 0.2.5 && < 0.3,
+    MonadCatchIO-transformers >= 0.3.1.0 && < 0.4,
+    mtl >= 2 && < 3,
+    snap >= 0.13 && < 0.14,
+    snap-core >= 0.9 && < 0.11,
+    snap-server >= 0.9 && < 0.11,
+    snap-loader-static >= 0.9 && < 0.10,
+    text,
+    time >= 1.1 && < 1.5,
+    xmlhtml >= 0.1,
+    snap-extras >= 0.9 && < 1,
+    lens        >= 4.0,
+    postgresql-simple
 
-  if flag(development)
-    build-depends:
-      snap-loader-dynamic == 0.10.*
-    cpp-options: -DDEVELOPMENT
-    -- In development mode, speed is already going to suffer, so skip
-    -- the fancy optimization flags.  Additionally, disable all
-    -- warnings.  The hint library doesn't give an option to execute
-    -- compiled code when there were also warnings, so disabling
-    -- warnings allows quicker workflow.
-    ghc-options: -threaded -w
-  else
-    if impl(ghc >= 6.12.0)
-      ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
-                   -fno-warn-orphans -fno-warn-unused-do-bind
-    else
-      ghc-options: -threaded -Wall -fwarn-tabs -funbox-strict-fields -O2
-                   -fno-warn-orphans
+executable acidToSQL
+  default-language: Haskell2010
+  hs-source-dirs: src scripts
+  main-is:        acidToSQL.hs
+  other-modules:
+    Reffit.AcidTypes,
+    Reffit.CrossRef,
+    Reffit.Discussion,
+    Reffit.Document,
+    Reffit.FieldTag,
+    Reffit.Filter,
+    Reffit.Handlers,
+    Reffit.Handlers.HandleAuthentication,
+    Reffit.Handlers.HandleDiscussion,
+    Reffit.Handlers.HandleIndex,
+    Reffit.Handlers.HandleNewDocClass,
+    Reffit.Handlers.HandleNewOComment,
+    Reffit.Handlers.HandleNewPaper,
+    Reffit.Handlers.HandleNewSummary,
+    Reffit.Handlers.HandleSummaryVote,
+    Reffit.Handlers.HandleViewPaper,
+    Reffit.Handlers.HandleViewUser,
+    Reffit.OverviewComment,
+    Reffit.PaperRoll,
+    Reffit.Scores,
+    Reffit.Search,
+    Reffit.Sort,
+    Reffit.Types,
+    Reffit.User
+
+  build-depends: 
+    base >= 4.4 && < 5,
+    containers,
+    acid-state,
+    safecopy,
+    hashable,
+    snaplet-acid-state,
+    digestive-functors,
+    digestive-functors-heist,
+    digestive-functors-snap,
+    blaze-html,
+    digestive-functors-blaze,
+    transformers-compat,
+    safe,
+    text-icu,
+    HTTP,
+    network,
+    aeson,
+    unordered-containers,
+    cereal,
+    haskell-src-exts >= 1.14.0 && < 1.15,
+    haskell-src-meta >= 0.6 && < 0.7,
+    bytestring >= 0.9.1 && < 0.11,
+    heist >= 0.13 && < 0.14,
+    snaplet-acid-state >= 0.2.5 && < 0.3,
+    MonadCatchIO-transformers >= 0.3.1.0 && < 0.4,
+    mtl >= 2 && < 3,
+    snap >= 0.13 && < 0.14,
+    snap-core >= 0.9 && < 0.11,
+    snap-server >= 0.9 && < 0.11,
+    snap-loader-static >= 0.9 && < 0.10,
+    text,
+    time >= 1.1 && < 1.5,
+    xmlhtml >= 0.1,
+    snap-extras >= 0.9 && < 1,
+    lens        >= 4.0,
+    postgresql-simple
