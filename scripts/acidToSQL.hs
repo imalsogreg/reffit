@@ -3,7 +3,7 @@
 
 module Main where
 
-import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString as BS
 --import Data.Aeson
 import Data.Serialize
 import Database.PostgreSQL.Simple
@@ -21,8 +21,9 @@ main = do
     [fn] -> do
       bs <- BS.readFile fn
       case decode bs of
-        Nothing-> error $ "Error decoding " ++ fn
-        Just (s :: PersistentState) -> do
-          conn <- connectPostgreSQL ""
+        Left e -> error $ "Error decoding " ++ fn
+        Right (s :: PersistentState) -> do
+          conn <- connectPostgreSQL "dbname='postgres' user='postgres'"
           q    <- query_ conn "select 2 + 2" :: IO [Only Int]
           putStrLn $ show q
+    _ -> error "Usage: acidToSQL filename"
