@@ -9,15 +9,9 @@ CREATE TABLE userFollowers (
        followTime timestamp
 );
 
-CREATE TABLE userPinboard (
-       userID  int references reffitUsers(userID),
-       docID   int references documents(documentID),
-       pinTime timestamp
-);
-
 CREATE TABLE emailAddys (
        emailID    int          PRIMARY KEY,
-       user       int          references reffitUsers(userID),
+       userID     int          references reffitUsers(userID),
        verified   smallint,
        verifiedAt timestamp,
        verifyKey  varchar(200),
@@ -26,7 +20,7 @@ CREATE TABLE emailAddys (
 
 CREATE TABLE passwordResetRequests (
        resetRequestID int          PRIMARY KEY,
-       user           int          references reffitUsers(userID),
+       userID         int          references reffitUsers(userID),
        resetKey       varchar(200),
        resetExpiresAt timestamp
 );
@@ -47,7 +41,13 @@ CREATE TABLE documents (
        docSourceURL varchar(200)
 );
 
-CREATE TABLE documentAuthers (
+CREATE TABLE userPinboard (
+       userID  int references reffitUsers(userID),
+       docID   int references documents(documentID),
+       pinTime timestamp
+);
+
+CREATE TABLE documentAuthors (
        authorID int          PRIMARY KEY,
        document int          references documents(documentID),
        author   varchar(200)

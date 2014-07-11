@@ -12,7 +12,8 @@ import System.Environment
 import Reffit.Types
 import Reffit.AcidTypes
 
-
+insertUsers :: PersistentState -> IO ()
+insertUsers p = 
 
 main :: IO ()
 main = do
