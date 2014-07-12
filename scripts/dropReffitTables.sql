@@ -1,3 +1,4 @@
+DROP TABLE passwordresetrequests CASCADE;
 DROP TABLE anoncommentauthors CASCADE;
 DROP TABLE anoncommentvotes CASCADE;
 DROP TABLE authors CASCADE;

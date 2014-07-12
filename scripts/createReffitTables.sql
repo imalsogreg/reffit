@@ -10,12 +10,13 @@ CREATE TABLE userFollowers (
 );
 
 CREATE TABLE emailAddys (
-       emailID    int          PRIMARY KEY,
-       userID     int          references reffitUsers(userID),
-       verified   smallint,
+       emailID    int           PRIMARY KEY,
+       emailAddy  varchar(200),
+       userID     int           references reffitUsers(userID),
+       verified   boolean,
        verifiedAt timestamp,
        verifyKey  varchar(200),
-       isPrimary  smallint
+       isPrimary  boolean
 );
 
 CREATE TABLE passwordResetRequests (
