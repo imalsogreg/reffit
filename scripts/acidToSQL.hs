@@ -15,6 +15,7 @@ import Data.Serialize
 import Database.PostgreSQL.Simple
 import System.Environment
 
+import Reffit.Document
 import Reffit.Types
 import Reffit.User
 import Reffit.AcidTypes
@@ -65,6 +66,19 @@ insertFollowers conn rUsers userSqlIDs =
                                                       else Nothing
                                   _                -> Nothing
 
+
+------------------------------------------------------------------------------
+insertDocuments :: Connection -> Map.Map UserName Int
+                   -> PersistentState -> IO ()
+insertDocuments conn p = do
+  undefined
+
+insertDocument :: Connection -> Map.Map UserName Int
+               -> PersistentState -> Int -> Document -> IO ()
+insertDocument conn rUsers p dInd doc = do
+  execute conn "insert into documents (documentID,title,docClass,uploadTime,docSourceURL) values (?,?,?,?,?)"
+    (dInd, docTitle doc, docClassName (docClass doc), docPostTime doc, docLink doc)
+  return ()
 
 ------------------------------------------------------------------------------
 main :: IO ()

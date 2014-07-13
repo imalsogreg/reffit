@@ -37,7 +37,7 @@ CREATE TABLE commentReferrals (
 CREATE TABLE documents (
        documentID   int           PRIMARY KEY,
        title        varchar(400),
-       docClass     smallint,
+       docClass     varchar(100),
        uploadTime   timestamp,
        docSourceURL varchar(200)
 );

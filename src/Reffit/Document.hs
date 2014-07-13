@@ -17,6 +17,7 @@ import           GHC.Generics
 import           Data.Typeable
 import           Data.SafeCopy
 import qualified Data.Map as Map
+import           Database.PostgreSQL.Simple
 
 data Document = Document
                 { docUploader   :: Maybe UserName
