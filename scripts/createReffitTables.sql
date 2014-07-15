@@ -60,15 +60,15 @@ CREATE TABLE authors (
 );     
 
 CREATE TABLE comments (
-       commentID     int           PRIMARY KEY,
-       commentTime   timestamp,
-       parentDoc     int           references documents(documentID),
-       parentComment int           references comments(commentID),
-       commentText   varchar(5000)
+       commentID   int           PRIMARY KEY,
+       commentTime timestamp,
+       parentDoc      int           references documents(documentID),
+       parentComment  int           references comments(commentID),
+       commentText varchar(5000)
 );
 
 CREATE TABLE commentParts (
-       commentPartID  int            PRIMARY KEY,
+       commentPartID  int            UNIQUE PRIMARY KEY,
        wholeCommentID int            references comments(commentID),
        partIndex      smallint,
        text           varchar(1000),
