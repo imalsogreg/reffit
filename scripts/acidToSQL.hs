@@ -44,7 +44,9 @@ insertUsers conn p = do
       _ <- execute' c "insert into reffitUsers (userid,username) values (?,?)"
         (i, uName :: T.Text)
       execute' conn
-        "insert into emailaddys (emailID,emailAddy,userID,verified,isPrimary) values (?,?,?,?,?)"
+        "insert into emailaddys \
+        \(emailID,emailAddy,userID,verified,isPrimary) \
+        \values (?,?,?,?,?)"
         (i, uName, i, False, True)
 
 
@@ -85,7 +87,9 @@ insertDocuments conn p = do
 
 insertDocument :: Connection -> PersistentState -> Int -> Document -> IO ()
 insertDocument conn p docSqlId d@Document{..} = do
-  execute' conn "insert into documents (documentID,title,docClass,uploadTime,docSourceURL) values (?,?,?,?,?)"
+  execute' conn "insert into documents \
+                \(documentID,title,docClass,uploadTime,docSourceURL) \
+                \values (?,?,?,?,?)"
     (docSqlId, docTitle, docClassName docClass, docPostTime, docLink)
   mapM_ (insertComment conn docSqlId) (Map.elems docOComments)
   insertDiscussion conn docSqlId Nothing docDiscussion
@@ -93,29 +97,38 @@ insertDocument conn p docSqlId d@Document{..} = do
 
 insertComment :: Connection -> Int -> OverviewComment -> IO ()
 insertComment conn docSqlId OverviewComment{..} = do
-  allComments <- query_' conn "SELECT (commentid) FROM comments" :: IO [Only Int]
+  allComments <- query_' conn
+                 "SELECT (commentid) FROM comments" :: IO [Only Int]
   let commentSqlId = length allComments + 1
   execute' conn
-    "insert into comments (commentID,commentTime,parentDoc,parentComment,commentText) values (?,?,?,?,?)"
-    (commentSqlId :: Int, ocPostTime :: UTCTime, docSqlId :: Int, Nothing :: Maybe Int, ocText)
+    "insert into comments \
+    \(commentID,commentTime,parentDoc,parentComment,commentText) \
+    \values (?,?,?,?,?)"
+    (commentSqlId, ocPostTime, docSqlId, Nothing :: Maybe Int, ocText)
 
   insertDiscussion conn docSqlId (Just commentSqlId) ocDiscussion
 
   return ()
 
+------------------------------------------------------------------------------
 insertDiscussion :: Connection -> Int -> Maybe Int -> Discussion -> IO ()
 insertDiscussion conn docSqlId parentSqlId discussion =
   forM_ (discussion :: Forest DiscussionPoint)
-  (\d -> insertDiscussionPoint conn docSqlId parentSqlId (rootLabel d) (subForest d))
+  (\d -> insertDiscussionPoint conn docSqlId parentSqlId (rootLabel d)
+         (subForest d))
 
-insertDiscussionPoint :: Connection -> Int -> Maybe Int -> DiscussionPoint -> Discussion -> IO ()
-insertDiscussionPoint conn docSqlId parentSqlId DiscussionPoint{..} subDiscussion = do
-  allComments <- query_' conn "SELECT (commentid) FROM Comments" :: IO [Only Int]
+insertDiscussionPoint :: Connection -> Int -> Maybe Int -> DiscussionPoint
+                      -> Discussion -> IO ()
+insertDiscussionPoint conn docSqlId parentSqlId DiscussionPoint{..} subD = do
+  allComments <- query_' conn
+                 "SELECT (commentid) FROM Comments" :: IO [Only Int]
   let commentSqlId = length allComments + 1
   execute' conn
-    "INSERT into Comments (commentId, commentTime, parentDoc, parentComment, commentText) values (?,?,?,?,?)"
+    "INSERT into Comments \
+    \(commentId, commentTime, parentDoc, parentComment, commentText)\
+    \ values (?,?,?,?,?)"
     (commentSqlId, _dPostTime, docSqlId, parentSqlId, _dText)
-  insertDiscussion conn docSqlId (Just commentSqlId) subDiscussion
+  insertDiscussion conn docSqlId (Just commentSqlId) subD
   return ()
 
 
