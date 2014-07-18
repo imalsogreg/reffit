@@ -1,6 +1,7 @@
 CREATE TABLE reffitUsers (
-       userID   int PRIMARY KEY,
-       userName varchar(200) UNIQUE
+       userID       int PRIMARY KEY,
+       userName     varchar(200) UNIQUE,
+       userJoinTime timestamp
 );
 
 CREATE TABLE userFollowers (
@@ -37,6 +38,7 @@ CREATE TABLE commentReferrals (
 CREATE TABLE documents (
        documentID   int           PRIMARY KEY,
        title        varchar(400),
+       docUploader  int           references reffitusers(userid),
        docClass     varchar(100),
        uploadTime   timestamp,
        docSourceURL varchar(200)
@@ -64,39 +66,40 @@ CREATE TABLE comments (
        commentTime timestamp,
        parentDoc      int           references documents(documentID),
        parentComment  int           references comments(commentID),
-       commentText varchar(5000)
+       commentText varchar(50000)
 );
 
 CREATE TABLE commentParts (
        commentPartID  int            UNIQUE PRIMARY KEY,
        wholeCommentID int            references comments(commentID),
+       ratingOfPaper  smallint,
        partIndex      smallint,
-       text           varchar(1000),
-       html           varchar(5000)
+       text           varchar(10000),
+       html           varchar(50000)
 );
 
 CREATE TABLE publicCommentAuthors (
        commentID       int references comments(commentID),
-       commentPartID   int references commentParts(commentPartID),
        authorID        int references reffitUsers(userID)
 );
 
 CREATE TABLE anonCommentAuthors (
        commentID     int references comments(commentID),
-       commentPartID int references commentParts(commentPartID),
        authorID      int references reffitUsers(userID)
 );
 
 CREATE TABLE publicCommentVotes (
        voterID       int references reffitUsers(userID),
        voteSubject   int references commentParts(commentPartID),
-       voteValue     int NOT NULL
+       voteValue     int NOT NULL,
+       voteTime      timestamp
 );
 
 CREATE TABLE anonCommentVotes (
        voterID       int references reffitUsers(userID),
        voteSubject   int references commentParts(commentPartID),
-       voteValue     int NOT NULL
+       voteValue     int NOT NULL,
+       voteTime      timestamp
 );
 
 CREATE TABLE hashTags (
@@ -117,7 +120,7 @@ CREATE TABLE hashTagPages (
        hashTagPageID   int PRIMARY KEY,
        hashTag         int references hashTags(hashTagID),
        pageText        varchar(20000),
-       pageTextHistory varchar(50000),
-       pageHtml        varchar(40000)
+       pageHtml        varchar(40000),
+       pageDate        timestamp
 );
 

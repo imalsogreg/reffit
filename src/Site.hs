@@ -45,6 +45,7 @@ import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Snaplet.AcidState
+import           Snap.Snaplet.PostgresqlSimple hiding (query)
 import           Snap.Util.FileServe
 import           Heist
 import qualified Heist.Interpreted as I
@@ -113,7 +114,7 @@ routes =
   [ ("login" , with auth handleLoginSubmit)
   , ("logout"                          , with auth handleLogout)
   , ("new_user"                        , with auth handleNewUser)
-  , ("search"                          , with auth  handleIndex)
+  , ("search"                          , handleIndex)
   , ("new_article"                     , with auth handleNewArticle)
   , ("new_article/:doi"                , with auth handleNewArticle)
   , ("new_summary/"                    , with auth (handleNewOComment Summary'))
@@ -133,11 +134,11 @@ routes =
   , ("/add_usertag/:fieldtag"          , with auth (handleAddTag True))
   , ("/delete_usertag/:fieldtag"       , with auth (handleAddTag False))
   , ("/about"                          , render "about")
-  , ("/:params"                        , with auth handleIndex)
+  , ("/:params"                        , handleIndex)
   , ("stateToDisk"                     , with auth handleStateToDisk)
   , ("stateFromDisk"                   , with auth handleStateFromDisk)
   , ("checkpoint"                      , with auth handleCheckpoint)
-  , ("/"                               , with auth handleIndex)
+  , ("/"                               , handleIndex)
   , ("/dump_state"                     , with auth handleDumpState)
   , ("/splashscreen"                   , render "splashscreen")
   , ("/static"                         , serveDirectory "static")
@@ -157,6 +158,9 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     ac <- nestSnaplet "acid" acid $ acidInit defaultState
     h <- nestSnaplet "" heist $ heistInit "templates"
 
+    d <- nestSnaplet "db" db pgsInit
+--    d <- return undefined
+
     addRoutes routes
     addAuthSplices h auth
 
@@ -165,7 +169,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     -- Perhaps use longer session times?
     wrapSite (\site -> with sess touchSession >> site >> with sess commitSession)
 
-    return $ App h s a ac
+    return $ App h s a ac d
 
 defaultState :: PersistentState
 defaultState =
