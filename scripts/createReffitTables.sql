@@ -51,15 +51,31 @@ CREATE TABLE userPinboard (
 );
 
 CREATE TABLE documentAuthors (
-       authorID int          PRIMARY KEY,
-       document int          references documents(documentID),
-       author   varchar(200)
+       authorID int    PRIMARY KEY,
+       authorGivenName varchar(200),
+       authorSurname   varchar(200),
+       document int    references documents(documentID)
 );
 
 CREATE TABLE authors (
-       authorID int       PRIMARY KEY,
-       authorReffitID int references reffitUsers(userID)
+       authorID        int PRIMARY KEY,     
+       authorReffitID  int references reffitUsers(userID)
 );     
+
+CREATE TABLE authorNames (
+       authorID    int PRIMARY KEY,
+       firstName varchar(200),
+       surname   varchar(200)
+);
+
+CREATE TABLE authorEquivalenceClass (
+       authorClassID PRIMARY KEY
+);
+
+CREATE TABLE authorEquivalenceClassMember (
+       authorID               int references reffitUsers(userID),
+       authorEquivalenceclass int references authorEquivalenceClass(authorClassID)
+);
 
 CREATE TABLE comments (
        commentID   int           PRIMARY KEY,

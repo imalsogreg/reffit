@@ -2,34 +2,48 @@
 
 module Reffit.PaperRoll where
 
-import Reffit.Types
-import Reffit.AcidTypes
-import Reffit.Document
-import Reffit.Scores
-import Reffit.Sort
-import Reffit.Search
-import Reffit.FieldTag
-
-import Control.Applicative
-import qualified Data.List as L
-import Data.Maybe (listToMaybe)
-import Snap.Snaplet (Handler)
-import Snap.Core
-import Snap.Snaplet.AcidState (query)
-import Snap.Snaplet.Heist
-import Application
-import Heist
-import qualified Heist.Interpreted as I
-import qualified Data.Text as T
-import Data.Text.Encoding (decodeUtf8)
-import qualified Data.Map as Map
+------------------------------------------------------------------------------
+import           Control.Applicative
+import           Control.Error
+import           Control.Monad (join)
+import           Control.Monad.Trans (liftIO)
 import qualified Data.ByteString.Char8 as BS
-import Control.Monad (join)
-import Control.Monad.Trans (liftIO)
-import Data.Time
+import qualified Data.List as L
+import qualified Data.Map as Map
+import           Data.Maybe (listToMaybe)
+import qualified Data.Text as T
+import           Data.Text.Encoding (decodeUtf8)
+import           Data.Time
+------------------------------------------------------------------------------
+import           Snap.Snaplet (Handler)
+import           Snap.Core
+import           Snap.Snaplet.AcidState hiding (query)
+import           Snap.Snaplet.PostgresqlSimple
+import           Snap.Snaplet.Heist
+import           Heist
+import qualified Heist.Interpreted as I
+------------------------------------------------------------------------------
+import           Application
+import           Reffit.AcidTypes
+import           Reffit.Document
+import           Reffit.FieldTag
+import           Reffit.Scores
+import           Reffit.Search
+import           Reffit.Sort
+import           Reffit.Types
 
 
+------------------------------------------------------------------------------
+documentFromDB :: Int -> Handler App App (Maybe Document)
+documentFromDB docID = runMaybeT $ do
+  (t,u,c,ts,ln) <- MaybeT $ listToMaybe <$>
+       query "SELECT (title, docUploader, docClass, uploadTime, docSourceURL) \
+        \from documents WHERE documentID == (?)"
+         (Only docID)
+  
+  undefined
 
+------------------------------------------------------------------------------
 paramsToStrategy :: FieldTags -> Map.Map BS.ByteString [BS.ByteString]
                     -> PresentationStrategy
 paramsToStrategy tags params = case Map.lookup "q" params of
@@ -53,6 +67,7 @@ paramsToStrategy tags params = case Map.lookup "q" params of
     in FiltSort sortCrit filtTags
 
 
+------------------------------------------------------------------------------
 allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do
   "paper_roll_papers" ## (renderPaperRollPapers (take 100 docs))

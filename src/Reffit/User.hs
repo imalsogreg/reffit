@@ -16,6 +16,8 @@ import           GHC.Generics
 import           Data.Typeable
 import           Data.SafeCopy (base,extension,deriveSafeCopy,Migrate,MigrateFrom,migrate)
 
+type UserID = Int
+
 data UserEvent = WroteOComment   DocumentId OverviewCommentId
                | VotedOnOComment DocumentId OverviewCommentId (Maybe UpDownVote) UTCTime
                | PostedDocument  DocumentId

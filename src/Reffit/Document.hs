@@ -5,20 +5,38 @@
 
 module Reffit.Document where
 
-import           Reffit.Types
-import           Reffit.FieldTag
-import           Reffit.OverviewComment
-import           Reffit.Discussion
-
-import qualified Data.Text as T
-import           Data.Serialize
-import           Data.Time
-import           GHC.Generics
-import           Data.Typeable
-import           Data.SafeCopy
+------------------------------------------------------------------------------
 import qualified Data.Map as Map
+import           Data.SafeCopy
+import           Data.Serialize
+import qualified Data.Text as T
+import           Data.Typeable
+import           Data.Time
 import           Database.PostgreSQL.Simple
+import           GHC.Generics
+------------------------------------------------------------------------------
+import           Reffit.Discussion
+import           Reffit.DocAuthor
+import           Reffit.FieldTag
+import           Reffit.Types
+import           Reffit.HashTag
+import           Reffit.OverviewComment
 
+
+------------------------------------------------------------------------------
+data DocOverview = DocOverview {
+    docOTitle      :: T.Text
+  , docOUploader   :: Maybe UserName
+  , docOAuthors    :: [DocAuthor]
+  , docOLink       :: T.Text
+  , docOUploadTime :: UTCTime
+  , docONComments  :: Int
+  , docONVotes     :: Int
+  , docHashTags    :: [HashTag]
+  }
+
+
+------------------------------------------------------------------------------
 data Document = Document
                 { docUploader   :: Maybe UserName
                 , docId         :: DocumentId

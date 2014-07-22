@@ -32,9 +32,9 @@ import           Reffit.AcidTypes
 import           Reffit.Document
 import           Reffit.FieldTag
 import           Reffit.Handlers.HandleNewPaper -- to get fieldTag button splices. TODO restructure
-import           Reffit.PaperRoll
+import           Reffit.PaperRoll               (allPaperRollSplices, paramsToStrategy)
 import           Reffit.Scores
-import           Reffit.Sort
+import           Reffit.Sort 
 import           Reffit.Types
 import           Reffit.User
 
@@ -56,6 +56,8 @@ handleIndex = do
       (allIndexSplices tNow docs user' indexParams tags stats)
     Nothing -> writeText "Error getting usage stats"
 
+
+------------------------------------------------------------------------------
 allIndexSplices :: UTCTime -> Map.Map DocumentId Document
                    -> Maybe User
                    -> Map.Map BS.ByteString [BS.ByteString]
@@ -82,7 +84,8 @@ allStatsSplices (nUsers, nDocs, nComments, nVotes) = do
   "nVotes"    ## I.textSplice $ T.pack . show $ nVotes
   where
 
-    
+
+------------------------------------------------------------------------------
 allFilterTagSplices :: [TagPath] -> Splices (SnapletISplice App)
 allFilterTagSplices tps = do
   "fieldTags"  ## renderFieldTags tps
