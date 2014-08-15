@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE QuasiQuotes       #-}
 
 module Reffit.Handlers.Document where
 
@@ -8,6 +9,7 @@ import           Control.Error
 import qualified Data.Text as T
 import           Data.Time
 ------------------------------------------------------------------------------
+import           Database.PostgreSQL.Simple.SqlQQ
 import           Snap.Snaplet (Handler)
 import           Snap.Snaplet.PostgresqlSimple
 ------------------------------------------------------------------------------
@@ -23,7 +25,6 @@ getDocOverview :: Int -> Handler App App (Maybe DocOverview)
 getDocOverview = undefined
 
 
-
 ------------------------------------------------------------------------------
 getAuthorByID :: Int -> Handler App App (Maybe DocAuthor)
 getAuthorByID authorID = do
@@ -35,6 +36,11 @@ getAuthorByID authorID = do
     (Only authorID)
   return $ maybe Nothing (\(g,s) -> Just $ DocAuthor g s refID) v
 
+
+------------------------------------------------------------------------------
 getAuthorsByDocID ::Int -> Handler App App [DocAuthor]
-getAuthorNamesByDocID docID = do
-  authorIDs <- query "SELECT (authorID) from
+getAuthorsByDocID docID =
+  query [sql| SELECT (authorGivenName, authorSurname, reffitID)
+              FROM documentAuthors
+              WHERE authorID = (?) |]
+    (Only docID)

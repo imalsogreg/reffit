@@ -33,6 +33,7 @@ import           Reffit.Sort
 import           Reffit.Types
 
 
+{-
 ------------------------------------------------------------------------------
 documentFromDB :: Int -> Handler App App (Maybe Document)
 documentFromDB docID = runMaybeT $ do
@@ -42,6 +43,7 @@ documentFromDB docID = runMaybeT $ do
          (Only docID)
   
   undefined
+-}
 
 ------------------------------------------------------------------------------
 paramsToStrategy :: FieldTags -> Map.Map BS.ByteString [BS.ByteString]

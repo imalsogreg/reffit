@@ -40,8 +40,6 @@ instance HasAcid App PersistentState where
 instance HasPostgres (Handler b App) where
   getPostgresState = trace "Postgres App handler" $ with db get
 
---instance HasPostgres (Handler App (AuthManager App)) where
---  getPostgresState = trace "Postgres AuthManager App Handler" $ getPostgresState
 
 ------------------------------------------------------------------------------
 type AppHandler = Handler App App

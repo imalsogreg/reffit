@@ -2,6 +2,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE QuasiQuotes         #-}
 
 module Main where
 
@@ -20,6 +21,7 @@ import qualified Data.Text as T
 import Data.Time
 import Data.Tree
 import Database.PostgreSQL.Simple
+import Database.PostgreSQL.Simple.SqlQQ
 import Database.PostgreSQL.Simple.ToField
 import GHC.Int
 import System.Environment
@@ -43,10 +45,15 @@ insertUsers conn p = do
     userIDs =  Map.fromList $ zip
                (map userName . Map.elems $ _users p) [(0::Int)..]
     f c i u = do
-      _ <- execute' c "insert into reffitUsers (userid,username,userJoinTime) values (?,?,?)"
+
+      _ <- execute' c [sql| INSERT into reffitUsers
+                            (userid, username, userJoinTime)
+                            values (?,?,?) |]
         (i, userName u :: T.Text, userJoinTime u)
-      execute' conn
-        "insert into emailaddys (emailID,emailAddy,userID,verified,isPrimary) values (?,?,?,?,?)"
+           
+      execute' conn [sql| insert into emailaddys
+                          (emailID,emailAddy,userID,verified,isPrimary)
+                          values (?,?,?,?,?) |]
         (i, userName u, i, False, True)
 
 
@@ -91,12 +98,30 @@ insertDocuments conn p userIdMap = do
 
 insertDocument :: Connection -> PersistentState -> Map.Map UserName Int
                -> Int -> Document -> IO [(OverviewCommentId, Int)]
-insertDocument conn p userIdMap docSqlId d@Document{..} = do
-  let uploaderId = flip Map.lookup userIdMap <$> docUploader
-  execute' conn "insert into documents (documentID,title,docUploader,docClass,uploadTime,docSourceURL) values (?,?,?,?,?,?)"
-    (docSqlId, docTitle, uploaderId, docClassName docClass, docPostTime, docLink)
-  commentMapping <- mapM (insertComment conn docSqlId userIdMap) (Map.toList docOComments)
-  insertDiscussion conn docSqlId Nothing userIdMap docDiscussion
+insertDocument conn _ userIDMap docSqlID Document{..} = do
+  let uploaderId = flip Map.lookup userIDMap <$> docUploader
+  execute' conn
+    [sql| insert into documents
+          (documentID,title,docUploader,docClass,uploadTime,docSourceURL)
+          values (?,?,?,?,?,?) |]
+    (docSqlID, docTitle, uploaderId, docClassName docClass,
+     docPostTime, docLink)
+    
+  commentMapping <- mapM (insertComment conn docSqlID userIDMap)
+                    (Map.toList docOComments)
+  forM_ docAuthors $ \dAuthor -> do
+    nAuthors <- (listToMaybe . map fromOnly) <$>
+                query_ conn "SELECT count(*) FROM documentAuthors"
+    let (given:surs) = T.words dAuthor
+    case nAuthors of
+      Nothing -> error "Trouble counting authors"
+      Just n  ->
+        execute' conn
+          [sql| insert into documentAuthors
+                (authorID, authorGivenName, authorSurname, document)
+                values (?,?,?,?) |]
+        (n+1::Int, given, T.unwords surs, docSqlID)
+  insertDiscussion conn docSqlID Nothing userIDMap docDiscussion
   return commentMapping
 
 ------------------------------------------------------------------------------
@@ -104,24 +129,35 @@ insertComment :: Connection -> Int -> Map.Map UserName Int
               -> (OverviewCommentId,OverviewComment)
               -> IO (OverviewCommentId,Int)
 insertComment conn docSqlId userIdMap (ocId,OverviewComment{..}) = do
-  allComments <- query_' conn "SELECT (commentid) FROM comments" :: IO [Only Int]
+  allComments <- query_' conn [sql| SELECT (commentid)
+                                    FROM comments |] :: IO [Only Int]
   let commentSqlId = length allComments + 1
       rating = case ocVote of
         Just (_, UpVote)   ->  1 :: Int
         Just (_, DownVote) -> -1
         Nothing            ->  0
   execute' conn
-    "insert into comments (commentID,commentTime,parentDoc,parentComment,commentText) values (?,?,?,?,?)"
+    [sql| insert into comments
+          (commentID,commentTime,parentDoc,parentComment,commentText)
+          values (?,?,?,?,?) |]
     (commentSqlId, ocPostTime, docSqlId, Nothing :: Maybe Int, ocText)
 
   execute' conn
-    "insert into commentparts (commentPartID,wholeCommentID,ratingOfPaper,partIndex,text,html) values (?,?,?,?,?,?)"
-    (commentSqlId, commentSqlId, rating, 0 :: Int, ocText, Nothing :: Maybe T.Text)
+    [sql| insert into commentparts
+          (commentPartID,wholeCommentID,ratingOfPaper,partIndex,text,html)
+          values (?,?,?,?,?,?) |]
+    (commentSqlId, commentSqlId, rating,
+     0 :: Int, ocText, Nothing :: Maybe T.Text)
+    
   let (authorQuery,userId) = case (ocPoster :: Maybe UserName) of
-        Nothing    -> ("insert into anonCommentAuthors (commentID,authorID) values (?,?)",Nothing)
+        Nothing    ->
+          ([sql| insert into anonCommentAuthors (commentID,authorID)
+                 values (?,?) |],Nothing)
         Just uName -> case Map.lookup uName userIdMap of
           Nothing    -> error "Unknown user when inserting comment"
-          Just uId   -> ("insert into publicCommentAuthors (commentID,authorID) values (?,?)",Just uId)
+          Just uId   -> ( [sql| insert into publicCommentAuthors
+                                (commentID,authorID)
+                                values (?,?) |],Just uId)
   execute' conn authorQuery
     (commentSqlId,userId)
 
@@ -137,28 +173,42 @@ insertCommentVotes conn p commentIdMap userIdMap =
   forM_ (Map.elems $ p^.users) $ \u ->
   forM_ (userHistory u) $ \case
     VotedOnOComment _ cId (Just voteDir) t ->
-        case (Map.lookup cId commentIdMap, Map.lookup (userName u) userIdMap) of
+        case (Map.lookup cId commentIdMap, 
+              Map.lookup (userName u) userIdMap) of
           (Just commentSqlId, Just userSqlId) ->
-            execute conn "insert into publicCommentVotes (voterID, voteSubject, voteValue, voteTime) values (?,?,?,?)"
-            (userSqlId, commentSqlId, if voteDir == UpVote then 1 else (-1 :: Int), t)
-          _ -> print (unwords ["Failed to find doc/comment/user id when inserting vote"
-                              , "ocId:", show cId
-                              , "userId:", show (userName u)]) >> 
-               return 0
+            execute conn 
+              [sql| insert into publicCommentVotes 
+                    (voterID, voteSubject, voteValue, voteTime) 
+                    values (?,?,?,?) |]
+            (userSqlId, commentSqlId, if voteDir == UpVote 
+                                      then 1 else (-1 :: Int), t)
+          _ -> do 
+            print $
+             unwords ["Failed to find doc/comment/user id when inserting vote"
+                     , "ocId:", show cId
+                     , "userId:", show (userName u)]
+            return 0
     _ -> return 0
 
-insertDiscussion :: Connection -> Int -> Maybe Int -> Map.Map UserName Int -> Discussion -> IO ()
+------------------------------------------------------------------------------
+insertDiscussion :: Connection -> Int -> Maybe Int -> Map.Map UserName Int 
+                 -> Discussion -> IO ()
 insertDiscussion conn docSqlId parentSqlId userIdMap discussion =
-  forM_ (discussion :: Forest DiscussionPoint)
-  (\d -> insertDiscussionPoint conn docSqlId parentSqlId (rootLabel d) (subForest d) userIdMap)
+  forM_ (discussion :: Forest DiscussionPoint) $ \d ->
+  insertDiscussionPoint conn docSqlId parentSqlId
+    (rootLabel d) (subForest d) userIdMap
 
 insertDiscussionPoint :: Connection -> Int -> Maybe Int -> DiscussionPoint
                       -> Discussion -> Map.Map UserName Int -> IO ()
-insertDiscussionPoint conn docSqlId parentSqlId DiscussionPoint{..} subDiscussion userIdMap = do
-  allComments <- query_' conn "SELECT (commentid) FROM Comments" :: IO [Only Int]
+insertDiscussionPoint
+  conn docSqlId parentSqlId DiscussionPoint{..} subDiscussion userIdMap = do
+  allComments <- query_' conn [sql| SELECT (commentid)
+                                    FROM Comments |] :: IO [Only Int]
   let commentSqlId = length allComments + 1
   execute' conn
-    "INSERT into Comments (commentId, commentTime, parentDoc, parentComment, commentText) values (?,?,?,?,?)"
+    [sql| INSERT into Comments
+          (commentId, commentTime, parentDoc, parentComment, commentText)
+          values (?,?,?,?,?) |]
     (commentSqlId, _dPostTime, docSqlId, parentSqlId, _dText)
   insertDiscussion conn docSqlId (Just commentSqlId) userIdMap subDiscussion
   return ()
@@ -171,11 +221,11 @@ insertPinboard conn User{..} userIdMap docMap =
   forM_ (Set.toList userPinboard) $ \docId ->
   let docSqlId  = Map.lookup docId docMap
       userSqlId = Map.lookup userName userIdMap
-      pinTime   = listToMaybe . catMaybes .
-                  map (\h -> case h of
-                             PinnedDoc pDocId t | pDocId == docId -> Just t
-                             _                                    -> Nothing) $
-                  userHistory
+      justPin h = case h of
+        PinnedDoc pDocId t | pDocId == docId -> Just t
+        _                                    -> Nothing
+      pinTime   = listToMaybe . catMaybes $ 
+                  map justPin userHistory
   in  case (docSqlId, userSqlId, pinTime) of
     (Just dsID, Just usID, Just pT) -> do
       execute conn
@@ -199,7 +249,8 @@ main = do
           userIdMap <- insertUsers conn p
           (docIdMap,commentIdMap)  <- insertDocuments conn p userIdMap
           insertCommentVotes conn p commentIdMap userIdMap
-          mapM_ (\u -> insertPinboard conn u userIdMap docIdMap) (Map.elems $ p^.users)
+          mapM_ (\u -> insertPinboard conn u userIdMap docIdMap)
+            (Map.elems $ p^.users)
           putStrLn $ "Done"
 
     _ -> error "Usage: acidToSQL filename"
