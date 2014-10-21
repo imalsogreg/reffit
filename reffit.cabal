@@ -47,6 +47,7 @@ Executable reffit
     snaplet-acid-state        >= 0.2.5   && < 0.3,
     MonadCatchIO-transformers >= 0.2.1   && < 0.4,
     mtl                       >= 2       && < 3,
+    network-uri               >= 2.6.0.1 && < 2.7,
     snap                      >= 0.13    && < 0.14,
     snap-core                 >= 0.9     && < 0.11,
     snap-server               >= 0.9     && < 0.11,
@@ -54,16 +55,9 @@ Executable reffit
     text                      >= 0.11    && < 0.12,
     time                      >= 1.1     && < 1.5,
     xmlhtml                   >= 0.1,
-    snap-extras               >= 0.9     && < 0.10
-
-  if flag(old-base)
-    build-depends:
-      base                      >= 4        && < 4.4,
-      lens                      >= 3.7.6    && < 3.8
-  else
-    build-depends:
-      base                      >= 4.4      && < 5,
-      lens                      >= 4.0      && < 4.4
+    base                      >= 4.4     && < 5,
+    lens                      >= 4.0     && < 4.5,
+    lens-aeson                >= 1.0.0.1 && < 1.1
 
   extra-libraries: icuuc
   if os(mingw32)
