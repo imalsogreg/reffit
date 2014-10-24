@@ -115,6 +115,7 @@ routes =
   , ("new_user"                        , with auth handleNewUser)
   , ("search"                          , with auth  handleIndex)
   , ("new_article"                     , with auth handleNewArticle)
+  , ("delete_article"                  , with auth handleDeleteArticle)
   , ("new_article/:doi"                , with auth handleNewArticle)
   , ("new_summary/"                    , with auth (handleNewOComment Summary'))
   , ("edit_summary/"                   , with auth (handleNewOComment Summary'))
