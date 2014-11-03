@@ -111,16 +111,20 @@ insertDocument conn _ userIDMap docSqlID Document{..} = do
                     (Map.toList docOComments)
   forM_ docAuthors $ \dAuthor -> do
     nAuthors <- (listToMaybe . map fromOnly) <$>
-                query_ conn "SELECT count(*) FROM documentAuthors"
+                query_ conn "SELECT count(*) FROM authors"
     let (given:surs) = T.words dAuthor
     case nAuthors of
       Nothing -> error "Trouble counting authors"
-      Just n  ->
+      Just n  -> do
         execute' conn
-          [sql| insert into documentAuthors
-                (authorID, authorGivenName, authorSurname, document)
-                values (?,?,?,?) |]
-        (n+1::Int, given, T.unwords surs, docSqlID)
+          [sql| insert into authors
+                (authorID, authorGivenName, authorSurname)
+                values (?,?,?) |]
+          (n+1::Int, given, T.unwords surs)
+        execute' conn
+          [sql| INSERT INTO documentAuthors
+                VALUES (?,?) |]
+          (n+1::Int,docSqlID)
   insertDiscussion conn docSqlID Nothing userIDMap docDiscussion
   return commentMapping
 

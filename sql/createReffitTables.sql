@@ -7,7 +7,7 @@ CREATE TABLE reffitUsers (
 CREATE TABLE userFollowers (
        follower   int references reffitusers(userid),
        followed   int references reffitusers(userid),
-       UNIQUE (follower,followed)
+       UNIQUE (follower,followed),
        followTime timestamp
 );
 
@@ -51,11 +51,15 @@ CREATE TABLE userPinboard (
        pinTime timestamp
 );
 
+CREATE TABLE authors (
+  authorID int PRIMARY KEY,
+  reffitID int references reffitUsers(userID),
+  authorGivenName varchar(200),
+  authorSurname   varchar(200)
+);
+
 CREATE TABLE documentAuthors (
        authorID        int    PRIMARY KEY,
-       reffitID        int    references reffitUsers(userID),
-       authorGivenName varchar(200),
-       authorSurname   varchar(200),
        document        int    references documents(documentID)
 );
 
