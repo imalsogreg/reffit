@@ -7,6 +7,7 @@ CREATE TABLE reffitUsers (
 CREATE TABLE userFollowers (
        follower   int references reffitusers(userid),
        followed   int references reffitusers(userid),
+       UNIQUE (follower,followed)
        followTime timestamp
 );
 
@@ -28,11 +29,11 @@ CREATE TABLE passwordResetRequests (
 );
 
 CREATE TABLE commentReferrals (
-       referralID    int          PRIMARY KEY,
-       referrer      int          references reffitUsers(userID),
-       referredEmail varchar(200),
+       referralID       int          PRIMARY KEY,
+       referrer         int          references reffitUsers(userID),
+       referredEmail    varchar(200),
        referredUserName varchar(200), 
-       accepted      smallint
+       accepted         smallint
 );
 
 CREATE TABLE documents (

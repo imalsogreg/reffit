@@ -7,7 +7,6 @@ module Reffit.Types where
 
 import           Control.Applicative
 import           Data.Text
-import qualified Data.Map as Map
 import           GHC.Int
 import           GHC.Generics
 import           Data.Typeable
@@ -15,7 +14,6 @@ import           Data.Time.Clock
 import           Data.Serialize
 import           Data.Time
 import Data.SafeCopy (base, deriveSafeCopy)
-import qualified Data.Set as Set
 
 
 -- Orphan instances for types used all over

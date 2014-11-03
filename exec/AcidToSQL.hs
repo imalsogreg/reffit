@@ -245,7 +245,7 @@ main = do
       case decode bs of
         Left e -> error $ "Error decoding " ++ fn ++ ": " ++ e
         Right (p :: PersistentState) -> do
-          conn <- connectPostgreSQL "dbname='postgres' user='postgres'"
+          conn <- connectPostgreSQL "dbname='reffit' user='greghale'"
           userIdMap <- insertUsers conn p
           (docIdMap,commentIdMap)  <- insertDocuments conn p userIdMap
           insertCommentVotes conn p commentIdMap userIdMap

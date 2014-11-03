@@ -24,6 +24,18 @@ import           Reffit.HashTag
 getDocOverview :: Int -> Handler App App (Maybe DocOverview)
 getDocOverview = undefined
 
+------------------------------------------------------------------------------
+getDocUploaderByDocID :: Int -> Handler App App (Maybe UserName)
+getDocUploaderByDocID docID = do
+  res <- query [sql| SELECT userName FROM reffitUsers
+                     INNER JOIN documents
+                     ON documents.docUploader = reffitUsers.userID
+                     WHERE  documentID = (?) |]
+         (Only docID)
+  case res of
+    [Only uID] -> return uID
+    _          -> return Nothing
+  
 
 ------------------------------------------------------------------------------
 getAuthorByID :: Int -> Handler App App (Maybe DocAuthor)

@@ -21,8 +21,9 @@ import Data.Text.Encoding
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy.Char8 as BSL
 import Control.Lens
-import Data.Aeson.Lens
 import qualified Data.Aeson as A
+import Data.Aeson.Lens
+
 
 apiUrl :: T.Text
 apiUrl = "http://search.crossref.org/dois?q="

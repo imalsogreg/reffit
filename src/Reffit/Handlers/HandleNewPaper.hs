@@ -4,6 +4,7 @@ module Reffit.Handlers.HandleNewPaper(
 --  documentView,
   documentForm,
   handleNewArticle,
+  handleDeleteArticle,
   tagButtonSplice
   )
 where
@@ -36,6 +37,7 @@ import qualified Text.Blaze.Html5             as H
 import qualified Text.XmlHtml                 as X
 import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist
+import qualified Data.Text.Encoding as T
 import           GHC.Int
 import qualified Data.Tree                    as RT
 import           Data.Time
@@ -86,6 +88,26 @@ validateTags allTags formTags
   where
     allPathStrs = map T.strip . T.splitOn "," $ formTags
     allPaths = map (T.splitOn ".") allPathStrs
+
+
+------------------------------------------------------------------------------
+-- | Handle article deletion  TODO cleanup user history when doing this
+handleDeleteArticle :: Handler App (AuthManager App) ()
+handleDeleteArticle = do
+  aUser <- currentUser
+  case userLogin <$> aUser of
+    Just "imalsogreg" -> do
+      docMap <- query QueryAllDocs
+      pId'   <- getParam "paperid"
+      case join $ (readMay . BS.unpack) <$> pId' of
+        Nothing -> writeText $ "Bad parameter paperid"
+        Just pId -> do
+          let newPapers = Map.filterWithKey (\k _ -> k /= pId) docMap
+          _ <- update $ UpdateAllDocs newPapers
+          writeText "Done"
+    Just x -> do
+      writeText $ T.append x ", only admin can delete an article"
+
 
 ------------------------------------------------------------------------------
 -- | Handles article submission

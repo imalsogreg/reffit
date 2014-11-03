@@ -2,40 +2,24 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-------------------------------------------------------------------------------
--- | This module is where all the routes and handlers are defined for your
--- site. The 'app' function is the initializer that combines everything
--- together and is exported by this module.
 module Site
   ( app
   ) where
 
 ------------------------------------------------------------------------------
-
-import           Reffit.Types
-import           Reffit.AcidTypes
-import           Reffit.OverviewComment
-import           Reffit.Document
-import           Reffit.Discussion
-import           Reffit.User
-import           Reffit.FieldTag
-import           Reffit.CrossRef
-import           Reffit.PaperRoll
-
-import           Reffit.Handlers
-
-import           Util.ReffitMigrate
-import           Control.Lens (view)
-import           Snap.Snaplet.AcidState (Update, Query, Acid,
-                                         HasAcid (getAcidStore),
-                                         makeAcidic,
-                                         update,query,acidInit)
-
 import           Control.Applicative
-import qualified Data.Map as Map
-import qualified Data.Set as Set
-import           Data.ByteString (ByteString)
-import qualified Data.Text as T
+import           Control.Lens          (view)
+import           Control.Monad.CatchIO (throw)
+import           Control.Monad.State
+import qualified Data.Map              as Map
+import qualified Data.Set              as Set
+import           Data.ByteString       (ByteString)
+import qualified Data.Text             as T
+import           Data.Text.Encoding    (decodeUtf8)
+import           Data.Time
+------------------------------------------------------------------------------
+import           Heist
+import qualified Heist.Interpreted as I
 import           Snap (gets)
 import           Snap.Core
 import           Snap.Snaplet
@@ -45,26 +29,35 @@ import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Snaplet.AcidState
+import           Snap.Snaplet.AcidState (Update, Query, Acid,
+                                         HasAcid (getAcidStore),
+                                         makeAcidic,
+                                         update,query,acidInit)
 import           Snap.Snaplet.PostgresqlSimple hiding (query)
 import           Snap.Util.FileServe
-import           Heist
-import qualified Heist.Interpreted as I
 import qualified Text.Blaze.Html5  as H
 import           Text.Digestive
 import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist
 import           Text.Digestive.Blaze.Html5
-
-import           Control.Monad.CatchIO (throw)
-import           Control.Monad.State
-import           Data.Text.Encoding (decodeUtf8)
-import           Data.Time
 ------------------------------------------------------------------------------
 import           Application
+import           Reffit.Types
+import           Reffit.AcidTypes
+import           Reffit.OverviewComment
+import           Reffit.Document
+import           Reffit.Discussion
+import           Reffit.User
+import           Reffit.FieldTag
+import           Reffit.CrossRef
+import           Reffit.PaperRoll
+import           Reffit.Handlers
+import           Util.ReffitMigrate
 
 ------------------------------------------------------------------------------
 -- | Handle new user form submit
 -- TODO - make sure user by that name doesn't already exist!
+-- TODO - figure out cookies issue?
 handleNewUser :: Handler App (AuthManager App) ()
 handleNewUser = method GET handleForm <|> method POST handleFormSubmit
   where
@@ -116,6 +109,7 @@ routes =
   , ("new_user"                        , with auth handleNewUser)
   , ("search"                          , handleIndex)
   , ("new_article"                     , with auth handleNewArticle)
+  , ("delete_article"                  , with auth handleDeleteArticle)
   , ("new_article/:doi"                , with auth handleNewArticle)
   , ("new_summary/"                    , with auth (handleNewOComment Summary'))
   , ("edit_summary/"                   , with auth (handleNewOComment Summary'))
