@@ -102,10 +102,12 @@ insertDocument conn _ userIDMap docSqlID Document{..} = do
   let uploaderId = flip Map.lookup userIDMap <$> docUploader
   execute' conn
     [sql| insert into documents
-          (documentID,title,docUploader,docClass,uploadTime,docSourceURL)
-          values (?,?,?,?,?,?) |]
-    (docSqlID, docTitle, uploaderId, docClassName docClass,
-     docPostTime, docLink)
+          (documentID,title,docUploader,docClass,uploadTime)
+          values (?,?,?,?,?) |]
+    (docSqlID, docTitle, uploaderId, docClassName docClass, docPostTime)
+  execute' conn
+    [sql| INSERT INTO documentURLs VALUES (?,?) |]
+    (docSqlID, docLink)
     
   commentMapping <- mapM (insertComment conn docSqlID userIDMap)
                     (Map.toList docOComments)

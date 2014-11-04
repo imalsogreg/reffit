@@ -35,24 +35,28 @@ getDocUploaderByDocID docID = do
   case res of
     [Only uID] -> return uID
     _          -> return Nothing
-  
+
+getDocLink :: Int -> Handler App App [String]
+getDocLink docID = map fromOnly <$>
+  query [sql| SELECT docSourceURL FROM documentURLs
+              WHERE  documentID = (?) |]
+  (Only docID)
 
 ------------------------------------------------------------------------------
 getAuthorByID :: Int -> Handler App App (Maybe DocAuthor)
-getAuthorByID authorID = do
-  v <- listToMaybe <$> query
-    "SELECT (firstname,surname) FROM authorNames WHERE authorID == (?)"
-    (Only authorID)
-  refID <- (listToMaybe . map fromOnly) <$> query
-    "SELECT (authorReffitID) FROM authors WHERE authorID == (?)"
-    (Only authorID)
-  return $ maybe Nothing (\(g,s) -> Just $ DocAuthor g s refID) v
+getAuthorByID authorID =
+  listToMaybe <$>
+  query [sql| SELECT authorSurname, authorGivenName, reffitID
+              FROM authors
+              WHERE authorID = (?) |]
+  (Only authorID)
 
 
 ------------------------------------------------------------------------------
 getAuthorsByDocID ::Int -> Handler App App [DocAuthor]
 getAuthorsByDocID docID =
-  query [sql| SELECT (authorGivenName, authorSurname, reffitID)
-              FROM documentAuthors
-              WHERE authorID = (?) |]
+  query [sql| SELECT authorSurname, authorGivenName, reffitID FROM authors
+              INNER JOIN documentAuthors
+              ON authors.authorID = documentAuthors.authorID
+              WHERE documentAuthors.documentID = (?) |]
     (Only docID)

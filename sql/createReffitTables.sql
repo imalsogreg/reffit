@@ -41,8 +41,12 @@ CREATE TABLE documents (
        title        varchar(400),
        docUploader  int           references reffitusers(userid),
        docClass     varchar(100),
-       uploadTime   timestamp,
-       docSourceURL varchar(200)
+       uploadTime   timestamp
+);
+
+CREATE TABLE documentURLs (
+       documentID int references  documents(documentID),
+       docSourceURL varchar(400)
 );
 
 CREATE TABLE userPinboard (
@@ -60,7 +64,7 @@ CREATE TABLE authors (
 
 CREATE TABLE documentAuthors (
        authorID        int    PRIMARY KEY,
-       document        int    references documents(documentID)
+       documentID      int    references documents(documentID)
 );
 
 
