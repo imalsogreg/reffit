@@ -1,4 +1,4 @@
-{-#LANGUAGE OverloadedStrings    #-}
+{-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE LambdaCase          #-}
@@ -134,28 +134,32 @@ insertDocument conn _ userIDMap docSqlID Document{..} = do
 insertComment :: Connection -> Int -> Map.Map UserName Int
               -> (OverviewCommentId,OverviewComment)
               -> IO (OverviewCommentId,Int)
-insertComment conn docSqlId userIdMap (ocId,OverviewComment{..}) = do
+insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
   allComments <- query_' conn [sql| SELECT (commentid)
                                     FROM comments |] :: IO [Only Int]
-  let commentSqlId = length allComments + 1
+  allCommentParts <- query_' conn [sql| SELECT (commentpartid)
+                                        FROM commentParts |] :: IO [Only Int]
+  let commentSqlID     = length allComments     + 1
+      commentPartSqlID = length allCommentParts + 1
       rating = case ocVote of
         Just (_, UpVote)   ->  1 :: Int
         Just (_, DownVote) -> -1
         Nothing            ->  0
   execute' conn
-    [sql| insert into comments
-          (commentID,commentTime,parentDoc,parentComment,commentText)
-          values (?,?,?,?,?) |]
-    (commentSqlId, ocPostTime, docSqlId, Nothing :: Maybe Int, ocText)
+    [sql| INSERT INTO comments
+          (commentID,commentTime,parentDoc,commentText)
+          VALUES (?,?,?,?) |]
+    (commentSqlID, ocPostTime, docSqlID, ocText)
 
-  execute' conn
-    [sql| insert into commentparts
-          (commentPartID,wholeCommentID,ratingOfPaper,partIndex,text,html)
-          values (?,?,?,?,?,?) |]
-    (commentSqlId, commentSqlId, rating,
-     0 :: Int, ocText, Nothing :: Maybe T.Text)
+  zipWithM_  (\i p ->
+    execute' conn
+      [sql| INSERT INTO commentparts
+            (commentPartID, wholeCommentID, commentRating, partIndex, text)
+            VALUES (?,?,?,?,?) |]
+      (commentSqlID, commentPartSqlID, rating, i :: Int, ocText))
+    [0..] (T.lines ocText) 
     
-  let (authorQuery,userId) = case (ocPoster :: Maybe UserName) of
+  let (authorQuery,userID) = case (ocPoster :: Maybe UserName) of
         Nothing    ->
           ([sql| insert into anonCommentAuthors (commentID,authorID)
                  values (?,?) |],Nothing)
@@ -165,11 +169,11 @@ insertComment conn docSqlId userIdMap (ocId,OverviewComment{..}) = do
                                 (commentID,authorID)
                                 values (?,?) |],Just uId)
   execute' conn authorQuery
-    (commentSqlId,userId)
+    (commentSqlID,userID)
 
-  insertDiscussion conn docSqlId (Just commentSqlId) userIdMap ocDiscussion
+  insertDiscussion conn docSqlID (Just commentSqlID) userIdMap ocDiscussion
 
-  return (ocId,commentSqlId)
+  return (ocID,commentSqlID)
 
 ------------------------------------------------------------------------------
 insertCommentVotes :: Connection -> PersistentState
@@ -207,18 +211,36 @@ insertDiscussion conn docSqlId parentSqlId userIdMap discussion =
 insertDiscussionPoint :: Connection -> Int -> Maybe Int -> DiscussionPoint
                       -> Discussion -> Map.Map UserName Int -> IO ()
 insertDiscussionPoint
-  conn docSqlId parentSqlId DiscussionPoint{..} subDiscussion userIdMap = do
+  conn docSqlID parentSqlID DiscussionPoint{..} subDiscussion userIdMap = do
   allComments <- query_' conn [sql| SELECT (commentid)
                                     FROM Comments |] :: IO [Only Int]
-  let commentSqlId = length allComments + 1
+  [Only nCommentParts] <- query_' conn
+                          [sql| SELECT count(*) FROM commentParts |]
+  let commentSqlID = length allComments + 1
+      commentPartSqlID = nCommentParts  + 1 :: Int
   execute' conn
-    [sql| INSERT into Comments
-          (commentId, commentTime, parentDoc, parentComment, commentText)
-          values (?,?,?,?,?) |]
-    (commentSqlId, _dPostTime, docSqlId, parentSqlId, _dText)
-  insertDiscussion conn docSqlId (Just commentSqlId) userIdMap subDiscussion
+    [sql| INSERT INTO comments
+          (commentId, commentTime, parentDoc, commentText)
+          values (?,?,?,?) |]
+    (commentSqlID, _dPostTime, docSqlID, _dText)
+
+  zipWithM_  (\i t ->
+               execute' conn
+               [sql| INSERT INTO commentParts
+                     (commentPartID,wholeCommentID,commentRating,partIndex,parentCommentPart)
+                     VALUES (?,?,?,?,?) |]
+               (commentPartSqlID + i, commentSqlID, commentPartRating _dText, i, parentSqlID))
+    [0..] (T.lines _dText)
+    
+  insertDiscussion conn docSqlID (Just commentSqlID) userIdMap subDiscussion
   return ()
 
+------------------------------------------------------------------------------
+commentPartRating :: T.Text -> Int
+commentPartRating p
+  | "(+1)" `T.isInfixOf` p =  1
+  | "(-1)" `T.isInfixOf` p = -1
+  | otherwise              =  0
 
 ------------------------------------------------------------------------------
 insertPinboard :: Connection -> User -> Map.Map UserName Int
@@ -240,6 +262,14 @@ insertPinboard conn User{..} userIdMap docMap =
     _ -> error $ "Couldn't find pinboard document for "
                        ++ T.unpack userName
 
+insertFieldTags :: Connection -> FieldTags -> TagPath -> IO ()
+insertFieldTags ts accPath = mapM_ (insertFieldTag accPath) ts
+
+insertFieldTag :: Connection -> TagPath -> FieldTag -> IO ()
+insertFieldTag conn accPath (Node tag subTags) = do
+  execute' conn "INSERT INTO hashTags VALUES (?,?,?,?)"
+    (showPath accPath, tag, parentSqlID, 
+  
 
 ------------------------------------------------------------------------------
 main :: IO ()
@@ -269,6 +299,14 @@ execute' c str q = do
   putStrLn $ "Execute: " ++ show str ++ " at " ++ show q :: IO ()
   n <- execute c str q
   putStrLn $ "Done, affected rows: " ++ show n
+
+{-
+execute_' :: Connection -> Query -> IO ()
+execute_' c str = do
+  putStrLn "Execute_: " ++ show str :: IO ()
+  n <- execute_ c str
+  putStrLn $ "Done, affected rows: " ++ show n
+-}
 
 query' :: (ToRow q, Show q, FromRow r, Show r) => Connection -> Query -> q
        -> IO [r]

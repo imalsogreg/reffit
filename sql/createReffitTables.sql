@@ -1,14 +1,14 @@
 CREATE TABLE reffitUsers (
        userID       int PRIMARY KEY,
        userName     varchar(200) UNIQUE,
-       userJoinTime timestamp
+       userJoinTime timestamptz
 );
 
 CREATE TABLE userFollowers (
        follower   int references reffitusers(userid),
        followed   int references reffitusers(userid),
        UNIQUE (follower,followed),
-       followTime timestamp
+       followTime timestamptz
 );
 
 CREATE TABLE emailAddys (
@@ -16,7 +16,7 @@ CREATE TABLE emailAddys (
        emailAddy  varchar(200),
        userID     int           references reffitUsers(userID),
        verified   boolean,
-       verifiedAt timestamp,
+       verifiedAt timestamptz,
        verifyKey  varchar(200),
        isPrimary  boolean
 );
@@ -25,7 +25,7 @@ CREATE TABLE passwordResetRequests (
        resetRequestID int          PRIMARY KEY,
        userID         int          references reffitUsers(userID),
        resetKey       varchar(200),
-       resetExpiresAt timestamp
+       resetExpiresAt timestamptz
 );
 
 CREATE TABLE commentReferrals (
@@ -41,7 +41,7 @@ CREATE TABLE documents (
        title        varchar(400),
        docUploader  int           references reffitusers(userid),
        docClass     varchar(100),
-       uploadTime   timestamp
+       uploadTime   timestamptz
 );
 
 CREATE TABLE documentURLs (
@@ -52,7 +52,7 @@ CREATE TABLE documentURLs (
 CREATE TABLE userPinboard (
        userID  int references reffitUsers(userID),
        docID   int references documents(documentID),
-       pinTime timestamp
+       pinTime timestamptz
 );
 
 CREATE TABLE authors (
@@ -79,49 +79,52 @@ CREATE TABLE authorEquivalenceClassMembers (
 
 CREATE TABLE comments (
        commentID   int           PRIMARY KEY,
-       commentTime timestamp,
+       commentTime timestamptz,
        parentDoc      int           references documents(documentID),
-       parentComment  int           references comments(commentID),
        commentText varchar(50000)
 );
 
 CREATE TABLE commentParts (
-       commentPartID  int            UNIQUE PRIMARY KEY,
-       wholeCommentID int            references comments(commentID),
-       ratingOfPaper  smallint,
-       partIndex      smallint,
-       text           varchar(10000),
-       html           varchar(50000)
+       commentPartID     int           UNIQUE PRIMARY KEY,
+       wholeCommentID    int           references comments(commentID),
+       commentRating     smallint,
+       partIndex         smallint,
+       parentComment     int           references comments(commentID),
+       parentCommentPart int           references commentParts(commentPartID),
+       text              varchar(10000),
+       html              varchar(50000)
 );
 
 CREATE TABLE publicCommentAuthors (
        commentID       int references comments(commentID),
        authorID        int references reffitUsers(userID)
+       UNIQUE (commentID, authorID)
 );
 
 CREATE TABLE anonCommentAuthors (
        commentID     int references comments(commentID),
        authorID      int references reffitUsers(userID)
+       UNIQUE (commentID, authorID)
 );
 
 CREATE TABLE publicCommentVotes (
-       voterID       int references reffitUsers(userID),
+       voterID       int references reffitUsers(userID) NOT NULL,
        voteSubject   int references commentParts(commentPartID),
        voteValue     int NOT NULL,
-       voteTime      timestamp
+       voteTime      timestamptz
 );
 
 CREATE TABLE anonCommentVotes (
-       voterID       int references reffitUsers(userID),
+       voterID       int references reffitUsers(userID) NOT NULL,
        voteSubject   int references commentParts(commentPartID),
        voteValue     int NOT NULL,
-       voteTime      timestamp
+       voteTime      timestamptz
 );
 
 CREATE TABLE hashTags (
-       hashTagID int PRIMARY KEY,
-       hashTagFullName  varchar(200),
-       hashTagShortName varchar(50)
+       hashTagLongName  varchar (200) PRIMARY KEY,
+       hashTagShortName varchar(50),
+       hashTagParent    varchar (200) references hashTagLongName
 );
 
 CREATE TABLE hashTagMentions (
@@ -137,6 +140,6 @@ CREATE TABLE hashTagPages (
        hashTag         int references hashTags(hashTagID),
        pageText        varchar(20000),
        pageHtml        varchar(40000),
-       pageDate        timestamp
+       pageDate        timestamptz
 );
 

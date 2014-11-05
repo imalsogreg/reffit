@@ -48,45 +48,46 @@ Library
 
   build-depends:    
     base >= 4.4 && < 5,
-    containers,
     acid-state,
-    safecopy,
-    hashable,
-    snaplet-acid-state,
+    aeson,
+    blaze-html,
+    bytestring >= 0.9.1 && < 0.11,
+    cereal,
+    containers,
+    digestive-functors-blaze,
     digestive-functors,
     digestive-functors-heist,
     digestive-functors-snap,
-    blaze-html,
-    digestive-functors-blaze,
-    transformers-compat,
-    safe,
-    text-icu,
-    HTTP,
-    network,
-    network-uri,
-    aeson,
-    unordered-containers,
-    cereal,
     errors,
+    hashable,
     haskell-src-exts >= 1.14.0 && < 1.16,
     haskell-src-meta >= 0.6 && < 0.7,
-    bytestring >= 0.9.1 && < 0.11,
     heist >= 0.13 && < 1.1,
-    snaplet-acid-state >= 0.2.5 && < 0.3,
-    MonadCatchIO-transformers >= 0.3.1.0 && < 0.4,
-    mtl >= 2 && < 3,
-    snap >= 0.13 && < 1.1,
-    snap-core,
-    snap-server,
-    snap-loader-static,
-    snaplet-postgresql-simple,
-    text,
-    time >= 1.1 && < 1.5,
-    xmlhtml >= 0.1,
-    snap-extras >= 0.9 && < 1,
+    HTTP,
     lens        >= 4.0,
     lens-aeson,
-    postgresql-simple
+    MonadCatchIO-transformers >= 0.3.1.0 && < 0.4,
+    mtl >= 2 && < 3,
+    network,
+    network-uri,
+    postgresql-simple,
+    safe,
+    safecopy,
+    snap >= 0.13 && < 1.1,
+    snap-core,
+    snap-extras >= 0.9 && < 1,
+    snap-server,
+    snap-loader-static,
+    snaplet-acid-state >= 0.2.5 && < 0.3,
+    snaplet-postgresql-simple,
+    text,
+    text-icu,
+    time >= 1.1 && < 1.5,
+    transformers,
+    transformers-compat,
+    unordered-containers,
+    xmlhtml >= 0.1
+
 
 Executable reffit
   default-language: Haskell2010
@@ -104,11 +105,11 @@ Executable reffit
     snap-loader-static,
     text
 
+
 executable acidToSQL
   default-language: Haskell2010
   hs-source-dirs: exec
   main-is:        AcidToSQL.hs
-
   build-depends: 
     base >= 4.4 && < 5,
     cereal,
