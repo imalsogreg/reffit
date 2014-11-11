@@ -145,10 +145,11 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
         Just (_, UpVote)   ->  1 :: Int
         Just (_, DownVote) -> -1
         Nothing            ->  0
-  execute' conn
+  cID <- query' conn
     [sql| INSERT INTO comments
-          (commentID,commentTime,parentDoc,commentText)
-          VALUES (?,?,?,?) |]
+          (commentTime,parentDoc,commentText)
+          VALUES (?,?,?) 
+          RETURNING commentID |]
     (commentSqlID, ocPostTime, docSqlID, ocText)
 
   zipWithM_  (\i p ->
@@ -262,14 +263,16 @@ insertPinboard conn User{..} userIdMap docMap =
     _ -> error $ "Couldn't find pinboard document for "
                        ++ T.unpack userName
 
+{-
 insertFieldTags :: Connection -> FieldTags -> TagPath -> IO ()
 insertFieldTags ts accPath = mapM_ (insertFieldTag accPath) ts
+
 
 insertFieldTag :: Connection -> TagPath -> FieldTag -> IO ()
 insertFieldTag conn accPath (Node tag subTags) = do
   execute' conn "INSERT INTO hashTags VALUES (?,?,?,?)"
     (showPath accPath, tag, parentSqlID, 
-  
+-}
 
 ------------------------------------------------------------------------------
 main :: IO ()

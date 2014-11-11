@@ -15,6 +15,7 @@ DROP TABLE publiccommentvotes CASCADE;
 DROP TABLE userfollowers CASCADE;
 DROP TABLE userpinboard CASCADE;
 DROP TABLE comments CASCADE;
+DROP TABLE documenturls CASCADE;
 DROP TABLE documents CASCADE;
 DROP TABLE emailaddys CASCADE;
 DROP TABLE reffitusers CASCADE;
