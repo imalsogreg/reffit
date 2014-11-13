@@ -1,6 +1,6 @@
 DROP TABLE passwordresetrequests CASCADE;
 DROP TABLE anoncommentauthors CASCADE;
-DROP TABLE anoncommentvotes CASCADE;
+DROP TABLE anonvotes CASCADE;
 DROP TABLE authorequivalenceclassmembers CASCADE;
 DROP TABLE authorequivalenceclasses CASCADE;
 DROP TABLE authors CASCADE;
@@ -11,7 +11,7 @@ DROP TABLE hashtagmentions CASCADE;
 DROP TABLE hashtagpages CASCADE;
 DROP TABLE hashtags CASCADE;
 DROP TABLE publiccommentauthors CASCADE;
-DROP TABLE publiccommentvotes CASCADE;
+DROP TABLE publicvotes CASCADE;
 DROP TABLE userfollowers CASCADE;
 DROP TABLE userpinboard CASCADE;
 DROP TABLE comments CASCADE;
