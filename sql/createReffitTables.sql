@@ -77,33 +77,39 @@ CREATE TABLE authorEquivalenceClassMembers (
        authorEquivalenceclass int references authorEquivalenceClasses(authorClassID)
 );
 
+CREATE SEQUENCE comment_id_seq;
 CREATE TABLE comments (
-       commentID   int           PRIMARY KEY,
+       commentID   smallint PRIMARY KEY DEFAULT nextval('comment_id_seq'),
        commentTime timestamptz,
        parentDoc      int           references documents(documentID),
        commentText varchar(50000)
 );
+ALTER SEQUENCE comment_id_seq OWNED BY comments.commentID;
 
+
+CREATE SEQUENCE comment_part_id_seq;
 CREATE TABLE commentParts (
-       commentPartID     int           UNIQUE PRIMARY KEY,
-       wholeCommentID    int           references comments(commentID),
+       commentPartID     smallint  PRIMARY KEY DEFAULT nextval('comment_part_id_seq'),
+       wholeCommentID    smallint references comments(commentID),
        commentRating     smallint,
        partIndex         smallint,
-       parentComment     int           references comments(commentID),
-       parentCommentPart int           references commentParts(commentPartID),
+       parentComment     smallint,
+       foreign key (parentComment)          references comments(commentID),
+       parentCommentPart smallint      references commentParts(commentPartID),
        text              varchar(10000),
        html              varchar(50000)
 );
+ALTER SEQUENCE comment_part_id_seq OWNED BY commentParts.commentPartID;
 
 CREATE TABLE publicCommentAuthors (
        commentID       int references comments(commentID),
-       authorID        int references reffitUsers(userID)
+       authorID        int references reffitUsers(userID),
        UNIQUE (commentID, authorID)
 );
 
 CREATE TABLE anonCommentAuthors (
        commentID     int references comments(commentID),
-       authorID      int references reffitUsers(userID)
+       authorID      int references reffitUsers(userID),
        UNIQUE (commentID, authorID)
 );
 
@@ -124,12 +130,12 @@ CREATE TABLE anonCommentVotes (
 CREATE TABLE hashTags (
        hashTagLongName  varchar (200) PRIMARY KEY,
        hashTagShortName varchar(50),
-       hashTagParent    varchar (200) references hashTagLongName
+       hashTagParent    varchar(200) references hashTags(hashTagLongName)
 );
 
 CREATE TABLE hashTagMentions (
        hashMentionID int PRIMARY KEY,
-       hashTag       int references hashTags(hashTagID),
+       hashTag       varchar(200) references hashTags(hashTagLongName),
        docID         int references documents(documentID),
        commentID     int references comments(commentID),
        commentPartID int references commentParts(commentPartID)
@@ -137,7 +143,7 @@ CREATE TABLE hashTagMentions (
 
 CREATE TABLE hashTagPages (
        hashTagPageID   int PRIMARY KEY,
-       hashTag         int references hashTags(hashTagID),
+       hashTag         varchar(200) references hashTags(hashTagLongName),
        pageText        varchar(20000),
        pageHtml        varchar(40000),
        pageDate        timestamptz
