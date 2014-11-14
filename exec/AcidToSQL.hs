@@ -37,25 +37,25 @@ import Reffit.AcidTypes
 ------------------------------------------------------------------------------
 insertUsers :: Connection -> PersistentState -> IO (Map.Map UserName Int)
 insertUsers conn p = do
-  zipWithM_ (f conn) [(0::Int)..] (Map.elems $ p^.users)
-  insertFollowers conn (_users p) userIDs
-  return userIDs
+  userSqlIDs <- Map.fromList <$> mapM (f conn) (Map.elems $ p^.users)
+  insertFollowers conn (_users p) userSqlIDs
+  return userSqlIDs
   where
-    userIDs :: Map.Map UserName Int
-    userIDs =  Map.fromList $ zip
-               (map userName . Map.elems $ _users p) [(0::Int)..]
-    f c i u = do
-
-      _ <- execute' c [sql| INSERT into reffitUsers
-                            (userid, username, userJoinTime)
-                            values (?,?,?) |]
-        (i, userName u :: T.Text, userJoinTime u)
-           
-      execute' conn [sql| insert into emailaddys
-                          (emailID,emailAddy,userID,verified,isPrimary)
-                          values (?,?,?,?,?) |]
-        (i, userName u, i, False, True)
-
+--    userSqlIDs :: Map.Map UserName Int
+--    userSqlIDs =  Map.fromList $ zip
+--               (map userName . Map.elems $ _users p) [(0::Int)..]
+    f c u = do
+      [Only uSqlID] <- query' c [sql| INSERT into reffitUsers
+                                      (username, userJoinTime)
+                                      values (?,?)
+                                      RETURNING userid |]
+        (userName u :: T.Text, userJoinTime u)
+      when (not . T.null . userEmail $ u) $ 
+        execute' conn [sql| INSERT INTO emailaddys
+                            (emailAddy,userID,verified,isPrimary)
+                            values (?,?,?,?) |]
+        (userEmail u, uSqlID, False, True)
+      return (userName u, uSqlID)
 
 ------------------------------------------------------------------------------
 insertFollowers :: Connection
@@ -145,7 +145,7 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
         Just (_, UpVote)   ->  1 :: Int
         Just (_, DownVote) -> -1
         Nothing            ->  0
-  cID <- query' conn
+  [Only (cSqlID :: Int)] <- query' conn
     [sql| INSERT INTO comments
           (commentTime,parentDoc,commentText)
           VALUES (?,?,?) 

@@ -11,7 +11,7 @@ import Data.List (sortBy, (\\))
 import Data.Text.ICU.Normalize
 import qualified Data.Char as C
 
-
+{-
 ------------------------------------------------------------------------------
 data SearchRequest =
   SearchRequest
@@ -20,7 +20,7 @@ data SearchRequest =
   , searchNOffset      :: Int
   , searchSortBy       :: SortBy
   } deriving (Eq, Show)
-
+-}
 tokenize :: T.Text -> [T.Text]
 tokenize query = T.words query \\ ["A","a","The","the","Is","is","An","an"]
 
@@ -38,8 +38,8 @@ dScore query doc = let qTokens  = tokenize query
   (length . filter (\t -> T.isInfixOf t dText) $ qTokens) +
   if T.isInfixOf query normText then 10 else 0
 
---searchDocs :: Int -> Map.Map DocumentId Document -> T.Text -> [Document]
---searchDocs n docs queryText = let nQueryText = norm queryText in
---  take n .
---  sortBy (\a b -> dScore queryText a `Prelude.compare` dScore queryText b) . filter ((>0) . dScore nQueryText) $
+searchDocs :: Int -> Map.Map DocumentId Document -> T.Text -> [Document]
+searchDocs n docs queryText = let nQueryText = norm queryText in
+  take n .
+  sortBy (\a b -> dScore queryText a `Prelude.compare` dScore queryText b) . filter ((>0) . dScore nQueryText) $
   Map.elems docs
