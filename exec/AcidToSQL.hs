@@ -41,9 +41,6 @@ insertUsers conn p = do
   insertFollowers conn (_users p) userSqlIDs
   return userSqlIDs
   where
---    userSqlIDs :: Map.Map UserName Int
---    userSqlIDs =  Map.fromList $ zip
---               (map userName . Map.elems $ _users p) [(0::Int)..]
     f c u = do
       [Only uSqlID] <- query' c [sql| INSERT into reffitUsers
                                       (username, userJoinTime)
@@ -91,20 +88,21 @@ insertDocuments :: Connection -> PersistentState -> Map.Map UserName Int
                 -> IO (Map.Map DocumentId Int, Map.Map OverviewCommentId Int)
 insertDocuments conn p userIdMap = do
   let docIdMap = zip (map fst . Map.toList $ p^.documents) [(0::Int)..]
-  commentIdMap <- concat <$> zipWithM (insertDocument conn p userIdMap )
-    [(0::Int)..] (Map.elems $ p^.documents)
+  commentIdMap <- concat <$> mapM (insertDocument conn p userIdMap )
+                             (Map.elems $ p^.documents)
   return $ (Map.fromList docIdMap, Map.fromList commentIdMap)
 
 
 insertDocument :: Connection -> PersistentState -> Map.Map UserName Int
-               -> Int -> Document -> IO [(OverviewCommentId, Int)]
-insertDocument conn _ userIDMap docSqlID Document{..} = do
+               -> Document -> IO [(OverviewCommentId, Int)]
+insertDocument conn _ userIDMap Document{..} = do
   let uploaderId = flip Map.lookup userIDMap <$> docUploader
-  execute' conn
-    [sql| insert into documents
-          (documentID,title,docUploader,docClass,uploadTime)
-          values (?,?,?,?,?) |]
-    (docSqlID, docTitle, uploaderId, docClassName docClass, docPostTime)
+  [Only docSqlID] <- query' conn
+    [sql| INSERT INTO documents
+          (title,docUploader,docClass,uploadTime)
+          VALUES (?,?,?,?) 
+          RETURNING documentID |]
+    (docTitle, uploaderId, docClassName docClass, docPostTime)
   execute' conn
     [sql| INSERT INTO documentURLs VALUES (?,?) |]
     (docSqlID, docLink)
@@ -112,21 +110,17 @@ insertDocument conn _ userIDMap docSqlID Document{..} = do
   commentMapping <- mapM (insertComment conn docSqlID userIDMap)
                     (Map.toList docOComments)
   forM_ docAuthors $ \dAuthor -> do
-    nAuthors <- (listToMaybe . map fromOnly) <$>
-                query_ conn "SELECT count(*) FROM authors"
     let (given:surs) = T.words dAuthor
-    case nAuthors of
-      Nothing -> error "Trouble counting authors"
-      Just n  -> do
-        execute' conn
-          [sql| insert into authors
-                (authorID, authorGivenName, authorSurname)
-                values (?,?,?) |]
-          (n+1::Int, given, T.unwords surs)
-        execute' conn
+    [Only authorSqlID] <- query' conn
+          [sql| INSERT INTO authors
+                (authorGivenName, authorSurname)
+                VALUES (?,?) 
+                RETURNING authorID |]
+          (given, T.unwords surs)
+    execute' conn
           [sql| INSERT INTO documentAuthors
                 VALUES (?,?) |]
-          (n+1::Int,docSqlID)
+          (authorSqlID :: Int,docSqlID)
   insertDiscussion conn docSqlID Nothing userIDMap docDiscussion
   return commentMapping
 
@@ -135,13 +129,8 @@ insertComment :: Connection -> Int -> Map.Map UserName Int
               -> (OverviewCommentId,OverviewComment)
               -> IO (OverviewCommentId,Int)
 insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
-  allComments <- query_' conn [sql| SELECT (commentid)
-                                    FROM comments |] :: IO [Only Int]
-  allCommentParts <- query_' conn [sql| SELECT (commentpartid)
-                                        FROM commentParts |] :: IO [Only Int]
-  let commentSqlID     = length allComments     + 1
-      commentPartSqlID = length allCommentParts + 1
-      rating = case ocVote of
+
+  let rating = case ocVote of
         Just (_, UpVote)   ->  1 :: Int
         Just (_, DownVote) -> -1
         Nothing            ->  0
@@ -159,22 +148,33 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
             VALUES (?,?,?,?) |]
       (cSqlID, rating, i :: Int, ocText))
     [1..] (T.lines ocText) 
-    
+  
   let (authorQuery,userID) = case (ocPoster :: Maybe UserName) of
         Nothing    ->
-          ([sql| insert into anonCommentAuthors (commentID,authorID)
-                 values (?,?) |],Nothing)
+          ([sql| INSERT INTO anonCommentAuthors (commentID,authorID)
+                 VALUES (?,?) |],Nothing)
         Just uName -> case Map.lookup uName userIdMap of
           Nothing    -> error "Unknown user when inserting comment"
           Just uId   -> ( [sql| insert into publicCommentAuthors
                                 (commentID,authorID)
                                 values (?,?) |],Just uId)
   execute' conn authorQuery
-    (commentSqlID,userID)
+    (cSqlID,userID)
 
-  insertDiscussion conn docSqlID (Just commentSqlID) userIdMap ocDiscussion
+  when (rating /= 0 && isJust ocPoster) $
+    execute' conn 
+     [sql| INSERT INTO publicVotes 
+           (voterID, voteDocument, voteValue, votetime)
+           VALUES (?,?,?,?) |] 
+     (userID, docSqlID, rating, ocPostTime)
 
-  return (ocID,commentSqlID)
+  when (rating /= 0 && ocPoster == Nothing) $
+    error "There should be no anonymous votes in the acidstate db!"
+
+  insertDiscussion conn docSqlID (Just cSqlID) userIdMap ocDiscussion
+
+  return (ocID,cSqlID)
+
 
 ------------------------------------------------------------------------------
 insertCommentVotes :: Connection -> PersistentState
@@ -188,8 +188,8 @@ insertCommentVotes conn p commentIdMap userIdMap =
               Map.lookup (userName u) userIdMap) of
           (Just commentSqlId, Just userSqlId) ->
             execute conn 
-              [sql| insert into publicCommentVotes 
-                    (voterID, voteSubject, voteValue, voteTime) 
+              [sql| insert into publicVotes 
+                    (voterID, voteComment, voteValue, voteTime) 
                     values (?,?,?,?) |]
             (userSqlId, commentSqlId, if voteDir == UpVote 
                                       then 1 else (-1 :: Int), t)
@@ -200,6 +200,7 @@ insertCommentVotes conn p commentIdMap userIdMap =
                      , "userId:", show (userName u)]
             return 0
     _ -> return 0
+
 
 ------------------------------------------------------------------------------
 insertDiscussion :: Connection -> Int -> Maybe Int -> Map.Map UserName Int 
@@ -213,9 +214,7 @@ insertDiscussionPoint :: Connection -> Int -> Maybe Int -> DiscussionPoint
                       -> Discussion -> Map.Map UserName Int -> IO ()
 insertDiscussionPoint
   conn docSqlID parentSqlID DiscussionPoint{..} subDiscussion userIdMap = do
-  [Only nCommentParts] <- query_' conn
-                          [sql| SELECT count(*) FROM commentParts |]
-  let commentPartSqlID = nCommentParts  + 1 :: Int
+
   [Only commentSqlID] <- query' conn
     [sql| INSERT INTO comments
           (commentTime, parentDoc, commentText)
@@ -234,12 +233,14 @@ insertDiscussionPoint
   insertDiscussion conn docSqlID (Just commentSqlID) userIdMap subDiscussion
   return ()
 
+
 ------------------------------------------------------------------------------
 commentPartRating :: T.Text -> Int
 commentPartRating p
   | "(+1)" `T.isInfixOf` p =  1
   | "(-1)" `T.isInfixOf` p = -1
   | otherwise              =  0
+
 
 ------------------------------------------------------------------------------
 insertPinboard :: Connection -> User -> Map.Map UserName Int
@@ -258,7 +259,8 @@ insertPinboard conn User{..} userIdMap docMap =
       execute conn
         "INSERT INTO userPinboard (userID,docID,pinTime) values (?,?,?)"
         (usID, dsID, pT)
-    _ -> error $ "Couldn't find pinboard document for "
+      return ()
+    _ -> putStrLn $ "Couldn't find pinboard document for "
                        ++ T.unpack userName
 
 {-
@@ -271,6 +273,7 @@ insertFieldTag conn accPath (Node tag subTags) = do
   execute' conn "INSERT INTO hashTags VALUES (?,?,?,?)"
     (showPath accPath, tag, parentSqlID, 
 -}
+
 
 ------------------------------------------------------------------------------
 main :: IO ()
