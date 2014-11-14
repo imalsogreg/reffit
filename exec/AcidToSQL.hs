@@ -150,15 +150,15 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
           (commentTime,parentDoc,commentText)
           VALUES (?,?,?) 
           RETURNING commentID |]
-    (commentSqlID, ocPostTime, docSqlID, ocText)
+    (ocPostTime, docSqlID, ocText)
 
   zipWithM_  (\i p ->
     execute' conn
-      [sql| INSERT INTO commentparts
-            (commentPartID, wholeCommentID, commentRating, partIndex, text)
-            VALUES (?,?,?,?,?) |]
-      (commentSqlID, commentPartSqlID, rating, i :: Int, ocText))
-    [0..] (T.lines ocText) 
+      [sql| INSERT INTO commentParts
+            (wholeCommentID, commentRating, partIndex, text)
+            VALUES (?,?,?,?) |]
+      (cSqlID, rating, i :: Int, ocText))
+    [1..] (T.lines ocText) 
     
   let (authorQuery,userID) = case (ocPoster :: Maybe UserName) of
         Nothing    ->
@@ -213,24 +213,22 @@ insertDiscussionPoint :: Connection -> Int -> Maybe Int -> DiscussionPoint
                       -> Discussion -> Map.Map UserName Int -> IO ()
 insertDiscussionPoint
   conn docSqlID parentSqlID DiscussionPoint{..} subDiscussion userIdMap = do
-  allComments <- query_' conn [sql| SELECT (commentid)
-                                    FROM Comments |] :: IO [Only Int]
   [Only nCommentParts] <- query_' conn
                           [sql| SELECT count(*) FROM commentParts |]
-  let commentSqlID = length allComments + 1
-      commentPartSqlID = nCommentParts  + 1 :: Int
-  execute' conn
+  let commentPartSqlID = nCommentParts  + 1 :: Int
+  [Only commentSqlID] <- query' conn
     [sql| INSERT INTO comments
-          (commentId, commentTime, parentDoc, commentText)
-          values (?,?,?,?) |]
-    (commentSqlID, _dPostTime, docSqlID, _dText)
+          (commentTime, parentDoc, commentText)
+          values (?,?,?)
+          RETURNING commentID |]
+    (_dPostTime, docSqlID, _dText)
 
   zipWithM_  (\i t ->
                execute' conn
                [sql| INSERT INTO commentParts
-                     (commentPartID,wholeCommentID,commentRating,partIndex,parentCommentPart)
-                     VALUES (?,?,?,?,?) |]
-               (commentPartSqlID + i, commentSqlID, commentPartRating _dText, i, parentSqlID))
+                     (wholeCommentID,commentRating,partIndex,parentCommentPart)
+                     VALUES (?,?,?,?) |]
+               (commentSqlID, commentPartRating _dText, i :: Int, parentSqlID))
     [0..] (T.lines _dText)
     
   insertDiscussion conn docSqlID (Just commentSqlID) userIdMap subDiscussion
