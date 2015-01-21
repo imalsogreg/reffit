@@ -7,9 +7,14 @@
   <form method="POST">
 
     <ifLoggedIn>
-      <p><span class="dummySpanToMakeDepthFromParentMatchJQueryScriptExpectation"><span class="anotherDummy">
-	  <apply template="new_discussion_link">Add Point</apply>
-      </span></span></p>
+      <p>
+	<span class="dummySpanToMakeDepthFromParentMatchJQueryScriptExpectation">
+	  <span class="anotherDummy">
+	    <apply template="new_discussion_link">Add Point
+	    </apply>
+	  </span>
+	</span>
+      </p>
       <div class="replyFormDiv" discussionid="">
 	
 	<textarea name="dpText" rows="4" cols="60" class="proseBox" value="TEXT AREA"/>

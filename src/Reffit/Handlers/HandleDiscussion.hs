@@ -7,6 +7,8 @@ module Reffit.Handlers.HandleDiscussion (
     )
        where
 
+import Control.Lens
+
 import Reffit.Types
 import Reffit.User
 import Reffit.Discussion
@@ -26,14 +28,16 @@ import Control.Monad (join)
 import Control.Monad.Trans (liftIO)
 import qualified Data.Map as Map
 import Control.Applicative ((<$>),(<*>),pure)
-import Data.Text.Encoding (decodeUtf8)
+import Data.Text.Encoding (decodeUtf8, encodeUtf8)
 import Safe
 import qualified Data.Text as T
 import Heist
+import qualified Heist.Splices.Markdown as Md
 import Snap.Snaplet.Heist
 import Heist.Interpreted
-import Data.Maybe (fromMaybe, listToMaybe)
 import qualified Data.Tree as Tree
+import qualified Text.Pandoc as Pandoc
+import qualified Text.XmlHtml as XML
 
 import qualified Data.ByteString.Char8 as BS
 import Data.Serialize
@@ -117,9 +121,9 @@ handleViewDiscussion = do
           comment'    = join $ Map.lookup <$> commentId' <*> comments'
           discussion' = maybe (docDiscussion <$> doc') (Just . ocDiscussion) comment'
       case (doc', discussion') of
-        (Just doc, Just discussion) -> 
+        (Just doc, Just discussion) ->
           renderWithSplices "discussion"
-          (allDiscussionSplices u us doc docs commentId' comment' tNow discussion)
+            (allDiscussionSplices u us doc docs commentId' comment' tNow discussion)
 
 allDiscussionSplices :: Maybe User -> Map.Map UserName User ->
                         Document -> Map.Map DocumentId Document ->
@@ -153,10 +157,29 @@ discussionPointSplices :: Map.Map DocumentId Document -> Map.Map UserName User -
 discussionPointSplices docs us tNow dp = do
   "dpAuthor"     ## textSplice $ authorText
   "authorLink"   ## textSplice $ maybe "#" (T.append "/user/") (_dPoster dp)
-  "dpText"       ## textSplice $ _dText dp
+--  "dpText"       ## textSplice $ _dText dp
+  "dpText"       ## discussionMarkdown (dp^.dText)
   "dpTime"       ## textSplice . T.pack $ sayTimeDiff tNow ( _dPostTime dp )
   "discussionId" ## textSplice . T.pack . show . _dID $ dp
   where
     userRepText u = T.pack . show $ userReputation docs u
     authorText = maybe "Anonymous" (\u -> T.concat [userName u,"(",userRepText u,")"])
                 . join $ Map.lookup <$> (_dPoster dp) <*> pure us
+
+
+discussionMarkdown :: (Monad m) => T.Text -> Splice m
+discussionMarkdown t = 
+  either (textSplice . T.pack) (return . XML.docContent)
+  . XML.parseHTML "comment"
+  . encodeUtf8
+  . T.pack
+  . Pandoc.writeHtmlString writerOpts
+  . Pandoc.readMarkdown Pandoc.def
+  . T.unpack
+  . T.filter (/= '\r')
+  $ t
+
+------------------------------------------------------------------------------
+writerOpts :: Pandoc.WriterOptions
+writerOpts = Pandoc.def { Pandoc.writerHTMLMathMethod =
+                             Pandoc.MathML Nothing }
