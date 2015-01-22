@@ -23,26 +23,31 @@ Executable reffit
   main-is: Main.hs
 
   Build-depends:
-    containers,
     acid-state,
-    safecopy,
-    hashable,
-    snaplet-acid-state,
+    blaze-html,
+    bytestring                >= 0.9.1   && < 0.11,
+    cereal,
+    containers,
     digestive-functors,
     digestive-functors-heist,
     digestive-functors-snap,
-    blaze-html,
     digestive-functors-blaze,
-    transformers,
+    errors,
+    hashable,
     safe,
+    safecopy,
+
+    snaplet-acid-state,
+    transformers,
+
     text-icu,
     HTTP,
     network,
     aeson,
     lens-aeson,
     unordered-containers,
-    cereal,
-    bytestring                >= 0.9.1   && < 0.11,
+
+
     heist                     >= 0.13    && < 0.14,
     snaplet-acid-state        >= 0.2.5   && < 0.3,
     MonadCatchIO-transformers >= 0.2.1   && < 0.4,
@@ -59,6 +64,40 @@ Executable reffit
     base                      >= 4.4     && < 5,
     lens                      >= 4.0     && < 4.5,
     lens-aeson                >= 1.0.0.1 && < 1.1
+
+  hs-source-dirs: src
+  other-modules:
+    Application,
+    Reffit.AcidTypes,
+    Reffit.CrossRef,
+    Reffit.Discussion,
+--    Reffit.DocAuthor,
+    Reffit.Document,
+    Reffit.FieldTag,
+    Reffit.Filter,
+    Reffit.Handlers,
+--    Reffit.Handlers.Document,
+    Reffit.Handlers.HandleAuthentication,
+    Reffit.Handlers.HandleDiscussion,
+    Reffit.Handlers.HandleIndex,
+    Reffit.Handlers.HandleNewDocClass,
+    Reffit.Handlers.HandleNewOComment,
+    Reffit.Handlers.HandleNewPaper,
+    Reffit.Handlers.HandleNewSummary,
+    Reffit.Handlers.HandleSummaryVote,
+    Reffit.Handlers.HandleViewPaper,
+    Reffit.Handlers.HandleViewUser,
+--    Reffit.HashTag,
+    Reffit.Markdown,
+    Reffit.OverviewComment,
+    Reffit.PaperRoll,
+    Reffit.Scores,
+    Reffit.Search,
+    Reffit.Sort,
+    Reffit.Types,
+    Reffit.User
+    Site
+    Util.ReffitMigrate
 
   extra-libraries: icuuc
   if os(mingw32)
