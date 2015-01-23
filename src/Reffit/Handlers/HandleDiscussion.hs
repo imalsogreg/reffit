@@ -53,7 +53,7 @@ handleAddDiscussion = do
   docId'          <- fmap join (fmap $ readMay . BS.unpack) <$>
                      getPostParam "docId"
   posterId'       <- fmap (decodeUtf8) <$>
-                     getPostParam "posterId"
+                     getPostParam "posterIdSelect"
   commentId'      <- fmap join (fmap $ readMay . BS.unpack) <$>
                      getPostParam "commentId"
   dParentId'      <- fmap join (fmap $ readMay . BS.unpack) <$>
@@ -68,7 +68,7 @@ handleAddDiscussion = do
           writeText "Document not in database, or couldn't parse docid from url"
           let tShow = T.pack . show
           writeText $ T.unwords ["docId", tShow (docId' :: Maybe DocumentId)
-                                ," posterId", tShow (posterId' :: Maybe T.Text)
+                                ," posterIdSelect", tShow (posterId' :: Maybe T.Text)
                                 ," discussionText", tShow discussionText']
         Just doc -> case commentId' of
           Nothing-> do
@@ -156,8 +156,10 @@ allDiscussionSplices user' us doc docs commentId' comment' tNow disc = do
   "discussionReNode" ## textSplice $ maybe (docTitle doc) (ocText) comment'
   "userName"         ## textSplice $ maybe "" userName user'
   "docid"            ## textSplice . T.pack . show . docId $ doc
+  "parentid"         ## textSplice ""
   "commentid"        ## textSplice $
     maybe "nocomment" (T.pack . show) commentId'
+  "itemid"           ## textSplice $ T.pack . show $ (-1 :: Int)
   "discussionNodes"  ## (bindDiscussionPoints docs us tNow disc)
 
 
@@ -188,10 +190,17 @@ discussionPointSplices docs us tNow dp = do
   "authorLink"   ## textSplice $ maybe "#" (T.append "/user/") (_dPoster dp)
   "dpText"       ## markdownSplice (dp^.dText)
   "dpTime"       ## textSplice . T.pack $ sayTimeDiff tNow ( _dPostTime dp )
+  "docid"        ## textSplice . T.pack . show $ docId'
+  "commentid"    ## textSplice $ maybe "" (T.pack . show) comMay
+  "parentid"     ## textSplice $ T.pack . show . _dID $ dp
   "discussionId" ## textSplice . T.pack . show . _dID $ dp
+  "itemid"       ## textSplice . T.pack . show . _dID $ dp
   where
-    userRepText u = T.pack . show $ userReputation docs u
-    authorText = maybe "Anonymous"
-                 (\u -> T.concat [userName u,"(",userRepText u,")"])
-                . join $ Map.lookup <$> (_dPoster dp) <*> pure us
+    userRepText u     = T.pack . show $ userReputation docs u
+    (docId',comMay,_) = dp^.dContext
+    authorText        = maybe "Anonymous"
+                        (\u -> T.concat [userName u
+                                        ,"(",userRepText u,")"])
+                        . join $
+                        Map.lookup <$> (_dPoster dp) <*> pure us
 

@@ -5,13 +5,14 @@ module Reffit.Handlers.HandleViewPaper (handleViewPaper) where
 import Reffit.Types
 import Reffit.AcidTypes
 import Reffit.Document
+import Reffit.Markdown
 import Reffit.OverviewComment
 import Reffit.User
 import Reffit.Sort
 import Reffit.Scores
 
 import Safe
-import Control.Applicative ((<$>),(<*>),pure)
+import Control.Applicative ((<$>))
 import qualified Data.List as List
 import qualified Data.Map as Map
 import Data.Maybe (fromJust)
@@ -31,10 +32,10 @@ import Data.Text.Encoding (decodeUtf8)
 import Control.Lens
 import Control.Monad
 import Control.Monad.Trans
-import qualified Data.Foldable as F
 import qualified Data.Tree as Tree
-import Data.Monoid ((<>))
 
+
+------------------------------------------------------------------------------
 handleViewPaper :: Handler App (AuthManager App) ()
 handleViewPaper = do
   us    <- query QueryAllUsers
@@ -182,7 +183,7 @@ splicesFromOComment :: Monad n => UTCTime -> OverviewCommentType
 splicesFromOComment t ct viewingU us doc docs (cId,c) = do
   "upCount"      ## I.textSplice (T.pack . show $ nUp)
   "downCount"    ## I.textSplice (T.pack . show $ nDown)
-  "proseText"    ## I.textSplice (ocText c)
+  "proseText"    ## markdownSplice (ocText c)
   reBlock
   "proseTimeSince"    ## I.textSplice (T.pack . sayTimeDiff t . ocPostTime $ c)
   "discussionUrl" ## I.textSplice (T.concat ["/view_discussion/?paperid="
