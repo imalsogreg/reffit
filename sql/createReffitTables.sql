@@ -1,43 +1,11 @@
-CREATE SEQUENCE reffitUserIDSeq;
-CREATE TABLE reffitUsers (
-       userID       smallint PRIMARY KEY DEFAULT nextval('reffitUserIDSeq'),
-       userName     varchar(200) UNIQUE,
-       userJoinTime timestamptz
-);
-ALTER SEQUENCE reffitUserIDSeq OWNED BY reffitUsers.userID;
-
-CREATE TABLE userFollowers (
-       follower   int references reffitusers(userid),
-       followed   int references reffitusers(userid),
-       UNIQUE (follower,followed),
-       followTime timestamptz
-);
-
-CREATE TABLE emailAddys (
-       emailAddy  varchar(200),
-       userID     int           references reffitUsers(userID),
-       verified   boolean,
-       verifiedAt timestamptz,
-       verifyKey  varchar(200),
-       isPrimary  boolean,
-       UNIQUE (userID, emailAddy)
-);
-
-CREATE SEQUENCE passwordResetRequestIDSeq;
-CREATE TABLE passwordResetRequests (
-       resetRequestID int PRIMARY KEY DEFAULT nextval ('passwordResetRequestIDSeq'),
-       userID         int references reffitUsers(userID),
-       resetKey       varchar(200),
-       resetExpiresAt timestamptz
-);
-ALTER SEQUENCE passwordResetRequestIDSeq OWNED BY passwordResetRequests.resetRequestID;
+\i user.sql
 
 CREATE SEQUENCE commentReferralIDSeq;
 CREATE TABLE commentReferrals (
        referralID       int PRIMARY KEY DEFAULt nextval('commentReferralIDSeq'),
        referrer         int references reffitUsers(userID),
        referredEmail    varchar(200),
-       referredUserName varchar(200), 
+       referredUserName varchar(200),
        accepted         smallint
 );
 ALTER SEQUENCE commentReferralIDSeq OWNED BY commentReferrals.referralID;
@@ -94,10 +62,12 @@ CREATE TABLE authorEquivalenceClassMembers (
 
 CREATE SEQUENCE commentIDSeq;
 CREATE TABLE comments (
-       commentID   smallint PRIMARY KEY DEFAULT nextval('commentIDSeq'),
-       commentTime timestamptz,
-       parentDoc      int           references documents(documentID),
-       commentText varchar(50000)
+       commentID     smallint PRIMARY KEY DEFAULT nextval('commentIDSeq'),
+       commentTime   timestamptz,
+       parentDoc     int           references documents(documentID),
+       parentComment int,
+       foreign key   parentComment references comments(commentID),
+       commentText   varchar(50000)
 );
 ALTER SEQUENCE commentIDSeq OWNED BY comments.commentID;
 
@@ -112,7 +82,6 @@ CREATE TABLE commentParts (
        foreign key (parentComment)          references comments(commentID),
        parentCommentPart smallint      references commentParts(commentPartID),
        text              varchar(10000),
-       html              varchar(50000)
 );
 ALTER SEQUENCE commentPartIDSeq OWNED BY commentParts.commentPartID;
 
@@ -146,28 +115,4 @@ CREATE TABLE anonVotes (
        voteTime      timestamptz
 );
 
-CREATE TABLE hashTags (
-       hashTagLongName  varchar (200) PRIMARY KEY,
-       hashTagShortName varchar(50),
-       hashTagParent    varchar(200) references hashTags(hashTagLongName)
-);
-
-CREATE SEQUENCE hashTagMentionsSeq;
-CREATE TABLE hashTagMentions (
-       hashMentionID int PRIMARY KEY DEFAULT nextval('hashTagMentionsSeq'),
-       hashTag       varchar(200) references hashTags(hashTagLongName),
-       docID         int references documents(documentID),
-       commentID     int references comments(commentID),
-       commentPartID int references commentParts(commentPartID)
-);
-ALTER SEQUENCE hashTagMentionsSeq OWNED BY hashTagMentions.hashMentionID;
-
-CREATE SEQUENCE hashTagPageIDSeq;
-CREATE TABLE hashTagPages (
-       hashTagPageID   int PRIMARY KEY DEFAULT nextval('hashTagPageIDSeq'),
-       hashTag         varchar(200) references hashTags(hashTagLongName),
-       pageText        varchar(20000),
-       pageHtml        varchar(40000),
-       pageDate        timestamptz
-);
-ALTER SEQUENCE hashTagPageIDSeq OWNED BY hashTagPages.hashTagPageID;
+\i hashtag.sql
