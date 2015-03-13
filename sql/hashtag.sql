@@ -1,5 +1,5 @@
 CREATE TABLE hashTags (
-       hashTagLongName  varchar (200) PRIMARY KEY,
+       hashTagDisambiguator varchar (200) PRIMARY KEY,
        hashTagShortName varchar(50),
        hashTagParent    varchar(200) references hashTags(hashTagLongName)
 );
