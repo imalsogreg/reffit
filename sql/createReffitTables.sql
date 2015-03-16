@@ -62,28 +62,14 @@ CREATE TABLE authorEquivalenceClassMembers (
 
 CREATE SEQUENCE commentIDSeq;
 CREATE TABLE comments (
-       commentID     smallint PRIMARY KEY DEFAULT nextval('commentIDSeq'),
+       commentID     int PRIMARY KEY DEFAULT nextval('commentIDSeq'),
        commentTime   timestamptz,
-       parentDoc     int           references documents(documentID),
-       parentComment int,
-       foreign key   parentComment references comments(commentID),
-       commentText   varchar(50000)
+       commentRating smallint,
+       parentDoc     int references documents(documentID),
+       parentComment int references comments(commentID),
+       commentText   varchar(20000)
 );
 ALTER SEQUENCE commentIDSeq OWNED BY comments.commentID;
-
-
-CREATE SEQUENCE commentPartIDSeq;
-CREATE TABLE commentParts (
-       commentPartID     smallint  PRIMARY KEY DEFAULT nextval('commentPartIDSeq'),
-       wholeCommentID    smallint references comments(commentID),
-       commentRating     smallint,
-       partIndex         smallint,
-       parentComment     smallint,
-       foreign key (parentComment)          references comments(commentID),
-       parentCommentPart smallint      references commentParts(commentPartID),
-       text              varchar(10000),
-);
-ALTER SEQUENCE commentPartIDSeq OWNED BY commentParts.commentPartID;
 
 CREATE TABLE publicCommentAuthors (
        commentID       int references comments(commentID),
@@ -100,7 +86,7 @@ CREATE TABLE anonCommentAuthors (
 CREATE TABLE publicVotes (
        voterID       int references reffitUsers(userID) NOT NULL,
        voteDocument  int references documents(documentID),
-       voteComment   int references commentParts(commentPartID),
+       voteComment   int references comments(commentID),
        voteValue     int NOT NULL,
        UNIQUE (voterID, voteDocument, voteComment),
        voteTime      timestamptz
@@ -109,7 +95,7 @@ CREATE TABLE publicVotes (
 CREATE TABLE anonVotes (
        voterID       int references reffitUsers(userID) NOT NULL,
        voteDocument  int references documents(documentID),
-       voteComment   int references commentParts(commentPartID),
+       voteComment   int references comments(commentID),
        voteValue     int NOT NULL,
        UNIQUE (voterID, voteDocument, voteComment),
        voteTime      timestamptz

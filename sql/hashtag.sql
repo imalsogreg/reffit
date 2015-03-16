@@ -1,23 +1,24 @@
+CREATE SEQUENCE hashTagSeq;
 CREATE TABLE hashTags (
-       hashTagDisambiguator varchar (200) PRIMARY KEY,
-       hashTagShortName varchar(50),
-       hashTagParent    varchar(200) references hashTags(hashTagLongName)
+       hashTagID          int PRIMARY KEY DEFAULT nextval('hashTagSeq'),
+       hashTag            varchar(50),
+       hashTagDescription varchar(200)
 );
+ALTER SEQUENCE hashTagSeq OWNED BY hashTags.hashTagID;
 
 CREATE SEQUENCE hashTagMentionsSeq;
 CREATE TABLE hashTagMentions (
        hashMentionID int PRIMARY KEY DEFAULT nextval('hashTagMentionsSeq'),
-       hashTag       varchar(200) references hashTags(hashTagLongName),
+       hashTag       int references hashTags(hashTagID),
        docID         int references documents(documentID),
-       commentID     int references comments(commentID),
-       commentPartID int references commentParts(commentPartID)
+       commentID     int references comments(commentID)
 );
 ALTER SEQUENCE hashTagMentionsSeq OWNED BY hashTagMentions.hashMentionID;
 
 CREATE SEQUENCE hashTagPageIDSeq;
-CREATE TABLE hashTagPages (
+CREATE TABLE IF NOT EXISTS  hashTagPages (
        hashTagPageID   int PRIMARY KEY DEFAULT nextval('hashTagPageIDSeq'),
-       hashTag         varchar(200) references hashTags(hashTagLongName),
+       hashTag         int references hashTags(hashTagID),
        pageText        varchar(20000),
        pageHtml        varchar(40000),
        pageDate        timestamptz

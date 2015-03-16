@@ -267,8 +267,8 @@ insertFieldTags ts accPath = mapM_ (insertFieldTag accPath) ts
 
 insertFieldTag :: Connection -> TagPath -> FieldTag -> IO ()
 insertFieldTag conn accPath (Node tag subTags) = do
-  execute' conn "INSERT INTO hashTags VALUES (?,?,?,?)"
-    (showPath accPath, tag, parentSqlID,
+  execute' conn "INSERT INTO hashTags VALUES (?)" (Only tag)
+  insertFieldTags conn subTags
 
 ------------------------------------------------------------------------------
 main :: IO ()
@@ -286,7 +286,7 @@ main = do
           insertCommentVotes conn p commentIdMap userIdMap
           mapM_ (\u -> insertPinboard conn u userIdMap docIdMap)
             (Map.elems $ p^.users)
-          putStrLn $ "Done"
+          putStrLn "Done"
 
     _ -> error "Usage: acidToSQL filename"
 
