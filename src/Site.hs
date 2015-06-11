@@ -146,14 +146,15 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
 
-    a <- nestSnaplet "auth" auth $
-           initJsonFileAuthManager defAuthSettings sess "users.json"
+    d <- nestSnaplet "db" db pgsInit
 
-    ac <- nestSnaplet "acid" acid $ acidInit defaultState
+    a <- nestSnaplet "auth" auth $
+    --       initJsonFileAuthManager defAuthSettings sess "users.json"
+         initPostgresAuth
+
+    ac <- nestSnaplet "acid" acid $ acid defaultState
     h <- nestSnaplet "" heist $ heistInit "templates"
 
-    d <- nestSnaplet "db" db pgsInit
---    d <- return undefined
 
     addRoutes routes
     addAuthSplices h auth
