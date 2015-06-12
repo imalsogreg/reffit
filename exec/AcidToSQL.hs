@@ -11,7 +11,9 @@ import Control.Exception
 import Control.Lens
 import Control.Monad
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BSC
 import Data.List
+import Data.Monoid
 
 import qualified Data.Map as Map
 import Data.Maybe
@@ -137,11 +139,12 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
         Nothing            ->  0
   [Only (cSqlID :: Int)] <- query' conn
     [sql| INSERT INTO comments
-          (commentTime,parentDoc,parentComment,commentText)
-          VALUES (?,?,?,?)
+          (commentTime,commentRating,parentDoc,parentComment,commentText)
+          VALUES (?,?,?,?,?)
           RETURNING commentID |]
-    (ocPostTime, docSqlID, ocText)
+    (ocPostTime, rating, docSqlID, (Nothing :: Maybe Int), ocText)
 
+  {-
   zipWithM_  (\i p ->
     execute' conn
       [sql| INSERT INTO commentParts
@@ -149,6 +152,7 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
             VALUES (?,?,?,?) |]
       (cSqlID, rating, i :: Int, ocText))
     [1..] (T.lines ocText)
+  -}
 
   let (authorQuery,userID) = case (ocPoster :: Maybe UserName) of
         Nothing    ->
@@ -282,12 +286,14 @@ main :: IO ()
 main = do
   args <- getArgs
   case args of
-    [fn] -> do
+    [fn, pw] -> do
       bs <- BS.readFile fn
       case decode bs of
         Left e -> error $ "Error decoding " ++ fn ++ ": " ++ e
         Right (p :: PersistentState) -> do
-          conn <- connectPostgreSQL "dbname='reffit' user='greghale'"
+          conn <- connectPostgreSQL
+                  ("dbname='reffit' user='reffit' host='localhost' password='"
+                   <> BSC.pack pw <> "'")
           userIdMap <- insertUsers conn p
           (docIdMap,commentIdMap)  <- insertDocuments conn p userIdMap
           insertCommentVotes conn p commentIdMap userIdMap
@@ -295,7 +301,7 @@ main = do
             (Map.elems $ p^.users)
           putStrLn "Done"
 
-    _ -> error "Usage: acidToSQL filename"
+    _ -> error "Usage: acidToSQL filename password"
 
 
 ------------------------------------------------------------------------------
