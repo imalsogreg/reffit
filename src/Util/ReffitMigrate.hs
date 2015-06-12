@@ -17,6 +17,7 @@ import           Snap.Snaplet.AcidState (Update, Query, Acid,
                                          update,query,acidInit,
                                          createCheckpoint)
 import           Snap.Snaplet.Auth
+import           Util.UsersJsonToSQL
 --import Data.Acid hiding (query)
 import Snap.Snaplet.AcidState (Update, Query, Acid, query, acidInit)
 import Data.SafeCopy

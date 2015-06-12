@@ -1,6 +1,7 @@
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TemplateHaskell       #-}
+{-# LANGUAGE TypeFamilies          #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances     #-}
 
 ------------------------------------------------------------------------------
 -- | This module defines our application's state type and an alias for its
@@ -9,19 +10,24 @@ module Application where
 
 ------------------------------------------------------------------------------
 import Control.Lens
-import Snap.Snaplet
+import Debug.Trace
+import Control.Monad.Reader            (local)
+import Control.Monad.State             (get)
+import Snap.Snaplet                    (Handler, Snaplet, snapletValue, subSnaplet, with)
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Auth
 import Snap.Snaplet.Session
 import Snap.Snaplet.AcidState
+import Snap.Snaplet.PostgresqlSimple
 import Reffit.AcidTypes
 
 ------------------------------------------------------------------------------
 data App = App
     { _heist :: Snaplet (Heist App)
-    , _sess :: Snaplet SessionManager
-    , _auth :: Snaplet (AuthManager App)
-    , _acid :: Snaplet (Acid PersistentState)
+    , _sess  :: Snaplet SessionManager
+    , _auth  :: Snaplet (AuthManager App)
+    , _acid  :: Snaplet (Acid PersistentState)
+    , _db    :: Snaplet Postgres
     }
 
 makeLenses ''App
@@ -30,7 +36,11 @@ instance HasHeist App where
     heistLens = subSnaplet heist
 
 instance HasAcid App PersistentState where
-  getAcidStore = view (acid.snapletValue)
+  getAcidStore = view (acid . snapletValue)
+
+instance HasPostgres (Handler b App) where
+  getPostgresState = trace "Postgres App handler" $ with db get
+  setLocalPostgresState s = local (set (db . snapletValue) s)
 
 ------------------------------------------------------------------------------
 type AppHandler = Handler App App

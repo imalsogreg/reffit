@@ -2,16 +2,46 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeFamilies #-}
 
-------------------------------------------------------------------------------
--- | This module is where all the routes and handlers are defined for your
--- site. The 'app' function is the initializer that combines everything
--- together and is exported by this module.
 module Site
   ( app
   ) where
 
 ------------------------------------------------------------------------------
-
+import           Control.Applicative
+import           Control.Lens          (view)
+import           Control.Monad.CatchIO (throw)
+import           Control.Monad.State
+import qualified Data.Map              as Map
+import qualified Data.Set              as Set
+import           Data.ByteString       (ByteString)
+import qualified Data.Text             as T
+import           Data.Text.Encoding    (decodeUtf8)
+import           Data.Time
+------------------------------------------------------------------------------
+import           Heist
+import qualified Heist.Interpreted as I
+import           Snap.Core
+import           Snap.Snaplet
+import           Snap.Snaplet.Auth
+import qualified Snap.Snaplet.Auth.Backends.JsonFile as AuthJ
+import qualified Snap.Snaplet.Auth.Backends.PostgresqlSimple as AuthSql
+import           Snap.Snaplet.Heist
+import           Snap.Snaplet.Session
+import           Snap.Snaplet.Session.Backends.CookieSession
+import           Snap.Snaplet.AcidState
+import           Snap.Snaplet.AcidState (Update, Query, Acid,
+                                         HasAcid (getAcidStore),
+                                         makeAcidic,
+                                         update,query,acidInit)
+import           Snap.Snaplet.PostgresqlSimple hiding (query)
+import           Snap.Util.FileServe
+import qualified Text.Blaze.Html5  as H
+import           Text.Digestive
+import           Text.Digestive.Snap (runForm)
+import           Text.Digestive.Heist
+import           Text.Digestive.Blaze.Html5
+------------------------------------------------------------------------------
+import           Application
 import           Reffit.Types
 import           Reffit.AcidTypes
 import           Reffit.OverviewComment
@@ -21,49 +51,14 @@ import           Reffit.User
 import           Reffit.FieldTag
 import           Reffit.CrossRef
 import           Reffit.PaperRoll
-
 import           Reffit.Handlers
-
 import           Util.ReffitMigrate
-import           Control.Lens (view)
-import           Snap.Snaplet.AcidState (Update, Query, Acid,
-                                         HasAcid (getAcidStore),
-                                         makeAcidic,
-                                         update,query,acidInit)
-
-import           Control.Applicative
-import qualified Data.Map as Map
-import qualified Data.Set as Set
-import           Data.ByteString (ByteString)
-import qualified Data.Text as T
-import           Snap (gets)
-import           Snap.Core
-import           Snap.Snaplet
-import           Snap.Snaplet.Auth
-import           Snap.Snaplet.Auth.Backends.JsonFile
-import           Snap.Snaplet.Heist
-import           Snap.Snaplet.Session
-import           Snap.Snaplet.Session.Backends.CookieSession
-import           Snap.Snaplet.AcidState
-import           Snap.Util.FileServe
-import           Heist
-import qualified Heist.Interpreted as I
-import qualified Text.Blaze.Html5  as H
-import           Text.Digestive
-import           Text.Digestive.Snap (runForm)
-import           Text.Digestive.Heist
-import           Text.Digestive.Blaze.Html5
-
-import           Control.Monad.CatchIO (throw)
-import           Control.Monad.State
-import           Data.Text.Encoding (decodeUtf8)
-import           Data.Time
-------------------------------------------------------------------------------
-import           Application
+import           Util.UsersJsonToSQL
 
 ------------------------------------------------------------------------------
 -- | Handle new user form submit
 -- TODO - make sure user by that name doesn't already exist!
+-- TODO - figure out cookies issue?
 handleNewUser :: Handler App (AuthManager App) ()
 handleNewUser = method GET handleForm <|> method POST handleFormSubmit
   where
@@ -113,7 +108,7 @@ routes =
   [ ("login" , with auth handleLoginSubmit)
   , ("logout"                          , with auth handleLogout)
   , ("new_user"                        , with auth handleNewUser)
-  , ("search"                          , with auth  handleIndex)
+  , ("search"                          , handleIndex)
   , ("new_article"                     , with auth handleNewArticle)
   , ("delete_article"                  , with auth handleDeleteArticle)
   , ("new_article/:doi"                , with auth handleNewArticle)
@@ -134,14 +129,15 @@ routes =
   , ("/add_usertag/:fieldtag"          , with auth (handleAddTag True))
   , ("/delete_usertag/:fieldtag"       , with auth (handleAddTag False))
   , ("/about"                          , render "about")
-  , ("/:params"                        , with auth handleIndex)
+  , ("/:params"                        , handleIndex)
   , ("stateToDisk"                     , with auth handleStateToDisk)
   , ("stateFromDisk"                   , with auth handleStateFromDisk)
   , ("checkpoint"                      , with auth handleCheckpoint)
-  , ("/"                               , with auth handleIndex)
+  , ("/"                               , handleIndex)
   , ("/dump_state"                     , with auth handleDumpState)
   , ("/splashscreen"                   , render "splashscreen")
   , ("/static"                         , serveDirectory "static")
+  , ("/migrateUsers"                   , with auth migrateUsers)
   ]
 
 ------------------------------------------------------------------------------
@@ -152,11 +148,16 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     s <- nestSnaplet "sess" sess $
            initCookieSessionManager "site_key.txt" "sess" (Just 3600)
 
-    a <- nestSnaplet "auth" auth $
-           initJsonFileAuthManager defAuthSettings sess "users.json"
+    d <- nestSnaplet "db" db pgsInit
+
+    --a <- nestSnaplet "auth" auth $
+    --     AuthJ.initJsonFileAuthManager defAuthSettings sess "users.json"
+
+    p <- nestSnaplet "auth" auth $ AuthSql.initPostgresAuth sess d
 
     ac <- nestSnaplet "acid" acid $ acidInit defaultState
     h <- nestSnaplet "" heist $ heistInit "templates"
+
 
     addRoutes routes
     addAuthSplices h auth
@@ -166,7 +167,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     -- Perhaps use longer session times?
     wrapSite (\site -> with sess touchSession >> site >> with sess commitSession)
 
-    return $ App h s a ac
+    return $ App h s p ac d
 
 defaultState :: PersistentState
 defaultState =

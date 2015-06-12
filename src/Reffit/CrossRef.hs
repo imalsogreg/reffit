@@ -24,6 +24,7 @@ import Control.Lens
 import qualified Data.Aeson as A
 import Data.Aeson.Lens
 
+
 apiUrl :: T.Text
 apiUrl = "http://search.crossref.org/dois?q="
 --apiUrl = "http://dx.doi.org/"

@@ -1,5 +1,6 @@
 module Reffit.Filter where
 
+import Reffit.Document
 import Reffit.Types
 import Reffit.FieldTag
 

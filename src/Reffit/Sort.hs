@@ -27,6 +27,7 @@ sortDocs scoreF False = sortBy (\a b -> scoreF a `compare` scoreF b)
 
 
 -- TODO pagination.  add Int and Int to each constructor for startInd and #of
+-- TODO -replace all uses of this with search strategy in Reffit.Search
 data PresentationStrategy = FiltSort SortBy [TagPath]
                           | SearchBy T.Text
                           deriving (Show, Eq)

@@ -11,10 +11,16 @@ import Data.List (sortBy, (\\))
 import Data.Text.ICU.Normalize
 import qualified Data.Char as C
 
--- TODO: I expect it will be extremely slow to search through
--- the documents like this.  When the type of a Doc settles,
--- can think about the type of an index for the docs.
-
+{-
+------------------------------------------------------------------------------
+data SearchRequest =
+  SearchRequest
+  { searchQuery        :: T.Text
+  , searchNPageResults :: Int
+  , searchNOffset      :: Int
+  , searchSortBy       :: SortBy
+  } deriving (Eq, Show)
+-}
 tokenize :: T.Text -> [T.Text]
 tokenize query = T.words query \\ ["A","a","The","the","Is","is","An","an"]
 
