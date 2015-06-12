@@ -106,9 +106,9 @@ usageStats :: Handler App App (Maybe (Int, Int, Int, Int))
 usageStats = runMaybeT $ do
     nU  <- MaybeT $ unSql "SELECT count(*) from reffitUsers"
     nD  <- MaybeT $ unSql "SELECT count(*) from documents"
-    nC  <- MaybeT $ unSql "SELECT count(*) from commentParts"
-    nVP <- MaybeT $ unSql "SELECT count(*) from publicCommentVotes"
-    nVA <- MaybeT $ unSql "SELECT count(*) from anonCommentVotes"
+    nC  <- MaybeT $ unSql "SELECT count(*) from comments"
+    nVP <- MaybeT $ unSql "SELECT count(*) from publicvotes"
+    nVA <- MaybeT $ unSql "SELECT count(*) from anonvotes"
     return (nU, nD, nC, nVP + nVA)
   where
     unSql q = (listToMaybe . map fromOnly) <$> (with db $ query_ q)
