@@ -20,11 +20,11 @@ import           Data.Time
 ------------------------------------------------------------------------------
 import           Heist
 import qualified Heist.Interpreted as I
-import           Snap (gets)
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
-import           Snap.Snaplet.Auth.Backends.JsonFile
+import qualified Snap.Snaplet.Auth.Backends.JsonFile as AuthJ
+import qualified Snap.Snaplet.Auth.Backends.PostgresqlSimple as AuthSql
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Session.Backends.CookieSession
@@ -149,10 +149,11 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     d <- nestSnaplet "db" db pgsInit
 
     a <- nestSnaplet "auth" auth $
-    --       initJsonFileAuthManager defAuthSettings sess "users.json"
-         initPostgresAuth
+         AuthJ.initJsonFileAuthManager defAuthSettings sess "users.json"
 
-    ac <- nestSnaplet "acid" acid $ acid defaultState
+    --p <- nestSnaplet "auth" auth $ AuthSql.initPostgresAuth sess d
+
+    ac <- nestSnaplet "acid" acid $ acidInit defaultState
     h <- nestSnaplet "" heist $ heistInit "templates"
 
 

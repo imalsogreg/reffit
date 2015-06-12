@@ -32,6 +32,7 @@ import Reffit.User
 import Reffit.OverviewComment
 import Reffit.Discussion
 import Reffit.AcidTypes
+import Reffit.FieldTag
 
 
 ------------------------------------------------------------------------------
@@ -47,7 +48,7 @@ insertUsers conn p = do
                                       values (?,?)
                                       RETURNING userid |]
         (userName u :: T.Text, userJoinTime u)
-      when (not . T.null . userEmail $ u) $ 
+      unless (T.null . userEmail $ u) $
         execute' conn [sql| INSERT INTO emailaddys
                             (emailAddy,userID,verified,isPrimary)
                             values (?,?,?,?) |]
@@ -58,14 +59,14 @@ insertUsers conn p = do
 insertFollowers :: Connection
                 -> Map.Map UserName User -> Map.Map UserName Int -> IO ()
 insertFollowers conn rUsers userSqlIDs =
-  forM_ (allFollowPairs) $ execute' conn
+  forM_ allFollowPairs $ execute' conn
   "insert into userFollowers (follower,followed,followTime) values (?,?,?)"
   where
     allFollowPairs = concatMap userFollowed (Map.elems rUsers)
 
     userFollowed :: User -> [(Int,Int,UTCTime)]
-    userFollowed u = catMaybes $
-                     map (pairFollow u) (Set.toList $ userFollowing u)
+    userFollowed u = mapMaybe (pairFollow u)
+                     (Set.toList $ userFollowing u)
 
     pairFollow :: User -> UserName -> Maybe (Int,Int,UTCTime)
     pairFollow u followed = (\x y z -> (x,y,z))
@@ -100,13 +101,13 @@ insertDocument conn _ userIDMap Document{..} = do
   [Only docSqlID] <- query' conn
     [sql| INSERT INTO documents
           (title,docUploader,docClass,uploadTime)
-          VALUES (?,?,?,?) 
+          VALUES (?,?,?,?)
           RETURNING documentID |]
     (docTitle, uploaderId, docClassName docClass, docPostTime)
   execute' conn
     [sql| INSERT INTO documentURLs VALUES (?,?) |]
     (docSqlID, docLink)
-    
+
   commentMapping <- mapM (insertComment conn docSqlID userIDMap)
                     (Map.toList docOComments)
   forM_ docAuthors $ \dAuthor -> do
@@ -136,8 +137,8 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
         Nothing            ->  0
   [Only (cSqlID :: Int)] <- query' conn
     [sql| INSERT INTO comments
-          (commentTime,parentDoc,commentText)
-          VALUES (?,?,?) 
+          (commentTime,parentDoc,parentComment,commentText)
+          VALUES (?,?,?,?)
           RETURNING commentID |]
     (ocPostTime, docSqlID, ocText)
 
@@ -147,8 +148,8 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
             (wholeCommentID, commentRating, partIndex, text)
             VALUES (?,?,?,?) |]
       (cSqlID, rating, i :: Int, ocText))
-    [1..] (T.lines ocText) 
-  
+    [1..] (T.lines ocText)
+
   let (authorQuery,userID) = case (ocPoster :: Maybe UserName) of
         Nothing    ->
           ([sql| INSERT INTO anonCommentAuthors (commentID,authorID)
@@ -162,10 +163,10 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
     (cSqlID,userID)
 
   when (rating /= 0 && isJust ocPoster) $
-    execute' conn 
-     [sql| INSERT INTO publicVotes 
+    execute' conn
+     [sql| INSERT INTO publicVotes
            (voterID, voteDocument, voteValue, votetime)
-           VALUES (?,?,?,?) |] 
+           VALUES (?,?,?,?) |]
      (userID, docSqlID, rating, ocPostTime)
 
   when (rating /= 0 && ocPoster == Nothing) $
@@ -184,16 +185,16 @@ insertCommentVotes conn p commentIdMap userIdMap =
   forM_ (Map.elems $ p^.users) $ \u ->
   forM_ (userHistory u) $ \case
     VotedOnOComment _ cId (Just voteDir) t ->
-        case (Map.lookup cId commentIdMap, 
+        case (Map.lookup cId commentIdMap,
               Map.lookup (userName u) userIdMap) of
           (Just commentSqlId, Just userSqlId) ->
             execute conn 
               [sql| insert into publicVotes 
                     (voterID, voteComment, voteValue, voteTime) 
                     values (?,?,?,?) |]
-            (userSqlId, commentSqlId, if voteDir == UpVote 
+            (userSqlId, commentSqlId, if voteDir == UpVote
                                       then 1 else (-1 :: Int), t)
-          _ -> do 
+          _ -> do
             print $
              unwords ["Failed to find doc/comment/user id when inserting vote"
                      , "ocId:", show cId
@@ -203,7 +204,7 @@ insertCommentVotes conn p commentIdMap userIdMap =
 
 
 ------------------------------------------------------------------------------
-insertDiscussion :: Connection -> Int -> Maybe Int -> Map.Map UserName Int 
+insertDiscussion :: Connection -> Int -> Maybe Int -> Map.Map UserName Int
                  -> Discussion -> IO ()
 insertDiscussion conn docSqlId parentSqlId userIdMap discussion =
   forM_ (discussion :: Forest DiscussionPoint) $ \d ->
@@ -222,15 +223,15 @@ insertDiscussionPoint
           RETURNING commentID |]
     (_dPostTime, docSqlID, _dText)
 
-  zipWithM_  (\i t ->
-               execute' conn
-               [sql| INSERT INTO commentParts
-                     (wholeCommentID,commentRating,partIndex,parentCommentPart)
-                     VALUES (?,?,?,?) |]
-               (commentSqlID, commentPartRating _dText, i :: Int, parentSqlID))
-    [0..] (T.lines _dText)
-    
-  insertDiscussion conn docSqlID (Just commentSqlID) userIdMap subDiscussion
+--  zipWithM_  (\i t ->
+--               execute' conn
+--               [sql| INSERT INTO commentParts
+--                     (wholeCommentID,commentRating,partIndex,parentCommentPart)
+--                    VALUES (?,?,?,?) |]
+--              (commentSqlID, commentPartRating _dText, i :: Int, parentSqlID))
+--    [0..] (T.lines _dText)
+
+  insertDiscussion conn docSqlID commentSqlID userIdMap subDiscussion
   return ()
 
 
@@ -252,7 +253,7 @@ insertPinboard conn User{..} userIdMap docMap =
       justPin h = case h of
         PinnedDoc pDocId t | pDocId == docId -> Just t
         _                                    -> Nothing
-      pinTime   = listToMaybe . catMaybes $ 
+      pinTime   = listToMaybe . catMaybes $
                   map justPin userHistory
   in  case (docSqlId, userSqlId, pinTime) of
     (Just dsID, Just usID, Just pT) -> do
@@ -263,16 +264,17 @@ insertPinboard conn User{..} userIdMap docMap =
     _ -> putStrLn $ "Couldn't find pinboard document for "
                        ++ T.unpack userName
 
-{-
-insertFieldTags :: Connection -> FieldTags -> TagPath -> IO ()
-insertFieldTags ts accPath = mapM_ (insertFieldTag accPath) ts
-
-
-insertFieldTag :: Connection -> TagPath -> FieldTag -> IO ()
-insertFieldTag conn accPath (Node tag subTags) = do
-  execute' conn "INSERT INTO hashTags VALUES (?,?,?,?)"
-    (showPath accPath, tag, parentSqlID, 
--}
+-- This doesn't get called from anywhere in AcidToSql.
+-- That is ok. In the old model, 'tags' are associated with a document directly
+-- In the new model, tags will only come from hashtags in comments.
+--insertFieldTags :: Connection -> FieldTags -> TagPath -> IO ()
+--insertFieldTags conn ts accPath = mapM_ (insertFieldTag conn accPath) ts
+--
+--
+--insertFieldTag :: Connection -> TagPath -> FieldTag -> IO ()
+--insertFieldTag conn accPath (Node tag subTags) = do
+--  execute' conn "INSERT INTO hashTags VALUES (?)" (Only tag)
+--  insertFieldTags conn subTags
 
 
 ------------------------------------------------------------------------------
@@ -291,7 +293,7 @@ main = do
           insertCommentVotes conn p commentIdMap userIdMap
           mapM_ (\u -> insertPinboard conn u userIdMap docIdMap)
             (Map.elems $ p^.users)
-          putStrLn $ "Done"
+          putStrLn "Done"
 
     _ -> error "Usage: acidToSQL filename"
 

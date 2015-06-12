@@ -11,7 +11,8 @@ module Application where
 ------------------------------------------------------------------------------
 import Control.Lens
 import Debug.Trace
-import Snap                            (get)
+import Control.Monad.Reader            (local)
+import Control.Monad.State             (get)
 import Snap.Snaplet                    (Handler, Snaplet, snapletValue, subSnaplet, with)
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Auth
@@ -39,7 +40,7 @@ instance HasAcid App PersistentState where
 
 instance HasPostgres (Handler b App) where
   getPostgresState = trace "Postgres App handler" $ with db get
-
+  setLocalPostgresState s = local (set (db . snapletValue) s)
 
 ------------------------------------------------------------------------------
 type AppHandler = Handler App App

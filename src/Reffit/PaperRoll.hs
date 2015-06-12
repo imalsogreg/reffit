@@ -26,6 +26,7 @@ import qualified Heist.Interpreted as I
 import           Application
 import           Reffit.AcidTypes
 import           Reffit.Document
+import           Reffit.Handlers.Document
 import           Reffit.FieldTag
 import           Reffit.Scores
 import           Reffit.Search
@@ -74,8 +75,15 @@ allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do
   "paper_roll_papers" ## (renderPaperRollPapers (take 100 docs))
 
+allDocOverviewSplices :: [Document] -> Splices (SnapletISplice App)
+allDocOverviewSplices docs = do
+  "paper_roll_papers" ## (renderDocOverviewPapers docs)
+
 renderPaperRollPapers :: [Document] -> SnapletISplice App
 renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
+
+renderDocOverviewPapers ::  [Document] -> SnapletISplice App
+renderDocOverviewPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
 
 splicesFromDocument :: Document -> Splices (SnapletISplice App)
 splicesFromDocument doc = do

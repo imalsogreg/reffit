@@ -1,3 +1,5 @@
+devel.cfg
+
 dist
 cabal-dev
 *.o

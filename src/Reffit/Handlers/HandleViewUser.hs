@@ -25,7 +25,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Data.Time
 import Snap.Core (getParam, redirect, writeBS)
-import Snap.Types (writeText)
+import Snap.Core (writeText)
 import Snap.Snaplet (Handler)
 import Snap.Snaplet.AcidState (query,update)
 import Snap.Snaplet.Heist

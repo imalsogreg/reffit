@@ -31,7 +31,7 @@ import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Text.Digestive
 import           Text.Digestive.Blaze.Html5
-import           Heist
+import           Heist hiding (Error)
 import qualified Heist.Interpreted            as I
 import qualified Text.Blaze.Html5             as H
 import qualified Text.XmlHtml                 as X
@@ -64,7 +64,6 @@ documentForm fromUser allDocClasses allFieldTags hints' t =
       posterOpts = [(Just (userName fromUser),userName fromUser)
                    ,(Nothing,"Anonymous")]
       classOpts  = [(dc,docClassName dc) | dc <- allDocClasses]
---      tempTime   = UTCTime (ModifiedJulianDay 0) (fromIntegral (0::Int))
       defTitle   = maybe "" titleHint hints'
       defAuthors = maybe "" (T.intercalate ", " . authorsHint) hints'
 --      defYear    = maybe "" (T.pack . show . yearHint) hints'
