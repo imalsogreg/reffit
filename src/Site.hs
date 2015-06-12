@@ -53,6 +53,7 @@ import           Reffit.CrossRef
 import           Reffit.PaperRoll
 import           Reffit.Handlers
 import           Util.ReffitMigrate
+import           Util.UsersJsonToSQL
 
 ------------------------------------------------------------------------------
 -- | Handle new user form submit
@@ -136,6 +137,7 @@ routes =
   , ("/dump_state"                     , with auth handleDumpState)
   , ("/splashscreen"                   , render "splashscreen")
   , ("/static"                         , serveDirectory "static")
+  , ("/migrateUsers"                   , with auth migrateUsers)
   ]
 
 ------------------------------------------------------------------------------
@@ -148,10 +150,10 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
 
     d <- nestSnaplet "db" db pgsInit
 
-    a <- nestSnaplet "auth" auth $
-         AuthJ.initJsonFileAuthManager defAuthSettings sess "users.json"
+    --a <- nestSnaplet "auth" auth $
+    --     AuthJ.initJsonFileAuthManager defAuthSettings sess "users.json"
 
-    --p <- nestSnaplet "auth" auth $ AuthSql.initPostgresAuth sess d
+    p <- nestSnaplet "auth" auth $ AuthSql.initPostgresAuth sess d
 
     ac <- nestSnaplet "acid" acid $ acidInit defaultState
     h <- nestSnaplet "" heist $ heistInit "templates"
@@ -165,7 +167,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     -- Perhaps use longer session times?
     wrapSite (\site -> with sess touchSession >> site >> with sess commitSession)
 
-    return $ App h s a ac d
+    return $ App h s p ac d
 
 defaultState :: PersistentState
 defaultState =
