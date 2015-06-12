@@ -32,6 +32,7 @@ import Reffit.User
 import Reffit.OverviewComment
 import Reffit.Discussion
 import Reffit.AcidTypes
+import Reffit.FieldTag
 
 
 ------------------------------------------------------------------------------
@@ -67,8 +68,8 @@ insertFollowers conn rUsers userSqlIDs =
     allFollowPairs = concatMap userFollowed (Map.elems rUsers)
 
     userFollowed :: User -> [(Int,Int,UTCTime)]
-                    userFollowed u = mayMaybe map (pairFollow u)
-                                     (Set.toList $ userFollowing u)
+    userFollowed u = mapMaybe (pairFollow u)
+                     (Set.toList $ userFollowing u)
 
     pairFollow :: User -> UserName -> Maybe (Int,Int,UTCTime)
     pairFollow u followed = (\x y z -> (x,y,z))
@@ -150,7 +151,7 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
           (commentTime,parentDoc,parentComment,commentText)
           VALUES (?,?,?,?)
           RETURNING commentID |]
-    (ocPostTime, docSqlID, Nothing, ocText)
+    (ocPostTime, docSqlID, (Nothing :: Maybe Int), ocText)
 
 --  zipWithM_  (\i p ->
 --    execute' conn
@@ -172,7 +173,7 @@ insertComment conn docSqlID userIdMap (ocID,OverviewComment{..}) = do
   execute' conn authorQuery
     (commentSqlID,userID)
 
-  insertDiscussion conn docSqlID commentSqlID userIdMap ocDiscussion
+  insertDiscussion conn docSqlID (Just commentSqlID) userIdMap ocDiscussion
 
   return (ocID,commentSqlID)
 
@@ -202,7 +203,7 @@ insertCommentVotes conn p commentIdMap userIdMap =
     _ -> return 0
 
 ------------------------------------------------------------------------------
-insertDiscussion :: Connection -> Int -> Int -> Map.Map UserName Int
+insertDiscussion :: Connection -> Int -> Maybe Int -> Map.Map UserName Int
                  -> Discussion -> IO ()
 insertDiscussion conn docSqlId parentSqlId userIdMap discussion =
   forM_ (discussion :: Forest DiscussionPoint) $ \d ->
@@ -261,14 +262,17 @@ insertPinboard conn User{..} userIdMap docMap =
     _ -> error $ "Couldn't find pinboard document for "
                        ++ T.unpack userName
 
-insertFieldTags :: Connection -> FieldTags -> TagPath -> IO ()
-insertFieldTags ts accPath = mapM_ (insertFieldTag accPath) ts
-
-
-insertFieldTag :: Connection -> TagPath -> FieldTag -> IO ()
-insertFieldTag conn accPath (Node tag subTags) = do
-  execute' conn "INSERT INTO hashTags VALUES (?)" (Only tag)
-  insertFieldTags conn subTags
+-- This doesn't get called from anywhere in AcidToSql.
+-- That is ok. In the old model, 'tags' are associated with a document directly
+-- In the new model, tags will only come from hashtags in comments.
+--insertFieldTags :: Connection -> FieldTags -> TagPath -> IO ()
+--insertFieldTags conn ts accPath = mapM_ (insertFieldTag conn accPath) ts
+--
+--
+--insertFieldTag :: Connection -> TagPath -> FieldTag -> IO ()
+--insertFieldTag conn accPath (Node tag subTags) = do
+--  execute' conn "INSERT INTO hashTags VALUES (?)" (Only tag)
+--  insertFieldTags conn subTags
 
 ------------------------------------------------------------------------------
 main :: IO ()

@@ -20,7 +20,6 @@ import           Data.Time
 ------------------------------------------------------------------------------
 import           Heist
 import qualified Heist.Interpreted as I
-import           Snap (gets)
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth

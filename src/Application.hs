@@ -11,7 +11,7 @@ module Application where
 ------------------------------------------------------------------------------
 import Control.Lens
 import Debug.Trace
-import Snap                            (get)
+import Control.Monad.State             (get)
 import Snap.Snaplet                    (Handler, Snaplet, snapletValue, subSnaplet, with)
 import Snap.Snaplet.Heist
 import Snap.Snaplet.Auth

@@ -75,15 +75,15 @@ allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do
   "paper_roll_papers" ## (renderPaperRollPapers (take 100 docs))
 
-allDocOverviewSplices :: [Int] -> Splices (SnapletISplice App)
-allDocOverviewSplices inds = do
-  "paper_roll_papers" ## (renderDocOverviewSplices (take 100 inds))
+allDocOverviewSplices :: [Document] -> Splices (SnapletISplice App)
+allDocOverviewSplices docs = do
+  "paper_roll_papers" ## (renderDocOverviewPapers docs)
 
 renderPaperRollPapers :: [Document] -> SnapletISplice App
 renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
 
-renderDocOverviewPapers :: [Int] -> SnapletISplice App
-renderDocOverviewPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocOverview
+renderDocOverviewPapers ::  [Document] -> SnapletISplice App
+renderDocOverviewPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
 
 splicesFromDocument :: Document -> Splices (SnapletISplice App)
 splicesFromDocument doc = do
