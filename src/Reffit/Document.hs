@@ -31,7 +31,8 @@ data DocOverview = DocOverview {
   , docOLink       :: T.Text
   , docOUploadTime :: UTCTime
   , docONComments  :: Int
-  , docONVotes     :: Int
+  , docONUpvotes   :: Int
+  , docONDownvotes :: Int
   , docHashTags    :: [HashTag]
   } deriving (Show)
 

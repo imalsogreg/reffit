@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE QuasiQuotes       #-}
 
@@ -14,6 +15,8 @@ import qualified Data.Text as T
 import           Data.Time
 import qualified Data.Vector as V
 ------------------------------------------------------------------------------
+import           Database.PostgreSQL.Simple.ToRow
+import           Database.PostgreSQL.Simple.ToField
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Database.PostgreSQL.Simple.FromRow
 import           Snap.Snaplet (Handler)
@@ -27,25 +30,37 @@ import           Reffit.HashTag
 
 
 instance FromRow DocOverview where
-  fromRow = do
-    ttl <- field
-    upl <- field
-    aus <- listFromJsonField <$> field
-    lnk <- field
-    tUp <- field
-    nUV <- field
-    nDV <- field
-    tgs <- listFromJsonField <$> field
-    return (DocOverview ttl upl aus lnk tUp nUV nDV tgs)
+  fromRow = DocOverview
+            <$> field
+            <*> field
+            <*> (listFromJsonField <$> field)
+            <*> field
+            <*> field
+            <*> field
+            <*> field
+            <*> field
+            <*> (listFromJsonField <$> field)
 
 listFromJsonField :: (A.FromJSON a, A.ToJSON a) => A.Value -> [a]
 listFromJsonField = (^.. _Array . traverse . _JSON)
 
 instance ToRow DocOverview where
-  toRow DocOverview{..} = Many []
+  toRow DocOverview{..} =
+    [toField docOTitle
+    ,toField docOUploader
+    ,toField (listToJsonField docOAuthors)
+    ,toField docOLink
+    ,toField docOUploadTime
+    ,toField docONComments
+    ,toField docONUpvotes
+    ,toField docONDownvotes
+    ,toField (listToJsonField docHashTags)
+    ]
+
 listToJsonField :: (A.ToJSON a) => [a] -> A.Value
 listToJsonField xs = A.Array . V.fromList . map A.toJSON $ xs
 
+{-
 ------------------------------------------------------------------------------
 getDocOverview :: Int -> Handler App App (Maybe DocOverview)
 getDocOverview docID = do
@@ -122,4 +137,4 @@ getAuthorsByDocID docID =
     (Only docID)
 
 ------------------------------------------------------------------------------
-
+-}
