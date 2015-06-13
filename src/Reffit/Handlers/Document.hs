@@ -5,12 +5,17 @@ module Reffit.Handlers.Document where
 
 ------------------------------------------------------------------------------
 import           Control.Applicative
+import           Control.Lens
+import           Data.Aeson.Lens
+import qualified Data.Aeson as A
 import           Control.Error
 import           Control.Monad.IO.Class (liftIO)
 import qualified Data.Text as T
 import           Data.Time
+import qualified Data.Vector as V
 ------------------------------------------------------------------------------
 import           Database.PostgreSQL.Simple.SqlQQ
+import           Database.PostgreSQL.Simple.FromRow
 import           Snap.Snaplet (Handler)
 import           Snap.Snaplet.PostgresqlSimple
 ------------------------------------------------------------------------------
@@ -21,6 +26,25 @@ import           Reffit.Types
 import           Reffit.HashTag
 
 
+instance FromRow DocOverview where
+  fromRow = do
+    ttl <- field
+    upl <- field
+    aus <- listFromJsonField <$> field
+    lnk <- field
+    tUp <- field
+    nUV <- field
+    nDV <- field
+    tgs <- listFromJsonField <$> field
+    return (DocOverview ttl upl aus lnk tUp nUV nDV tgs)
+
+listFromJsonField :: (A.FromJSON a, A.ToJSON a) => A.Value -> [a]
+listFromJsonField = (^.. _Array . traverse . _JSON)
+
+instance ToRow DocOverview where
+  toRow DocOverview{..} = Many []
+listToJsonField :: (A.ToJSON a) => [a] -> A.Value
+listToJsonField xs = A.Array . V.fromList . map A.toJSON $ xs
 
 ------------------------------------------------------------------------------
 getDocOverview :: Int -> Handler App App (Maybe DocOverview)

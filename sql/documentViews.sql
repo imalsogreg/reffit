@@ -1,14 +1,14 @@
 CREATE VIEW documentSummary as
-SELECT doc.documentID,  doc.title,
-       doc.docUploader, doc.docClass,
-       doc.uploadTime,  coms,
+WITH docs      AS (select * from documents),
+     coms      AS (select count(*)
+                   from comments, docs
+                   where comments.parentDoc=docs.documentID),
+     tags      AS (select * from hashTags)
+SELECT docs.documentID,  docs.title,
+       docs.docUploader, docs.docClass,
+       docs.uploadTime,  coms,
        tags
- FROM documents as docs,
-      coms      as (select count(*)
-                    from comments
-                    where comments.parentDoc=doc.documentID)
-      tags      as select hashTags
-;
+FROM docs, coms, tags;
 -- TODO make an index for documentSummary!
 
 -- View of the json hashtag data for each document

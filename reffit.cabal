@@ -72,6 +72,7 @@ Library
     mtl,
     network,
     network-uri,
+    pandoc,
     postgresql-simple,
     safe,
     safecopy,
@@ -87,6 +88,7 @@ Library
     transformers,
     transformers-compat,
     unordered-containers,
+    vector,
     xmlhtml >= 0.1
 
 
@@ -99,6 +101,7 @@ Executable reffit
     acid-state,
     transformers-compat,
     errors,
+    pandoc,
     reffit,
     snap,
     snap-core,

@@ -1,4 +1,4 @@
-\i user.sql
+\i sql/user.sql
 
 CREATE SEQUENCE commentReferralIDSeq;
 CREATE TABLE commentReferrals (
@@ -33,32 +33,44 @@ CREATE TABLE userPinboard (
        UNIQUE (userID, docID)
 );
 
+-- Authors with known names, may be associated with multiple docAuthors
 CREATE SEQUENCE authorIDSeq;
 CREATE TABLE authors (
   authorID int PRIMARY KEY DEFAULT nextval('authorIDSeq'),
   reffitID int references reffitUsers(userID),
+  reffitVerified bool,
   authorGivenName varchar(200),
   authorSurname   varchar(200)
 );
 ALTER SEQUENCE authorIDSeq OWNED BY authors.authorID;
 
+-- docAuthor is a particular spelling of a name used in a single paper
+-- May get manually associated with a single 'real' author
 CREATE TABLE documentAuthors (
-       authorID        int    PRIMARY KEY,
+       authorID        int,
        documentID      int    references documents(documentID),
+       nameString    varchar(200),
        UNIQUE (authorID, documentID)
 );
 
-CREATE SEQUENCE authorEquivalenceClassIDSeq;
-CREATE TABLE authorEquivalenceClasses (
-       authorClassID int PRIMARY KEY DEFAULT nextval('authorEquivalenceClassIDSeq')
-);
-ALTER SEQUENCE authorEquivalenceClassIDSeq OWNED BY authorEquivalenceClasses.authorClassID;
-
-CREATE TABLE authorEquivalenceClassMembers (
-       authorID               int references reffitUsers(userID),
-       authorEquivalenceClass int references authorEquivalenceClasses(authorClassID),
-       UNIQUE (authorID, authorEquivalenceClass)
-);
+-- I think autherEquivalenceClass and autherEquivalenceClassMember
+-- are subsumed by 'authors' and 'documentAuthors'. documentAuthors
+-- are closely related to their parent document, and their nameString
+-- comes from the document's spelling of their name.
+-- Later, documentAuthors are collected by equivalence (through manual labelling)
+-- into authors, when this happens, the docAuthor's nullable authorId is set to
+-- a non-null authorId
+--CREATE SEQUENCE authorEquivalenceClassIDSeq;
+--CREATE TABLE authorEquivalenceClasses (
+--       authorClassID int PRIMARY KEY DEFAULT nextval('authorEquivalenceClassIDSeq')
+--);
+--ALTER SEQUENCE authorEquivalenceClassIDSeq OWNED BY authorEquivalenceClasses.authorClassID;
+--
+--CREATE TABLE authorEquivalenceClassMembers (
+--       authorID               int references reffitUsers(userID),
+--       authorEquivalenceClass int references authorEquivalenceClasses(authorClassID),
+--       UNIQUE (authorID, authorEquivalenceClass)
+--);
 
 CREATE SEQUENCE commentIDSeq;
 CREATE TABLE comments (
@@ -101,4 +113,5 @@ CREATE TABLE anonVotes (
        voteTime      timestamptz
 );
 
-\i hashtag.sql
+\i sql/hashtag.sql
+\i sql/documentViews.sql

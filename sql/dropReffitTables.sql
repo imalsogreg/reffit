@@ -1,8 +1,6 @@
 DROP TABLE IF EXISTS passwordresetrequests CASCADE;
 DROP TABLE IF EXISTS anoncommentauthors CASCADE;
 DROP TABLE IF EXISTS anonvotes CASCADE;
-DROP TABLE IF EXISTS authorequivalenceclassmembers CASCADE;
-DROP TABLE IF EXISTS authorequivalenceclasses CASCADE;
 DROP TABLE IF EXISTS authors CASCADE;
 DROP TABLE IF EXISTS commentreferrals CASCADE;
 DROP TABLE IF EXISTS documentauthors CASCADE;
@@ -20,3 +18,6 @@ DROP TABLE IF EXISTS emailaddys CASCADE;
 DROP TABLE IF EXISTS reffitusers CASCADE;
 
 
+DROP VIEW IF EXISTS documentsummary CASCADE;
+DROP VIEW IF EXISTS documenthashtags CASCADE;
+DROP VIEW IF EXISTS documentncomments CASCADE;
