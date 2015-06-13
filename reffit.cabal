@@ -71,7 +71,7 @@ Library
     mtl,
     network,
     network-uri,
-    pandoc >= 0.14 && < 0.15,
+    pandoc >= 1.14 && < 1.15,
     postgresql-simple,
     safe,
     safecopy,
