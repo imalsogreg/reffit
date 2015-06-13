@@ -80,7 +80,7 @@ Library
     snap-server,
     snap-loader-static,
     snaplet-acid-state,
-    snaplet-postgresql-simple,
+    snaplet-postgresql-simple >= 0.6 && < 0.7,
     text,
     text-icu,
     time,
