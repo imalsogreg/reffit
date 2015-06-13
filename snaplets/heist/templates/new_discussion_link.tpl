@@ -1,2 +1,2 @@
-<a class="raiseDiscussionInput"><apply-content/></a>
+<a class="raiseDiscussionInput" data-id="${itemid}"><apply-content/></a>
 
