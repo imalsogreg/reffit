@@ -35,9 +35,6 @@ data DocOverview = DocOverview {
   , docHashTags    :: [HashTag]
   } deriving (Show)
 
-instance FromRow DocOverview where
-  
-
 ------------------------------------------------------------------------------
 data Document = Document
                 { docUploader   :: Maybe UserName
