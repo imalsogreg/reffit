@@ -9,6 +9,7 @@ SELECT doc.documentID,  doc.title,
                     where comments.parentDoc=doc.documentID)
       tags      as select hashTags
 ;
+-- TODO make an index for documentSummary!
 
 -- View of the json hashtag data for each document
 -- Multiple within-doc occurrances of the same tag

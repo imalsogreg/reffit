@@ -34,6 +34,7 @@ Library
     Reffit.Handlers.HandleSummaryVote,
     Reffit.Handlers.HandleViewPaper,
     Reffit.Handlers.HandleViewUser,
+    Reffit.Handlers.Serialize,
     Reffit.HashTag,
     Reffit.OverviewComment,
     Reffit.PaperRoll,
