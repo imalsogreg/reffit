@@ -135,7 +135,7 @@ profileSplices t cUser' profileUser docs = do
     $ profileUser
   "nFollowers"    ## I.textSplice . T.pack . show . Set.size . userFollowedBy
     $ profileUser
-  (allPaperRollSplices $ userPinboardDocs docs profileUser)
+  -- (allPaperRollSplices $ userPinboardDocs docs profileUser) TODO: to sql!
   (allUserBlockSplices "following" docs (userFollowing  profileUser))
   (allUserBlockSplices "followers" docs (userFollowedBy profileUser))
   where (followBtnText,followBtnLink) =

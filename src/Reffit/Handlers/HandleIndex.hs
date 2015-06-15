@@ -48,32 +48,35 @@ handleIndex = do
   aUser       <- with auth currentUser
   indexParams <- getParams
   tNow        <- liftIO $ getCurrentTime
+  docOs       <- docOverviews
   let user' = join $ Map.lookup <$> (userLogin <$> aUser) <*> pure us
   stats' <- usageStats
   case stats' of
     Just stats ->
       renderWithSplices "_index"
-      (allIndexSplices tNow docs user' indexParams tags stats)
+      (allIndexSplices tNow docOs user' indexParams tags stats)
     Nothing -> writeText "Error getting usage stats"
 
-
+type IntDocOs = (DocOverview)
 ------------------------------------------------------------------------------
-allIndexSplices :: UTCTime -> Map.Map DocumentId Document
+allIndexSplices :: UTCTime -> [IntDocOs]
                    -> Maybe User
                    -> Map.Map BS.ByteString [BS.ByteString]
                    -> FieldTags -> (Int, Int, Int, Int)
                    -> Splices (SnapletISplice App)
 allIndexSplices tNow docs user' indexParams tags nUsers = do
-  let docsToShow = presentationSort tNow docs (paramsToStrategy tags indexParams)
+  --let docsToShow = presentationSort tNow docs (paramsToStrategy tags indexParams)
+  let docsToShow = docs
   allPaperRollSplices docsToShow
   allStatsSplices nUsers
+  {- TODO bring back user reputation score
   case user' of
     Nothing -> do
       "tagsButton" ## tagButtonSplice tagHierarchy
     Just user -> do
       allFilterTagSplices (Set.toList . userTags $ user) <>
        ("userRep" ## I.textSplice . T.pack . show $ userReputation docs user)
-
+  -}
 
 ------------------------------------------------------------------------------
 allStatsSplices :: (Int, Int, Int, Int) -> Splices (SnapletISplice App)
@@ -112,3 +115,7 @@ usageStats = runMaybeT $ do
     return (nU, nD, nC, nVP + nVA)
   where
     unSql q = (listToMaybe . map fromOnly) <$> (with db $ query_ q)
+
+------------------------------------------------------------------------------
+docOverviews :: Handler App App [DocOverview]
+docOverviews = query_ "SELECT * FROM documentSummary"

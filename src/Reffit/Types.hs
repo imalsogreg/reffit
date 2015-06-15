@@ -2,6 +2,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Reffit.Types where
 
@@ -14,7 +15,8 @@ import           Data.Time.Clock
 import           Data.Serialize
 import           Data.Time
 import Data.SafeCopy (base, deriveSafeCopy)
-
+import           Database.PostgreSQL.Simple.ToField
+import           Database.PostgreSQL.Simple.FromField
 
 -- Orphan instances for types used all over
 instance Serialize UTCTime where
@@ -27,8 +29,8 @@ instance Serialize Text where
   put = put . unpack
   get = pack <$> get
 
-data DocClass = DocClass { docClassName :: Text
-                         } deriving (Show, Generic, Typeable, Eq)
+newtype DocClass = DocClass { docClassName :: Text
+                         } deriving (Show, Generic, Typeable, Eq, FromField, ToField)
 deriveSafeCopy 0 'base ''DocClass
 
 

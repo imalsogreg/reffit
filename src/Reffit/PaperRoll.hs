@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Reffit.PaperRoll where
@@ -27,10 +28,12 @@ import           Application
 import           Reffit.AcidTypes
 import           Reffit.Document
 import           Reffit.Handlers.Document
+import           Reffit.DocAuthor
 import           Reffit.FieldTag
 import           Reffit.Scores
 import           Reffit.Search
 import           Reffit.Sort
+import           Reffit.HashTag
 import           Reffit.Types
 
 
@@ -70,41 +73,40 @@ paramsToStrategy tags params = case Map.lookup "q" params of
     in FiltSort sortCrit filtTags
 
 
+type IntDocOverview = (DocOverview)
 ------------------------------------------------------------------------------
-allPaperRollSplices :: [Document] -> Splices (SnapletISplice App)
+allPaperRollSplices :: [IntDocOverview] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do
   "paper_roll_papers" ## (renderPaperRollPapers (take 100 docs))
 
-allDocOverviewSplices :: [Document] -> Splices (SnapletISplice App)
+allDocOverviewSplices :: [IntDocOverview] -> Splices (SnapletISplice App)
 allDocOverviewSplices docs = do
   "paper_roll_papers" ## (renderDocOverviewPapers docs)
 
-renderPaperRollPapers :: [Document] -> SnapletISplice App
+renderPaperRollPapers :: [IntDocOverview] -> SnapletISplice App
 renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
 
-renderDocOverviewPapers ::  [Document] -> SnapletISplice App
+renderDocOverviewPapers ::  [IntDocOverview] -> SnapletISplice App
 renderDocOverviewPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
 
-splicesFromDocument :: Document -> Splices (SnapletISplice App)
-splicesFromDocument doc = do
-  let (novScore, rigScore, coolScore) = documentDimScores doc
-  "idNum"               ## I.textSplice (T.pack . show $ docId doc)
-  "paper_title"         ## I.textSplice (docTitle doc)
-  "paper_authors"       ## I.textSplice (T.intercalate ", " $ docAuthors doc)
-  "paper_external_link" ## I.textSplice (docLink doc)
-  "noveltyScore"        ## I.textSplice (T.pack $ show (novScore))
-  "rigorScore"          ## I.textSplice (T.pack $ show (rigScore))
-  "coolnessScore"       ## I.textSplice (T.pack $ show (coolScore))
-  (allDFieldTags $ docFieldTags doc)
+splicesFromDocument :: IntDocOverview -> Splices (SnapletISplice App)
+splicesFromDocument (DocOverview{..}) = do
+  --let (novScore, rigScore, coolScore) = documentDimScores doc
+  "idNum"               ## I.textSplice (T.pack . show $ docOID)
+  "paper_title"         ## I.textSplice docOTitle
+  "paper_authors"       ## I.textSplice (T.intercalate ", " $ map daNameString docOAuthors)
+  "paper_external_link" ## I.textSplice (maybe "" id $ listToMaybe docOLink)
+  "noveltyScore"        ## I.textSplice (T.pack $ "-")
+  "rigorScore"          ## I.textSplice (T.pack $ "-")
+  "coolnessScore"       ## I.textSplice (T.pack $ "-")
+  (allDFieldTags $ docOHashTags)
 
-allDFieldTags :: [TagPath] -> Splices (SnapletISplice App)
-allDFieldTags tags = "fieldTags" ## renderDFieldTags fLabels
-    where
-      fLabels = map last tags
+allDFieldTags :: [HashTag] -> Splices (SnapletISplice App)
+allDFieldTags tags = "fieldTags" ## renderDFieldTags tags
 
-renderDFieldTags :: [T.Text] -> SnapletISplice App
+renderDFieldTags :: [HashTag] -> SnapletISplice App
 renderDFieldTags = I.mapSplices $ I.runChildrenWith . splicesFromDTag
 
-splicesFromDTag :: Monad n => T.Text -> Splices (I.Splice n)
+splicesFromDTag :: Monad n => HashTag -> Splices (I.Splice n)
 splicesFromDTag t = do
-  "fieldTag" ## I.textSplice t
+  "fieldTag" ## I.textSplice (unHashTag t)

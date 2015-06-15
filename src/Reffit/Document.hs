@@ -25,15 +25,17 @@ import           Reffit.OverviewComment
 
 ------------------------------------------------------------------------------
 data DocOverview = DocOverview {
-    docOTitle      :: T.Text
+    docOID         :: Int
+  , docOTitle      :: T.Text
   , docOUploader   :: Maybe UserName
   , docOAuthors    :: [DocAuthor]
-  , docOLink       :: T.Text
+  , docOLink       :: [T.Text]
+  , docOClass      :: DocClass
   , docOUploadTime :: UTCTime
   , docONComments  :: Int
   , docONUpvotes   :: Int
   , docONDownvotes :: Int
-  , docHashTags    :: [HashTag]
+  , docOHashTags    :: [HashTag]
   } deriving (Show)
 
 ------------------------------------------------------------------------------

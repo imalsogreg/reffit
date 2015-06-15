@@ -1,4 +1,4 @@
-devel.cfg
+snaplets/postgresql-simple/devel.cfg
 
 dist
 cabal-dev

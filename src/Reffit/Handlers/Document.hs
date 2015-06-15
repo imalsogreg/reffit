@@ -33,6 +33,8 @@ instance FromRow DocOverview where
   fromRow = DocOverview
             <$> field
             <*> field
+            <*> field
+            <*> (listFromJsonField <$> field)
             <*> (listFromJsonField <$> field)
             <*> field
             <*> field
@@ -46,15 +48,17 @@ listFromJsonField = (^.. _Array . traverse . _JSON)
 
 instance ToRow DocOverview where
   toRow DocOverview{..} =
-    [toField docOTitle
+    [toField docOID
+    ,toField docOTitle
     ,toField docOUploader
     ,toField (listToJsonField docOAuthors)
-    ,toField docOLink
+    ,toField (listToJsonField docOLink)
+    ,toField docOClass
     ,toField docOUploadTime
     ,toField docONComments
     ,toField docONUpvotes
     ,toField docONDownvotes
-    ,toField (listToJsonField docHashTags)
+    ,toField (listToJsonField docOHashTags)
     ]
 
 listToJsonField :: (A.ToJSON a) => [a] -> A.Value
