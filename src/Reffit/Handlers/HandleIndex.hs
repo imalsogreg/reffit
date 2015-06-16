@@ -30,11 +30,12 @@ import           Snap.Snaplet.PostgresqlSimple hiding (query)
 import           Application
 import           Reffit.AcidTypes
 import           Reffit.Document
-import           Reffit.FieldTag
+--import           Reffit.FieldTag -- TODO: get rid of all FieldTag stuff
+import           Reffit.HashTag
 import           Reffit.Handlers.HandleNewPaper -- to get fieldTag button splices. TODO restructure
 import           Reffit.PaperRoll               (allPaperRollSplices, paramsToStrategy)
 import           Reffit.Scores
-import           Reffit.Sort 
+import           Reffit.Sort
 import           Reffit.Types
 import           Reffit.User
 
@@ -42,9 +43,8 @@ import           Reffit.User
 ------------------------------------------------------------------------------
 handleIndex :: Handler App App ()
 handleIndex = do
-  docs        <- query QueryAllDocs
+  --docs        <- query QueryAllDocs
   us          <- query QueryAllUsers
-  tags        <- query QueryAllFieldTags
   aUser       <- with auth currentUser
   indexParams <- getParams
   tNow        <- liftIO $ getCurrentTime
@@ -54,29 +54,21 @@ handleIndex = do
   case stats' of
     Just stats ->
       renderWithSplices "_index"
-      (allIndexSplices tNow docOs user' indexParams tags stats)
+      (allIndexSplices tNow docOs user' indexParams stats)
     Nothing -> writeText "Error getting usage stats"
 
-type IntDocOs = (DocOverview)
+
 ------------------------------------------------------------------------------
-allIndexSplices :: UTCTime -> [IntDocOs]
+allIndexSplices :: UTCTime -> [DocOverview]
                    -> Maybe User
                    -> Map.Map BS.ByteString [BS.ByteString]
-                   -> FieldTags -> (Int, Int, Int, Int)
+                   -> (Int, Int, Int, Int)
                    -> Splices (SnapletISplice App)
-allIndexSplices tNow docs user' indexParams tags nUsers = do
-  --let docsToShow = presentationSort tNow docs (paramsToStrategy tags indexParams)
+allIndexSplices tNow docs user' indexParams nUsers = do
   let docsToShow = docs
   allPaperRollSplices docsToShow
   allStatsSplices nUsers
-  {- TODO bring back user reputation score
-  case user' of
-    Nothing -> do
-      "tagsButton" ## tagButtonSplice tagHierarchy
-    Just user -> do
-      allFilterTagSplices (Set.toList . userTags $ user) <>
-       ("userRep" ## I.textSplice . T.pack . show $ userReputation docs user)
-  -}
+
 
 ------------------------------------------------------------------------------
 allStatsSplices :: (Int, Int, Int, Int) -> Splices (SnapletISplice App)
@@ -89,30 +81,13 @@ allStatsSplices (nUsers, nDocs, nComments, nVotes) = do
 
 
 ------------------------------------------------------------------------------
-allFilterTagSplices :: [TagPath] -> Splices (SnapletISplice App)
-allFilterTagSplices tps = do
-  "fieldTags"  ## renderFieldTags tps
-  "tagsButton" ## tagButtonSplice tagHierarchy
-
-renderFieldTags :: [TagPath] -> SnapletISplice App
-renderFieldTags = I.mapSplices $ I.runChildrenWith . splicesFromFieldTag
-
-splicesFromFieldTag :: Monad n => TagPath -> Splices (I.Splice n)
-splicesFromFieldTag tp = do
-  "fieldTagText"     ## I.textSplice . last $ tp
-  "fieldTagFullText" ## I.textSplice . toFullName $ tp
-
-
-
-------------------------------------------------------------------------------
 usageStats :: Handler App App (Maybe (Int, Int, Int, Int))
 usageStats = runMaybeT $ do
     nU  <- MaybeT $ unSql "SELECT count(*) from reffitUsers"
     nD  <- MaybeT $ unSql "SELECT count(*) from documents"
     nC  <- MaybeT $ unSql "SELECT count(*) from comments"
-    nVP <- MaybeT $ unSql "SELECT count(*) from publicvotes"
-    nVA <- MaybeT $ unSql "SELECT count(*) from anonvotes"
-    return (nU, nD, nC, nVP + nVA)
+    nVP <- MaybeT $ unSql "SELECT count(*) from votes"
+    return (nU, nD, nC, nVP)
   where
     unSql q = (listToMaybe . map fromOnly) <$> (with db $ query_ q)
 

@@ -2,7 +2,7 @@
 
 CREATE SEQUENCE commentReferralIDSeq;
 CREATE TABLE commentReferrals (
-       referralID       int PRIMARY KEY DEFAULt nextval('commentReferralIDSeq'),
+       referralID       int PRIMARY KEY DEFAULT nextval('commentReferralIDSeq'),
        referrer         int references reffitUsers(userID),
        referredEmail    varchar(200),
        referredUserName varchar(200),
@@ -53,24 +53,6 @@ CREATE TABLE documentAuthors (
        UNIQUE (authorID, documentID)
 );
 
--- I think autherEquivalenceClass and autherEquivalenceClassMember
--- are subsumed by 'authors' and 'documentAuthors'. documentAuthors
--- are closely related to their parent document, and their nameString
--- comes from the document's spelling of their name.
--- Later, documentAuthors are collected by equivalence (through manual labelling)
--- into authors, when this happens, the docAuthor's nullable authorId is set to
--- a non-null authorId
---CREATE SEQUENCE authorEquivalenceClassIDSeq;
---CREATE TABLE authorEquivalenceClasses (
---       authorClassID int PRIMARY KEY DEFAULT nextval('authorEquivalenceClassIDSeq')
---);
---ALTER SEQUENCE authorEquivalenceClassIDSeq OWNED BY authorEquivalenceClasses.authorClassID;
---
---CREATE TABLE authorEquivalenceClassMembers (
---       authorID               int references reffitUsers(userID),
---       authorEquivalenceClass int references authorEquivalenceClasses(authorClassID),
---       UNIQUE (authorID, authorEquivalenceClass)
---);
 
 CREATE SEQUENCE commentIDSeq;
 CREATE TABLE comments (
