@@ -75,6 +75,7 @@ CREATE TABLE documentAuthors (
 CREATE SEQUENCE commentIDSeq;
 CREATE TABLE comments (
        commentID     int PRIMARY KEY DEFAULT nextval('commentIDSeq'),
+       userID        int references reffitUsers(userID),
        commentTime   timestamptz,
        commentRating smallint,
        parentDoc     int references documents(documentID),
@@ -83,35 +84,28 @@ CREATE TABLE comments (
 );
 ALTER SEQUENCE commentIDSeq OWNED BY comments.commentID;
 
-CREATE TABLE publicCommentAuthors (
-       commentID       int references comments(commentID),
-       authorID        int references reffitUsers(userID),
-       UNIQUE (commentID, authorID)
+CREATE TABLE privateCommentAuthors (
+       commentID int references comments(commentID),
+       userID    int references reffitUsers(userID)
 );
 
-CREATE TABLE anonCommentAuthors (
-       commentID     int references comments(commentID),
-       authorID      int references reffitUsers(userID),
-       UNIQUE (commentID, authorID)
-);
-
-CREATE TABLE publicVotes (
-       voterID       int references reffitUsers(userID) NOT NULL,
+CREATE SEQUENCE voteIDSeq;
+CREATE TABLE votes (
+       voteID        int PRIMARY KEY DEFAULT nextval('voteIDSeq'),
+       userID        int references reffitUsers(userID),
        voteDocument  int references documents(documentID),
        voteComment   int references comments(commentID),
        voteValue     int NOT NULL,
-       UNIQUE (voterID, voteDocument, voteComment),
+       UNIQUE (userID, voteDocument, voteComment),
        voteTime      timestamptz
 );
+ALTER SEQUENCE voteIDSeq OWNED BY votes.voteID;
 
-CREATE TABLE anonVotes (
-       voterID       int references reffitUsers(userID) NOT NULL,
-       voteDocument  int references documents(documentID),
-       voteComment   int references comments(commentID),
-       voteValue     int NOT NULL,
-       UNIQUE (voterID, voteDocument, voteComment),
-       voteTime      timestamptz
+CREATE TABLE privateVotes (
+       userID        int references reffitUsers(userID) NOT NULL,
+       voteID        int references votes(voteID)
 );
 
 \i sql/hashtag.sql
 \i sql/documentViews.sql
+\i sql/userViews.sql

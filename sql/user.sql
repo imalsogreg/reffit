@@ -31,4 +31,3 @@ CREATE TABLE passwordResetRequests (
        resetExpiresAt timestamptz
 );
 ALTER SEQUENCE passwordResetRequestIDSeq OWNED BY passwordResetRequests.resetRequestID;
-

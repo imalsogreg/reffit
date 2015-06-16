@@ -50,8 +50,8 @@ CREATE VIEW documentNVotes AS
 WITH legalValues AS (SELECT * from (values (1),(-1)) legalValues(voteValue)),
      nonZeroNs   AS (SELECT documentID, voteValue, count(*)
                      FROM documents
-                     INNER JOIN publicVotes
-                     ON documents.documentID = publicVotes.votedocument
+                     INNER JOIN votes
+                     ON documents.documentID = votes.votedocument
                      GROUP BY documentID, voteValue),
      nNull       AS (SELECT documents.documentID, legalValues.voteValue
                      FROM documents
@@ -66,12 +66,14 @@ SELECT * from nTopLevel;
 CREATE VIEW documentSummary as
 WITH docs      AS (select * from documents),
      tags      AS (select *
-                   from documentHashTags)
+                   from documentHashTags),
+     upVs      AS (SELECT * FROM documentNVotes WHERE votevalue = 1),
+     dnVs      AS (SELECT * FROM documentNVotes WHERE votevalue = -1)
 SELECT docs.documentID,  docs.title,
        reffitUsers.username, docAuths.auths,
        docUrls.urls, docs.docClass,
        docs.uploadTime,  documentNComments.n as nComments,
-       0 as nUpvotes, 0 as nDownvotes, -- TODO Fix this
+       upVs.count as uUpvotes, dnVs.count as nDownvotes, -- TODO Fix this
        tags.tags
 FROM docs
 LEFT JOIN documentNComments
@@ -82,6 +84,10 @@ LEFT JOIN reffitUsers
 ON docs.docuploader = reffitUsers.userID
 LEFT JOIN docUrls
 ON docs.documentID = docUrls.documentID
+LEFT JOIN upVs
+ON docs.documentID = upVs.documentID
+LEFT JOIN dnVs
+ON docs.documentID = dnVs.documentID
 LEFT JOIN tags
 ON docs.documentID = tags.documentID
 ;
