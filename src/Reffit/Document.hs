@@ -35,7 +35,7 @@ data DocOverview = DocOverview {
   , docONComments  :: Int
   , docONUpvotes   :: Int
   , docONDownvotes :: Int
-  , docOHashTags    :: [HashTag]
+  , docOHashTags   :: [HashTag]
   } deriving (Show)
 
 ------------------------------------------------------------------------------

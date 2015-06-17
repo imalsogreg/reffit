@@ -99,7 +99,7 @@ insertDocuments conn p userIdMap = do
 
 insertDocument :: Connection -> PersistentState -> Map.Map UserName Int
                -> Document -> IO ([(OverviewCommentId, Int)], Map.Map DiscussionPointReffitId DiscussionPointSQLId)
-insertDocument conn _ userIDMap Document{..} = do
+insertDocument conn _ userIDMap doc@Document{..} = do
   let uploaderId = flip Map.lookup userIDMap <$> docUploader
   [Only docSqlID] <- query' conn
     [sql| INSERT INTO documents
@@ -126,6 +126,7 @@ insertDocument conn _ userIDMap Document{..} = do
                 VALUES (?,?) |]
           (docSqlID :: Int, T.unwords (given:surs))
   discussionIdMap <- insertDiscussion conn docSqlID Nothing userIDMap docDiscussion Map.empty
+  insertDocFieldTags conn (fromIntegral docSqlID) doc
   return (zip commentAcidIds commentSQLIds :: [(OverviewCommentId, Int)],
           mconcat (discussionIdMap:discPntMaps) :: Map.Map DiscussionPointReffitId DiscussionPointSQLId)
 

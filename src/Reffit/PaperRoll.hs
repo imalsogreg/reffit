@@ -37,18 +37,6 @@ import           Reffit.HashTag
 import           Reffit.Types
 
 
-{-
-------------------------------------------------------------------------------
-documentFromDB :: Int -> Handler App App (Maybe Document)
-documentFromDB docID = runMaybeT $ do
-  (t,u,c,ts,ln) <- MaybeT $ listToMaybe <$>
-       query "SELECT (title, docUploader, docClass, uploadTime, docSourceURL) \
-        \from documents WHERE documentID == (?)"
-         (Only docID)
-  
-  undefined
--}
-
 ------------------------------------------------------------------------------
 paramsToStrategy :: FieldTags -> Map.Map BS.ByteString [BS.ByteString]
                     -> PresentationStrategy
@@ -73,23 +61,22 @@ paramsToStrategy tags params = case Map.lookup "q" params of
     in FiltSort sortCrit filtTags
 
 
-type IntDocOverview = (DocOverview)
 ------------------------------------------------------------------------------
-allPaperRollSplices :: [IntDocOverview] -> Splices (SnapletISplice App)
+allPaperRollSplices :: [DocOverview] -> Splices (SnapletISplice App)
 allPaperRollSplices docs = do
   "paper_roll_papers" ## (renderPaperRollPapers (take 100 docs))
 
-allDocOverviewSplices :: [IntDocOverview] -> Splices (SnapletISplice App)
+allDocOverviewSplices :: [DocOverview] -> Splices (SnapletISplice App)
 allDocOverviewSplices docs = do
   "paper_roll_papers" ## (renderDocOverviewPapers docs)
 
-renderPaperRollPapers :: [IntDocOverview] -> SnapletISplice App
+renderPaperRollPapers :: [DocOverview] -> SnapletISplice App
 renderPaperRollPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
 
-renderDocOverviewPapers ::  [IntDocOverview] -> SnapletISplice App
+renderDocOverviewPapers ::  [DocOverview] -> SnapletISplice App
 renderDocOverviewPapers = I.mapSplices $ I.runChildrenWith . splicesFromDocument
 
-splicesFromDocument :: IntDocOverview -> Splices (SnapletISplice App)
+splicesFromDocument :: DocOverview -> Splices (SnapletISplice App)
 splicesFromDocument (DocOverview{..}) = do
   --let (novScore, rigScore, coolScore) = documentDimScores doc
   "idNum"               ## I.textSplice (T.pack . show $ docOID)

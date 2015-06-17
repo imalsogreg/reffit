@@ -1,0 +1,8 @@
+--CREATE VIEW friendsNews AS
+--WITH friends AS (SELECT follower, array_agg(followed) as following
+--                 FROM userFollowers
+--                 GROUP BY follower)
+--SELECT * FROM friends
+--CROSS JOIN news
+-- ON news.newsUser = 1 -- ANY (friends.following)
+--;

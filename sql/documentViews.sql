@@ -3,11 +3,16 @@
 -- will show up multiple times in the document's
 -- results
 CREATE VIEW documentHashTags AS
-SELECT documents.documentID, array_to_json(array_agg(hashTags.hashTag)) as tags
+WITH nonZeros as (SELECT documents.documentID, array_to_json(array_agg(hashTags.hashTag)) as tags
+                  FROM documents
+                  INNER JOIN hashTags
+                  ON documents.documentID = hashTags.docID
+                  GROUP BY documents.documentID)
+SELECT documents.documentID, COALESCE (tags, '[]'::json) as tags
 FROM documents
-LEFT JOIN hashTags
-ON documents.documentID = hashTags.docID
-GROUP BY documents.documentID;
+LEFT JOIN nonZeros
+ON documents.documentID = nonZeros.documentID
+;
 
 CREATE VIEW docAuths AS
 WITH nonZeroDocs AS (
