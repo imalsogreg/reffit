@@ -7,6 +7,6 @@ in reflex-platform.ghc.override {
     # servant-snap        = dc (self.callPackage (c2n deps/servant-snap) {});
     # heist               = dc (self.callPackage (c2n deps/servant-snap/deps/snap/deps/heist) {});
     # xmlhtml             = dc (self.callPackage (c2n deps/servant-snap/deps/snap/deps/xmlhtml) {});
-    snaplet-acid-state    = dc (self.callPackage (c2n deps/snaplet-acid-state) {});
+    snaplet-acid-state    = dc (self.callPackage deps/snaplet-acid-state.nix {});
   };
 }
