@@ -32,6 +32,7 @@ import qualified Data.Set as Set
 import qualified Data.ByteString.Char8 as BS
 import Control.Monad
 import Control.Monad.Trans
+import Data.Map.Syntax
 import Data.Time
 import Data.Monoid ((<>))
 

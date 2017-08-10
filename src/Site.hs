@@ -36,7 +36,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import           Data.ByteString (ByteString)
 import qualified Data.Text as T
-import           Snap (gets)
+import           Control.Monad.State (gets)
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
@@ -54,7 +54,7 @@ import           Text.Digestive.Snap (runForm)
 import           Text.Digestive.Heist
 import           Text.Digestive.Blaze.Html5
 
-import           Control.Monad.CatchIO (throw)
+-- import           Control.Monad.CatchIO (throw)
 import           Control.Monad.State
 import           Data.Text.Encoding (decodeUtf8)
 import           Data.Time
@@ -150,7 +150,7 @@ app :: SnapletInit App App
 app = makeSnaplet "app" "An snaplet example application." Nothing $ do
 
     s <- nestSnaplet "sess" sess $
-           initCookieSessionManager "site_key.txt" "sess" (Just 3600)
+           initCookieSessionManager "site_key.txt" "sess" Nothing (Just 3600)
 
     a <- nestSnaplet "auth" auth $
            initJsonFileAuthManager defAuthSettings sess "users.json"

@@ -28,6 +28,7 @@ import Snap.Snaplet (Handler)
 import Snap.Snaplet.Auth
 
 import Snap.Snaplet.AcidState (query, update)
+import Data.Map.Syntax
 import Data.Time
 import Control.Monad (join)
 import Control.Monad.Trans (liftIO)

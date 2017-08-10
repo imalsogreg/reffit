@@ -10,6 +10,7 @@ module Reffit.Handlers.HandleAuthentication (
 import           Application
 
 import           Snap.Core
+import           Data.Map.Syntax
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
 import           Snap.Snaplet.Heist
@@ -22,7 +23,7 @@ import qualified Data.Text as T
 handleLogin :: Maybe T.Text -> Handler App (AuthManager App) ()
 handleLogin authError = heistLocal (I.bindSplices errs) $ render "login"
   where
-    errs = maybe noSplices splice authError
+    errs = maybe mempty splice authError
     splice err = "loginError" ## I.textSplice err
 
 -- | Handle login submit

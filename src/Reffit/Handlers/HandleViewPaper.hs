@@ -15,6 +15,7 @@ import Safe
 import Control.Applicative ((<$>))
 import qualified Data.List as List
 import qualified Data.Map as Map
+import Data.Map.Syntax
 import Data.Maybe (fromJust)
 import Data.Time
 import Snap.Core (getParam)

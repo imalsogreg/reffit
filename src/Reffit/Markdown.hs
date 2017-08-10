@@ -1,5 +1,6 @@
 module Reffit.Markdown where
 
+import           Data.Either (either)
 import qualified Data.Text as T
 import qualified Text.Pandoc as Pandoc
 import qualified Text.XmlHtml as XML
@@ -14,6 +15,7 @@ markdownSplice t =
   . encodeUtf8
   . T.pack
   . Pandoc.writeHtmlString writerOpts
+  . (either (error "bad parse") id) --TODO
   . Pandoc.readMarkdown Pandoc.def
   . T.unpack
   . T.filter (/= '\r')

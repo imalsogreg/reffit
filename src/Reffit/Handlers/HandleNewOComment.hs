@@ -23,6 +23,7 @@ import           Snap.Snaplet.Auth
 import           Control.Applicative
 import           Control.Monad.Trans
 import qualified Data.Map                     as Map
+import           Data.Map.Syntax
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Data.Time

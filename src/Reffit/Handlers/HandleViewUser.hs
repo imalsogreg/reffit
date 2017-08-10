@@ -22,10 +22,10 @@ import Control.Applicative ((<$>),(<*>),pure)
 import Control.Monad.Trans
 
 import qualified Data.Map as Map
+import Data.Map.Syntax
 import qualified Data.Set as Set
 import Data.Time
-import Snap.Core (getParam, redirect, writeBS)
-import Snap.Types (writeText)
+import Snap.Core (getParam, redirect, writeBS, writeText)
 import Snap.Snaplet (Handler)
 import Snap.Snaplet.AcidState (query,update)
 import Snap.Snaplet.Heist

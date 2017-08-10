@@ -13,6 +13,7 @@ import Reffit.FieldTag
 import Control.Applicative
 import qualified Data.List as L
 import Data.Maybe (listToMaybe)
+import Data.Map.Syntax
 import Snap.Snaplet (Handler)
 import Snap.Core
 import Snap.Snaplet.AcidState (query)

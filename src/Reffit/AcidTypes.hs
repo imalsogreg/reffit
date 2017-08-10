@@ -20,6 +20,7 @@ import Reffit.User
 import Reffit.FieldTag
 
 import Control.Monad.Reader (asks)
+import Control.Monad.State  (gets, modify)
 import Data.Time
 import Data.SafeCopy
 import qualified Data.Text as T hiding (head)
@@ -28,7 +29,6 @@ import Data.Typeable (Typeable)
 import qualified Data.Set as Set
 import Data.Hashable
 import qualified Data.Map as Map
-import Snap (modify, gets)
 import Data.Serialize
 import Snap.Snaplet.AcidState (Update, Query,makeAcidic)
 import Control.Lens

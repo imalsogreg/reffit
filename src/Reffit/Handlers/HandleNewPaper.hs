@@ -27,6 +27,7 @@ import           Control.Applicative
 import qualified Data.ByteString.Char8        as BS
 import           Data.Hashable
 import qualified Data.Map                     as Map
+import           Data.Map.Syntax              ((##))
 import           Data.Text                    (Text)
 import qualified Data.Text                    as T
 import           Text.Digestive
