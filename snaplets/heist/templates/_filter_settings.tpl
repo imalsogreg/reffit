@@ -1,4 +1,4 @@
-<div class="panel panel-success">
+<div class="panel panel-success" style="display:none">
   <div class="panel-heading"><h4 class="panel-title">Filter settings</h4></div>
   <div class="panel-body">
 
