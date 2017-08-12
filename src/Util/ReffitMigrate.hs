@@ -1,11 +1,15 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Util.ReffitMigrate where
 
-import Reffit.Types
-import Reffit.AcidTypes
 
+import qualified Control.Monad.State as St
+import Data.Maybe (catMaybes)
 import Data.Serialize
+import Data.Foldable
+import qualified Data.Map as M
+import Data.Traversable
 import System.IO
 import Snap.Core
 import           Snap.Snaplet(Handler)
@@ -25,6 +29,10 @@ import qualified Data.Map as Map
 import qualified Data.ByteString as BS
 import Control.Monad
 import Control.Monad.Trans
+
+import qualified Reffit.User as R
+import Reffit.Types
+import Reffit.AcidTypes
 
 handleStateToDisk :: Handler App (AuthManager App) ()
 handleStateToDisk = do
@@ -85,3 +93,18 @@ handleMigrateStateFromDisk = do
           writeText $ T.append "Parse error! " (T.pack e)
     _ -> writeText "Sorry.  Only imalsogreg can do state restore"
 -}
+
+setAuthUserEmails :: Handler App (AuthManager App) ()
+setAuthUserEmails = do
+    u <- currentUser
+    case userLogin <$> u of
+        Just "imalsogreg" -> do
+            aManager <- St.get
+            us      <- query QueryAllUsers
+            aus <- fmap catMaybes $ for (M.elems us) $ \(u :: R.User) -> do
+                liftIO $ putStrLn ("lookup login: " ++ show (R.userName u))
+                lkp <- liftIO $ lookupByLogin aManager (R.userName u)
+                liftIO $ print lkp
+                return $ fmap (\au -> au { userEmail = Just (R.userEmail u)}) lkp
+            for_ aus saveUser
+        _ -> error "Only imalsogreg can do this"

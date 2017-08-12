@@ -12,31 +12,17 @@ module Site
 
 ------------------------------------------------------------------------------
 
-import           Reffit.Types
-import           Reffit.AcidTypes
-import           Reffit.OverviewComment
-import           Reffit.Document
-import           Reffit.Discussion
-import           Reffit.User
-import           Reffit.FieldTag
-import           Reffit.CrossRef
-import           Reffit.PaperRoll
-
-import           Reffit.Handlers
-
-import           Util.ReffitMigrate
-import           Control.Lens (view)
-import           Snap.Snaplet.AcidState (Update, Query, Acid,
-                                         HasAcid (getAcidStore),
-                                         makeAcidic,
-                                         update,query,acidInit)
+import           Snap.Snaplet.AcidState (update,query,acidInit)
 
 import           Control.Applicative
+import           Control.Monad.State
 import qualified Data.Map as Map
-import qualified Data.Set as Set
 import           Data.ByteString (ByteString)
+import qualified Data.ByteString as BS
 import qualified Data.Text as T
-import           Control.Monad.State (gets)
+import           Data.Text.Encoding (decodeUtf8)
+import           Data.Time
+import qualified Network.HTTP.Client.TLS as C
 import           Snap.Core
 import           Snap.Snaplet
 import           Snap.Snaplet.Auth
@@ -44,22 +30,21 @@ import           Snap.Snaplet.Auth.Backends.JsonFile
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
 import           Snap.Snaplet.Session.Backends.CookieSession
-import           Snap.Snaplet.AcidState
 import           Snap.Util.FileServe
-import           Heist
-import qualified Heist.Interpreted as I
-import qualified Text.Blaze.Html5  as H
-import           Text.Digestive
-import           Text.Digestive.Snap (runForm)
-import           Text.Digestive.Heist
-import           Text.Digestive.Blaze.Html5
-
--- import           Control.Monad.CatchIO (throw)
-import           Control.Monad.State
-import           Data.Text.Encoding (decodeUtf8)
-import           Data.Time
 ------------------------------------------------------------------------------
 import           Application
+import           Reffit.Types
+import           Reffit.AcidTypes
+import           Reffit.OverviewComment
+import           Reffit.Document
+import           Reffit.Discussion
+import           Reffit.User hiding (userEmail)
+import           Reffit.FieldTag
+import           Reffit.CrossRef
+import           Reffit.PaperRoll
+import           Reffit.Handlers
+import           Util.ReffitMigrate
+import           Util.Mailgun
 
 ------------------------------------------------------------------------------
 -- | Handle new user form submit
@@ -78,12 +63,17 @@ handleNewUser = method GET handleForm <|> method POST handleFormSubmit
         (_,Nothing,_) -> redirect "/" -- TODO - Give a helpful error message
         (_,_,Nothing) -> redirect "/" -- TODO -- error message
         (Just uname, Just email, Just pw) -> do
+          am <- get
           unameMap <- query QueryAllUsers
           case Map.lookup uname unameMap of
             Nothing -> do
               _ <- registerUser "login" "password"
               _ <- update $ AddUser uname email t
-              _ <- loginByUsername uname (ClearText pw) True --TODO remember by default
+              u <- loginByUsername uname (ClearText pw) True --TODO remember by default
+              case u of
+                  Left _ -> return ()
+                  Right u' ->
+                      saveUser (u' {userEmail = e}) >> return ()
               redirect "/"
             Just _ -> do
               writeText "Username is taken" -- TODO - give a helpful error message: uname is taken
@@ -110,8 +100,10 @@ handleDumpState = do
 -- | The application's routes.
 routes :: [(ByteString, Handler App App ())]
 routes =
-  [ ("login" , with auth handleLoginSubmit)
+  [ ("login"                           , with auth handleLoginSubmit)
   , ("logout"                          , with auth handleLogout)
+  , ("reset"                           , handleRequestReset)
+  , ("reset/:token"                    , handleExecuteReset)
   , ("new_user"                        , with auth handleNewUser)
   , ("search"                          , with auth  handleIndex)
   , ("new_article"                     , with auth handleNewArticle)
@@ -140,6 +132,7 @@ routes =
   , ("checkpoint"                      , with auth handleCheckpoint)
   , ("/"                               , with auth handleIndex)
   , ("/dump_state"                     , with auth handleDumpState)
+  , ("/transfer_emails"                , with auth setAuthUserEmails)
   , ("/splashscreen"                   , render "splashscreen")
   , ("/static"                         , serveDirectory "static")
   ]
@@ -158,6 +151,9 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     ac <- nestSnaplet "acid" acid $ acidInit defaultState
     h <- nestSnaplet "" heist $ heistInit "templates"
 
+    (sk, mgk) <- liftIO $ deriveFromFile "../signing-key.txt"
+    mgr <- C.newTlsManager
+
     addRoutes routes
     addAuthSplices h auth
 
@@ -166,7 +162,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     -- Perhaps use longer session times?
     wrapSite (\site -> with sess touchSession >> site >> with sess commitSession)
 
-    return $ App h s a ac
+    return $ App h s a ac sk mgr mgk
 
 defaultState :: PersistentState
 defaultState =
@@ -183,4 +179,3 @@ defaultDocClasses = map DocClass ["Paper","Preprint","Blog Post","Video","Book"]
 
 testDate :: Integer -> UTCTime
 testDate d = UTCTime (ModifiedJulianDay d) (fromIntegral (0::Int))
-

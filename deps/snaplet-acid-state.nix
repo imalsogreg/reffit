@@ -6,8 +6,8 @@ mkDerivation {
   version = "0.2.7";
   src = fetchgit {
     url = "https://github.com/imalsogreg/snaplet-acid-state";
-    sha256 = "10v1dx8sdwzs7aynii564qk0pg7jd4pzk00s4abyjzk7mga9f3m0";
-    rev = "a50bc7fc51dacd2a7adecdcca268ccf748879ed4";
+    sha256 = "0bwzp1gf8rncpfa6vyvzl22371kcjvkzswmvyvcm8n0jj5dhbmm2";
+    rev = "ccf04965f6a606ff06e209a6a16af1b7855bd270";
   };
   libraryHaskellDepends = [
     acid-state base mtl snap text transformers

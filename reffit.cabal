@@ -23,48 +23,48 @@ Executable reffit
   main-is: Main.hs
 
   Build-depends:
+    base                      >= 4.4     && < 5,
     acid-state,
+    aeson,
     blaze-html,
     bytestring                >= 0.9.1   && < 0.11,
+    base64-bytestring,
     cereal,
     containers,
+    cryptonite,
     digestive-functors,
     digestive-functors-heist,
     digestive-functors-snap,
     digestive-functors-blaze,
     errors,
     hashable,
-    safe,
-    safecopy,
-
-    snaplet-acid-state,
-    transformers,
-
-    text-icu,
-    HTTP,
-    network,
-    aeson,
-    lens-aeson,
-    unordered-containers,
-
-
     heist                     >= 1.0     && < 1.1,
-    snaplet-acid-state        >= 0.2.5   && < 0.3,
-    -- MonadCatchIO-transformers >= 0.2.1   && < 0.4,
+    HTTP,
+    http-client,
+    http-client-tls,
+    http-types,
+    lens,
+    lens-aeson,
     map-syntax,
     mtl                       >= 2       && < 3,
+    network,
     network-uri               >= 2.6.0.1 && < 2.7,
     pandoc                                       ,
-    snap,
+    safe,
+    safecopy,
+    serialise,
+    snap                      >= 1.1 && < 1.2,
     snap-core,
     snap-server,
     snap-loader-static,
+    snaplet-acid-state        >= 0.2.5   && < 0.3,
+    text-icu,
     text                      ,
     time                      >= 1.1     && < 1.9,
-    xmlhtml,
-    base                      >= 4.4     && < 5,
-    lens,
-    lens-aeson
+    transformers,
+    unordered-containers,
+    wreq,
+    xmlhtml
 
   hs-source-dirs: src
   other-modules:
@@ -85,6 +85,7 @@ Executable reffit
     Reffit.Handlers.HandleNewOComment,
     Reffit.Handlers.HandleNewPaper,
     Reffit.Handlers.HandleNewSummary,
+    Reffit.Handlers.HandlePasswordReset,
     Reffit.Handlers.HandleSummaryVote,
     Reffit.Handlers.HandleViewPaper,
     Reffit.Handlers.HandleViewUser,
@@ -98,7 +99,9 @@ Executable reffit
     Reffit.Types,
     Reffit.User
     Site
+    Util.Mailgun
     Util.ReffitMigrate
+    Util.Snap
 
   extra-libraries: icuuc
   if os(mingw32)

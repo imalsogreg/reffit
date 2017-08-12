@@ -6,6 +6,7 @@
 module Reffit.Types where
 
 import           Control.Applicative
+import           Data.ByteString (ByteString)
 import           Data.Text
 import           GHC.Int
 import           GHC.Generics
