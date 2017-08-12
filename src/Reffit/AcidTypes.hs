@@ -64,7 +64,7 @@ getNewId elementText usedIds =
     cHash = abs . fromIntegral . hash $ T.unpack elementText
     cInd  = fromIntegral . length $ usedIds
     cAll = [0..]
-  
+
 -- TODO: Check that document title isn't already taken
 addDocument :: Maybe User -> Document -> Update PersistentState ()
 addDocument user' doc = do  -- HandleNewPaper now finds a good Id
@@ -101,7 +101,7 @@ addCommentDiscussionPoint dp parent' doc commentId comment =
                }
       comment' = comment { ocDiscussion = insertAt dp' parent' (ocDiscussion comment) }
 
-      
+
 addOComment :: Maybe User -> DocumentId -> OverviewComment
             -> Maybe OverviewCommentId -> Update PersistentState (Maybe OverviewCommentId)
 addOComment user' pId comment cId' = do
