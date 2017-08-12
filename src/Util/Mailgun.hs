@@ -26,6 +26,7 @@ import qualified Network.HTTP.Client  as C
 import qualified Network.HTTP.Client.TLS  as C
 import qualified Network.HTTP.Types   as C
 import qualified Network.Wreq         as W
+import qualified Codec.Serialise      as S
 
 ------------------------------------------------------------------------------
 data ResetRequest = ResetRequest
@@ -36,6 +37,8 @@ data ResetRequest = ResetRequest
 instance A.ToJSON   ResetRequest
 instance A.FromJSON ResetRequest
 
+instance S.Serialise ResetRequest
+
 newtype SigningKey = SigningKey ByteString
     deriving (Eq)
 
@@ -43,13 +46,13 @@ instance Show SigningKey where
     show _ = "SigningKey \"secretbytestring\""
 
 
-toSafeBlob :: A.ToJSON a => SigningKey -> a -> BS.ByteString
+toSafeBlob :: S.Serialise a => SigningKey -> a -> BS.ByteString
 toSafeBlob sk a =
-    B64U.encode . encrypt sk . BSL.toStrict $ A.encode a
+    B64U.encode . encrypt sk . BSL.toStrict $ S.serialise a
 
-fromSafeBlob :: A.FromJSON a => SigningKey -> BS.ByteString -> Maybe a
+fromSafeBlob :: S.Serialise a => SigningKey -> BS.ByteString -> Either S.DeserialiseFailure a
 fromSafeBlob sk blob =
-    A.decode . BSL.fromStrict . decrypt sk $ B64U.decodeLenient blob
+    S.deserialiseOrFail . BSL.fromStrict . decrypt sk $ B64U.decodeLenient blob
 
 
 mailtest :: IO ()

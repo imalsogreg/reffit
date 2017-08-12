@@ -55,9 +55,9 @@ handleExecuteReset = do
         pw' <- fmap T.decodeUtf8 $ checkedParam "password2"
         checkedAssert (RErr 412 "Passwords must match") (pw == pw')
 
-        (ResetRequest rTime tEmail) <- noteT
-            (RErr 500 "Failed to decode reset token") $
-            hoistMaybe $ fromSafeBlob sk (T.encodeUtf8 tk)
+        (ResetRequest rTime tEmail) <- fmapLT
+            (const $ RErr 500 "Failed to decode reset token") $
+            hoistEither $ fromSafeBlob sk (T.encodeUtf8 tk)
 
         checkedAssert (RErr 412 "Email must match token") (em == tEmail)
         checkedAssert (RErr 403 "Reset token expired")    (tNow < rTime)
