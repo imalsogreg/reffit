@@ -15,13 +15,17 @@ module Site
 import           Snap.Snaplet.AcidState (update,query,acidInit)
 
 import           Control.Applicative
+import           Control.Lens
 import           Control.Monad.State
+import           Control.Concurrent (forkIO)
+import qualified Data.Acid.Remote as Acid
 import qualified Data.Map as Map
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.Text as T
 import           Data.Text.Encoding (decodeUtf8)
 import           Data.Time
+import qualified Network as Network
 import qualified Network.HTTP.Client.TLS as C
 import           Snap.Core
 import           Snap.Snaplet
@@ -29,6 +33,7 @@ import           Snap.Snaplet.Auth
 import           Snap.Snaplet.Auth.Backends.JsonFile
 import           Snap.Snaplet.Heist
 import           Snap.Snaplet.Session
+import           Snap.Snaplet.AcidState
 import           Snap.Snaplet.Session.Backends.CookieSession
 import           Snap.Util.FileServe
 ------------------------------------------------------------------------------
@@ -149,6 +154,11 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
            initJsonFileAuthManager defAuthSettings sess "users.json"
 
     ac <- nestSnaplet "acid" acid $ acidInit defaultState
+
+    void $ liftIO $ forkIO $
+        Acid.acidServer Acid.skipAuthenticationCheck (Network.PortNumber 8888)
+        (_acidStore $ ac ^. snapletValue)
+
     h <- nestSnaplet "" heist $ heistInit "templates"
 
     (sk, mgk) <- liftIO $ deriveFromFile "../signing-key.txt"
