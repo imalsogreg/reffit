@@ -25,11 +25,22 @@
          info.html("Please enter a valid email address");
        };
        };
+
+       $('#form').on('keyup keypress', function(e) {
+         var keyCode = e.keyCode || e.which;
+         if (keyCode === 13) {
+           e.preventDefault();
+           submitRequest();
+           console.log('enter');
+           return false;
+         }
+       });
+
   </script>
 
   <div style="margin:0 auto; width:75%;">
 
-    <form method="POST" action="/reset" class="form-horizontal">
+    <form id="form" method="POST" action="/reset" class="form-horizontal">
 
       <div class="alert alert-info" role="alert" id="email-info">
           Enter the email address you used to sign up. If it&apos;
