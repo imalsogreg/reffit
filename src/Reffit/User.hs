@@ -1,20 +1,22 @@
-{-# LANGUAGE TemplateHaskell    #-}
-{-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE TemplateHaskell    #-}
 {-# LANGUAGE TypeFamilies       #-}
 
 module Reffit.User where
 
-import           Reffit.Types
-import           Reffit.FieldTag
-
+import           Data.Aeson
+import           Data.SafeCopy   (Migrate, MigrateFrom, base, deriveSafeCopy,
+                                  extension, migrate)
 import           Data.Serialize
-import qualified Data.Set as Set
+import qualified Data.Set        as Set
 import           Data.Text
 import           Data.Time
-import           GHC.Generics
 import           Data.Typeable
-import           Data.SafeCopy (base,extension,deriveSafeCopy,Migrate,MigrateFrom,migrate)
+import           GHC.Generics
+
+import           Reffit.FieldTag
+import           Reffit.Types
 
 data UserEvent = WroteOComment   DocumentId OverviewCommentId
                | VotedOnOComment DocumentId OverviewCommentId (Maybe UpDownVote) UTCTime
@@ -25,6 +27,8 @@ data UserEvent = WroteOComment   DocumentId OverviewCommentId
 deriveSafeCopy 1 'extension ''UserEvent
 
 instance Serialize UserEvent where
+instance ToJSON UserEvent
+instance FromJSON UserEvent
 
 data User = User { userName       :: UserName
                  , userEmail      :: Text
@@ -38,6 +42,8 @@ data User = User { userName       :: UserName
 deriveSafeCopy 0 'base ''User
 
 instance Serialize User where
+instance ToJSON User
+instance FromJSON User
 
 data UserEvent0 = WroteCritique0   DocumentId CritiqueId
                 | VotedOnCritique0 DocumentId CritiqueId (Maybe UpDownVote) UTCTime

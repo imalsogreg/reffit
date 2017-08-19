@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric #-}
+{-# LANGUAGE FlexibleInstances  #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -6,7 +7,9 @@
 module Reffit.Types where
 
 import           Control.Applicative
+import           Data.Aeson
 import           Data.ByteString (ByteString)
+import qualified Data.Map as M
 import           Data.Text
 import           GHC.Int
 import           GHC.Generics
@@ -32,6 +35,8 @@ data DocClass = DocClass { docClassName :: Text
                          } deriving (Show, Read, Generic, Typeable, Eq)
 deriveSafeCopy 0 'base ''DocClass
 
+instance ToJSON DocClass
+instance FromJSON DocClass
 
 type UserName          = Text
 type CritiqueId        = Int32
@@ -47,3 +52,14 @@ data UpDownVote = DownVote | UpVote
 deriveSafeCopy 0 'base ''UpDownVote
 
 instance Serialize UpDownVote where
+
+
+instance ToJSON UpDownVote
+instance FromJSON UpDownVote
+
+
+instance ToJSON v => ToJSON (M.Map Int32 v) where
+    toJSON = toJSON . M.mapKeys show
+
+instance FromJSON v => FromJSON (M.Map Int32 v) where
+    parseJSON o = M.mapKeys read <$> parseJSON o

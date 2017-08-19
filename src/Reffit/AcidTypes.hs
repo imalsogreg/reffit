@@ -21,6 +21,7 @@ import Reffit.FieldTag
 
 import Control.Monad.Reader (asks)
 import Control.Monad.State  (gets, modify)
+import Data.Aeson
 import Data.Time
 import Data.SafeCopy
 import qualified Data.Text as T hiding (head)
@@ -45,6 +46,8 @@ makeLenses ''PersistentState
 deriveSafeCopy 0 'base ''PersistentState
 
 instance Serialize PersistentState where
+instance ToJSON PersistentState where
+instance FromJSON PersistentState where
 
 queryAllDocs :: Query PersistentState (Map.Map DocumentId Document)
 queryAllDocs = asks _documents

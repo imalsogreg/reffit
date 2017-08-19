@@ -1,19 +1,21 @@
-{-# LANGUAGE TemplateHaskell   #-}
 {-# LANGUAGE DeriveGeneric     #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell   #-}
 
 module Reffit.Discussion where
 
-import Reffit.Types
 
-import qualified Data.Tree as Tree
-import qualified Data.Text as T
-import Control.Lens
-import Data.Serialize
-import qualified Data.Foldable as F
-import Data.SafeCopy
-import GHC.Generics
-import Data.Time
+import           Control.Lens
+import           Data.Aeson
+import qualified Data.Foldable  as F
+import           Data.SafeCopy
+import           Data.Serialize
+import qualified Data.Text      as T
+import           Data.Time
+import qualified Data.Tree      as Tree
+import           GHC.Generics
+
+import           Reffit.Types
 
 type Discussion = Tree.Forest DiscussionPoint
 
@@ -21,7 +23,7 @@ emptyDiscussion :: Discussion
 emptyDiscussion = []
 
 data DiscussionPoint = DiscussionPoint
-                  { _dID       :: DiscussionPointId  
+                  { _dID       :: DiscussionPointId
                   , _dPoster   :: Maybe UserName
                   , _dText     :: T.Text
                   , _dResponse :: [UpDownVote]
@@ -38,6 +40,8 @@ data DiscussionPoint = DiscussionPoint
 
 $(makeLenses ''DiscussionPoint)
 deriveSafeCopy 0 'base ''DiscussionPoint
+instance ToJSON DiscussionPoint
+instance FromJSON DiscussionPoint
 
 
 instance Serialize DiscussionPoint where

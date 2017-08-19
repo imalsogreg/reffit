@@ -9,4 +9,8 @@
 <p style="text-align:right">
    Don't have an account yet? <a href="/new_user">Join us!</a>
 </p>
+
+<p style="text-align:right">
+   Forgot your password? <a href="/reset">Reset</a>
+</p>
 </div>

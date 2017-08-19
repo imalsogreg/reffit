@@ -1,46 +1,57 @@
-{-# LANGUAGE TemplateHaskell    #-}
-{-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE TemplateHaskell    #-}
 {-# LANGUAGE TypeFamilies       #-}
 
 module Reffit.OverviewComment where
 
-import           Reffit.Types
-import           Reffit.Discussion
-
+import           Data.Aeson
+import           Data.SafeCopy
 import           Data.Serialize
 import           Data.Text
 import           Data.Time
-import           GHC.Generics
 import           Data.Typeable
-import           Data.SafeCopy
+import           GHC.Generics
+
+import           Reffit.Discussion
+import           Reffit.Types
 
 data OverviewCommentType = Summary' | Praise | Criticism
                          deriving (Eq, Read, Show, Generic, Typeable)
 deriveSafeCopy 0 'base ''OverviewCommentType
 
+instance ToJSON OverviewCommentType
+instance FromJSON OverviewCommentType
+
 data QualityDim = Novelty | Rigor | Coolness
                 deriving (Eq, Read, Show, Generic, Typeable)
 deriveSafeCopy 0 'base ''QualityDim
 
+
+instance ToJSON QualityDim
+instance FromJSON QualityDim
+
 instance Serialize QualityDim where
 
 data OverviewComment = OverviewComment
-                       { ocPoster :: Maybe UserName
-                       , ocText   :: Text
-                       , ocVote   :: Maybe (QualityDim,UpDownVote)
-                       , ocResponse :: [UpDownVote]
-                       , ocPostTime :: UTCTime
+                       { ocPoster     :: Maybe UserName
+                       , ocText       :: Text
+                       , ocVote       :: Maybe (QualityDim,UpDownVote)
+                       , ocResponse   :: [UpDownVote]
+                       , ocPostTime   :: UTCTime
                        , ocDiscussion :: Discussion
                        } deriving (Eq, Read, Show, Generic)
 deriveSafeCopy 1 'extension ''OverviewComment
 
 instance Serialize OverviewComment where
 
+instance ToJSON OverviewComment
+instance FromJSON OverviewComment
+
 data OverviewComment_v0 = OverviewComment_v0
-                       { ocPoster0 :: Maybe UserName
-                       , ocText0   :: Text
-                       , ocVote0   :: Maybe (QualityDim,UpDownVote)
+                       { ocPoster0   :: Maybe UserName
+                       , ocText0     :: Text
+                       , ocVote0     :: Maybe (QualityDim,UpDownVote)
                        , ocResponse0 :: [UpDownVote]
                        , ocPostTime0 :: UTCTime
                        } deriving (Show, Generic)

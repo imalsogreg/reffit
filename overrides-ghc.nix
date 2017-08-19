@@ -11,5 +11,6 @@ in reflex-platform.ghc.override {
     snaplet-acid-state    = dc (self.callPackage deps/snaplet-acid-state.nix {});
     cborg                 = dc (self.callPackage deps/cborg.nix {});
     serialise             = dc (self.callPackage deps/serialise.nix {});
+    wreq                  = dc (self.callPackage deps/wreq.nix {});
   };
 }

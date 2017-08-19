@@ -1,22 +1,23 @@
-{-# LANGUAGE TemplateHaskell    #-}
-{-# LANGUAGE DeriveGeneric      #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE TemplateHaskell    #-}
 {-# LANGUAGE TypeFamilies       #-}
 
 module Reffit.Document where
 
-import           Reffit.Types
+import           Data.Aeson
+import qualified Data.Map               as Map
+import           Data.SafeCopy
+import           Data.Serialize
+import qualified Data.Text              as T
+import           Data.Time
+import           Data.Typeable
+import           GHC.Generics
+
+import           Reffit.Discussion
 import           Reffit.FieldTag
 import           Reffit.OverviewComment
-import           Reffit.Discussion
-
-import qualified Data.Text as T
-import           Data.Serialize
-import           Data.Time
-import           GHC.Generics
-import           Data.Typeable
-import           Data.SafeCopy
-import qualified Data.Map as Map
+import           Reffit.Types
 
 data Document = Document
                 { docUploader   :: Maybe UserName
@@ -32,6 +33,8 @@ data Document = Document
                 } deriving (Show, Read, Generic, Typeable)
 deriveSafeCopy 2 'extension ''Document
 instance Serialize Document where
+instance ToJSON Document where
+instance FromJSON Document where
 
 data Document_v1 = Document_v1
                    { docUploader1  :: Maybe UserName
