@@ -19,9 +19,11 @@ import           Control.Lens
 import           Control.Monad.State
 import           Control.Concurrent (forkIO)
 import qualified Data.Acid.Remote as Acid
+import           Data.Aeson
 import qualified Data.Map as Map
 import           Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import           Data.Text.Encoding (decodeUtf8)
 import           Data.Time
@@ -94,7 +96,7 @@ handleDumpState = do
   aUser <- currentUser
   case userLogin <$> aUser of
     Just "imalsogreg" ->
-      writeText . T.pack . show $ PersistentState d u dc ft
+      writeBS . BSL.toStrict . encode $ PersistentState d u dc ft
     Just n ->
       writeText $ T.append n ", only the admin can dump_state."
     Nothing ->
