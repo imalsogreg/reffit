@@ -34,7 +34,7 @@ data DiscussionPoint = DiscussionPoint
                                   , Maybe OverviewCommentId
                                   , Maybe DiscussionPointId)
                   , _dPostTime :: UTCTime
-                  } deriving (Eq, Show, Generic)
+                  } deriving (Eq, Read, Show, Generic)
 
 $(makeLenses ''DiscussionPoint)
 deriveSafeCopy 0 'base ''DiscussionPoint

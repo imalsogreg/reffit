@@ -16,11 +16,11 @@ import           Data.Typeable
 import           Data.SafeCopy
 
 data OverviewCommentType = Summary' | Praise | Criticism
-                         deriving (Eq, Show, Generic, Typeable)
+                         deriving (Eq, Read, Show, Generic, Typeable)
 deriveSafeCopy 0 'base ''OverviewCommentType
 
 data QualityDim = Novelty | Rigor | Coolness
-                deriving (Eq, Show, Generic, Typeable)
+                deriving (Eq, Read, Show, Generic, Typeable)
 deriveSafeCopy 0 'base ''QualityDim
 
 instance Serialize QualityDim where
@@ -32,7 +32,7 @@ data OverviewComment = OverviewComment
                        , ocResponse :: [UpDownVote]
                        , ocPostTime :: UTCTime
                        , ocDiscussion :: Discussion
-                       } deriving (Eq, Show, Generic)
+                       } deriving (Eq, Read, Show, Generic)
 deriveSafeCopy 1 'extension ''OverviewComment
 
 instance Serialize OverviewComment where
@@ -78,7 +78,7 @@ data Critique = Critique { critiqueProse     :: Text
                          , critiqueVal       :: UpDownVote
                          , critiqueReactions :: [UpDownVote]
                          , critiquePostTime  :: UTCTime
-                         } deriving (Show, Generic)
+                         } deriving (Show, Read, Generic)
 deriveSafeCopy 0 'base ''Critique
 
 instance Serialize Critique where

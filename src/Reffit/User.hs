@@ -21,7 +21,7 @@ data UserEvent = WroteOComment   DocumentId OverviewCommentId
                | PostedDocument  DocumentId
                | FollowedUser    UserName   UTCTime
                | PinnedDoc       DocumentId UTCTime
-               deriving (Show, Eq, Ord, Generic, Typeable)
+               deriving (Show, Read, Eq, Ord, Generic, Typeable)
 deriveSafeCopy 1 'extension ''UserEvent
 
 instance Serialize UserEvent where
@@ -34,7 +34,7 @@ data User = User { userName       :: UserName
                  , userPinboard   :: Set.Set DocumentId
                  , userTags       :: Set.Set TagPath
                  , userJoinTime   :: UTCTime
-                 } deriving (Show, Eq, Ord, Generic,Typeable)
+                 } deriving (Show, Read, Eq, Ord, Generic,Typeable)
 deriveSafeCopy 0 'base ''User
 
 instance Serialize User where

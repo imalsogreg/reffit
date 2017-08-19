@@ -29,7 +29,7 @@ data Document = Document
                 , docOComments  :: Map.Map OverviewCommentId OverviewComment
                 , docPostTime   :: UTCTime
                 , docDiscussion :: Discussion
-                } deriving (Show, Generic, Typeable)
+                } deriving (Show, Read, Generic, Typeable)
 deriveSafeCopy 2 'extension ''Document
 instance Serialize Document where
 

@@ -29,7 +29,7 @@ instance Serialize Text where
   get = pack <$> get
 
 data DocClass = DocClass { docClassName :: Text
-                         } deriving (Show, Generic, Typeable, Eq)
+                         } deriving (Show, Read, Generic, Typeable, Eq)
 deriveSafeCopy 0 'base ''DocClass
 
 
@@ -43,7 +43,7 @@ type DiscussionPointId = Int32
 instance Serialize DocClass where
 
 data UpDownVote = DownVote | UpVote
-                deriving (Show, Eq, Ord, Generic, Typeable)
+                deriving (Show, Read, Eq, Ord, Generic, Typeable)
 deriveSafeCopy 0 'base ''UpDownVote
 
 instance Serialize UpDownVote where

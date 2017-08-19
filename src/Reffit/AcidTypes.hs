@@ -40,7 +40,7 @@ data PersistentState = PersistentState {
   , _users      :: Map.Map UserName User
   , _docClasses :: [DocClass]
   , _fieldTags  :: FieldTags
-  } deriving (Show, Generic, Typeable)
+  } deriving (Show, Read, Generic, Typeable)
 makeLenses ''PersistentState
 deriveSafeCopy 0 'base ''PersistentState
 
