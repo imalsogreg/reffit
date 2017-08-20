@@ -112,7 +112,8 @@ routes =
   , ("logout"                          , with auth handleLogout)
   , ("reset"                           , handleRequestReset)
   , ("reset/:token"                    , handleExecuteReset)
-  , ("doi"                        , handleDoiSearch)
+  , ("doi"                             , handleDoiSearch)
+  , ("restore_users"                   , with auth restoreAuthUsers) -- Temporary
   , ("new_user"                        , with auth handleNewUser)
   , ("search"                          , with auth  handleIndex)
   , ("new_article"                     , with auth handleNewArticle)
@@ -141,7 +142,7 @@ routes =
   , ("checkpoint"                      , with auth handleCheckpoint)
   , ("/"                               , with auth handleIndex)
   , ("/dump_state"                     , with auth handleDumpState)
-  , ("/transfer_emails"                , with auth setAuthUserEmails)
+  , ("/transfer_emails"                , with auth setAuthUserEmails) -- Temporary
   , ("/splashscreen"                   , render "splashscreen")
   , ("/static"                         , serveDirectory "static")
   ]

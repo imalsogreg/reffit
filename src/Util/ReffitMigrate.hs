@@ -4,9 +4,11 @@
 module Util.ReffitMigrate where
 
 
+import Data.Monoid ((<>))
 import qualified Control.Monad.State as St
 import Data.Maybe (catMaybes)
 import Data.Serialize
+import System.Random
 import Data.Foldable
 import qualified Data.Map as M
 import Data.Traversable
@@ -26,7 +28,7 @@ import Snap.Snaplet.AcidState (Update, Query, Acid, query, acidInit)
 import Data.SafeCopy
 import qualified Data.Text as T
 import qualified Data.Map as Map
-import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as BS
 import Control.Monad
 import Control.Monad.Trans
 
@@ -73,6 +75,23 @@ handleCheckpoint = do
       _ <- createCheckpoint
       writeText "Checkpoint made"
     _ -> writeText "Only imalsogreg can create a checkpoint"
+
+restoreAuthUsers :: Handler App (AuthManager App) ()
+restoreAuthUsers = do
+    aUser <- currentUser
+    mgr <- St.get
+    case userLogin <$> aUser of
+        Just "imalsogreg" -> do
+            us <- query QueryAllUsers
+            res <- forM (M.toList us) $ \(uname, u) -> do
+                pw :: Integer <- liftIO $ randomRIO (100000000,100000000000)
+                existingU <- liftIO $ lookupByLogin mgr (R.userName u)
+                case existingU of
+                    Just n  -> return $ "No need, " <> R.userName u <> " exists"
+                    Nothing -> T.pack . show <$>
+                               createUser (R.userName u) (BS.pack $ show pw)
+            writeText $ T.unlines res
+        _ -> writeText "Only the admin can do that"
 
 {-
 handleMigrateStateFromDisk :: Handler App (AuthManager App) ()

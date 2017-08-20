@@ -51,6 +51,7 @@ Executable reffit
     network,
     network-uri               >= 2.6.0.1 && < 2.7,
     pandoc                                       ,
+    random,
     safe,
     safecopy,
     serialise,
