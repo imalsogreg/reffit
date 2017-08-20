@@ -14,6 +14,7 @@ module Site
 
 import           Snap.Snaplet.AcidState (update,query,acidInit)
 
+import           Data.Monoid
 import           Control.Applicative
 import           Control.Lens
 import           Control.Monad.State
@@ -111,6 +112,7 @@ routes =
   , ("logout"                          , with auth handleLogout)
   , ("reset"                           , handleRequestReset)
   , ("reset/:token"                    , handleExecuteReset)
+  , ("doi"                        , handleDoiSearch)
   , ("new_user"                        , with auth handleNewUser)
   , ("search"                          , with auth  handleIndex)
   , ("new_article"                     , with auth handleNewArticle)
@@ -166,6 +168,8 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     (sk, mgk) <- liftIO $ deriveFromFile "../signing-key.txt"
     mgr <- C.newTlsManager
 
+    cref <- liftIO $ initializeCrossRef
+
     addRoutes routes
     addAuthSplices h auth
 
@@ -174,7 +178,7 @@ app = makeSnaplet "app" "An snaplet example application." Nothing $ do
     -- Perhaps use longer session times?
     wrapSite (\site -> with sess touchSession >> site >> with sess commitSession)
 
-    return $ App h s a ac sk mgr mgk
+    return $ App h s a ac sk mgr mgk cref
 
 defaultState :: PersistentState
 defaultState =
@@ -191,3 +195,13 @@ defaultDocClasses = map DocClass ["Paper","Preprint","Blog Post","Video","Book"]
 
 testDate :: Integer -> UTCTime
 testDate d = UTCTime (ModifiedJulianDay d) (fromIntegral (0::Int))
+
+handleDoiSearch :: Handler App App ()
+handleDoiSearch = do
+    doi <- decodeUtf8 . rqPathInfo <$> getRequest
+    liftIO $ putStrLn $ "path: " ++ T.unpack doi
+    cr <- gets _cref
+    r <- liftIO $ crossRef cr doi
+    case r of
+        Right v -> writeBS $ BSL.toStrict (encode v)
+        Left e  -> writeText $ "Error calling crossref: " <> e

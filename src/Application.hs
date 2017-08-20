@@ -19,6 +19,7 @@ import           Snap.Snaplet.Session
 import           Snap.Snaplet.AcidState
 import           Reffit.AcidTypes
 import           Util.Mailgun            (SigningKey)
+import           Reffit.CrossRef
 
 ------------------------------------------------------------------------------
 data App = App
@@ -29,6 +30,7 @@ data App = App
     , _sign  :: SigningKey
     , _mgr   :: C.Manager
     , _mgKey :: T.Text
+    , _cref  :: CrossRef
     }
 
 makeLenses ''App

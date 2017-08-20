@@ -12,5 +12,7 @@ in reflex-platform.ghc.override {
     cborg                 = dc (self.callPackage deps/cborg.nix {});
     serialise             = dc (self.callPackage deps/serialise.nix {});
     wreq                  = dc (self.callPackage deps/wreq.nix {});
+    servant               = dc (super.servant);
+    servant-client        = dc (super.servant-client);
   };
 }

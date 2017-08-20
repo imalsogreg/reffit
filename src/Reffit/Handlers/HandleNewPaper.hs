@@ -15,7 +15,7 @@ import           Reffit.Document
 import           Reffit.User
 import           Reffit.Scores
 import           Reffit.FieldTag (FieldTags, FieldTag, TagPath, toFullName, tagPathIsElem, showPath, tagHierarchy, toShortName)
-import           Reffit.CrossRef (docHints,DocumentHints(..))
+-- import           Reffit.CrossRef (docHints,DocumentHints(..))
 
 import           Application
 import           Snap.Snaplet.AcidState (update,query)
@@ -47,9 +47,9 @@ import           Control.Monad.Trans
 import           Data.Monoid ((<>))
 import           Safe (readMay)
 
-documentForm :: (Monad m) => User -> [DocClass] -> FieldTags -> (Maybe DocumentHints)
+documentForm :: (Monad m) => User -> [DocClass] -> FieldTags
                 -> UTCTime -> Form Text m Document
-documentForm fromUser allDocClasses allFieldTags hints' t =
+documentForm fromUser allDocClasses allFieldTags t =
   Document
   <$> "poster"   .: choice posterOpts Nothing
   <*> pure 0
@@ -66,10 +66,10 @@ documentForm fromUser allDocClasses allFieldTags hints' t =
                    ,(Nothing,"Anonymous")]
       classOpts  = [(dc,docClassName dc) | dc <- allDocClasses]
 --      tempTime   = UTCTime (ModifiedJulianDay 0) (fromIntegral (0::Int))
-      defTitle   = maybe "" titleHint hints'
-      defAuthors = maybe "" (T.intercalate ", " . authorsHint) hints'
+      defTitle   = "" -- maybe "" titleHint hints'
+      defAuthors = "" -- maybe "" (T.intercalate ", " . authorsHint) hints'
 --      defYear    = maybe "" (T.pack . show . yearHint) hints'
-      defLink    = maybe "" linkHint hints'
+      defLink    = "" -- maybe "" linkHint hints'
 
 validateAuthors :: Text -> Result Text [Text]
 validateAuthors authorsText
@@ -80,12 +80,13 @@ validateTags :: FieldTags -> Text -> Result Text [TagPath]
 validateTags allTags formTags
   | all (\tp -> tagPathIsElem tp  allTags) allPaths =
     Success $ allPaths
-  | otherwise =
-    Error $ T.concat ["Unrecognized tags: " ,
-                      (T.unwords . map (T.pack . showPath) .
-                       filter (\tp -> not $ tagPathIsElem tp allTags)
-                       $ allPaths)
-                     ]
+  | otherwise = Success []
+  -- | otherwise =
+  --   Error $ T.concat ["Unrecognized tags: " ,
+  --                     (T.unwords . map (T.pack . showPath) .
+  --                      filter (\tp -> not $ tagPathIsElem tp allTags)
+  --                      $ allPaths)
+  --                    ]
   where
     allPathStrs = map T.strip . T.splitOn "," $ formTags
     allPaths = map (T.splitOn ".") allPathStrs
@@ -123,16 +124,16 @@ handleNewArticle = handleForm
      doi'    <- getParam "doi"
      pId'    <- getParam "paperid"
      t       <- liftIO $ getCurrentTime
-     hints <- case doi' of
-       Nothing  -> return Nothing
-       Just doi -> liftIO $ Just <$> (docHints (BS.unpack doi))
+     -- hints <- case doi' of
+     --   Nothing  -> return Nothing
+     --   Just doi -> liftIO $ Just <$> (docHints (BS.unpack doi))
      let oldDoc' = join $ liftA (flip Map.lookup docs)
                    (join $ (readMay . BS.unpack) <$> pId') 
      authUser' <- currentUser
      case join (Map.lookup <$> (userLogin <$> authUser') <*> pure userMap) of
        Nothing -> writeText "Error - authUser not in app user database"
        Just user  -> do
-         (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft hints t
+         (vw,rs) <- runForm "new_paper_form" $ documentForm user dc ft t
          case rs of
            Just doc -> do
              let docId' = case (join $ (readMay . BS.unpack) <$> pId') of

@@ -10,8 +10,12 @@
 	    </div>
 
 	    <div class="col-sm-2">
-	      <button class="btn btn-default form-control doiButton">Apply</button>
+	      <button type="button" onClick="getDoiInfo()"
+         class="btn btn-default form-control doiButton">
+           Apply
+         </button>
 	    </div>
+
 	</div>
 	<br/>
 	<div class="alert alert-danger doiError" style="display:none;">
@@ -35,19 +39,19 @@
 	  <div class="form-group control-title">
             <label ref="title" for="title" class="col-sm-2 control-label">Title</label>
             <div class="col-sm-10">
-              <dfInputText ref="title" size="50" class="form-control" value="${title}"/>
+              <dfInputText id="title" ref="title" size="50" class="form-control" value="${title}"/>
             </div>
 	  </div>
 	  <div class="form-group control-authors">
             <label ref="authors" for="authors" class="col-sm-2 control-label">Authors</label>
             <div class="col-sm-10">
-              <dfInputText ref="authors" size="50" class="form-control" value="${authors}"/>
+              <dfInputText id="authors" ref="authors" size="50" class="form-control" value="${authors}"/>
             </div>
 	  </div>
 	  <div class="form-group control-link">
             <label ref="link" for="link" class="col-sm-2 control-label">Link to Article</label>
             <div class="col-sm-10">
-              <dfInputText ref="link" size="50" class="form-control" value="${url}"/>
+              <dfInputText id="link" ref="link" size="50" class="form-control" value="${url}"/>
             </div>
 	  </div>
 	  <div class="form-group">
@@ -92,22 +96,6 @@
 	
   </div>
 
-  <script>
-
-  $(document).ready(function(){
-
-    var r = $(".doiButton").click(function(){
-      var doi = $('.doiText').val();
-      window.location.href = "/new_article?doi=" + encodeURIComponent(doi);
-  
-    });
-
-    $('.tree-top').click();
-
-  });
-
-
-  </script>
 
 
 </div>
