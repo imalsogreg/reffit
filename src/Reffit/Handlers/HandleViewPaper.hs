@@ -176,7 +176,7 @@ renderOComments :: UTCTime -> OverviewCommentType ->
 renderOComments t ct u us doc docs = I.mapSplices $ I.runChildrenWith .
                                   splicesFromOComment t ct u us doc docs
 
-splicesFromOComment :: Monad n => UTCTime -> OverviewCommentType
+splicesFromOComment :: MonadIO n => UTCTime -> OverviewCommentType
                        -> Maybe User -> Map.Map UserName User
                        -> Document -> Map.Map DocumentId Document
                        -> (OverviewCommentId, OverviewComment)

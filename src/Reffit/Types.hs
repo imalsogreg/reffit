@@ -58,8 +58,8 @@ instance ToJSON UpDownVote
 instance FromJSON UpDownVote
 
 
-instance ToJSON v => ToJSON (M.Map Int32 v) where
-    toJSON = toJSON . M.mapKeys show
+-- instance ToJSON v => ToJSON (M.Map Int32 v) where
+--     toJSON = toJSON . M.mapKeys show
 
-instance FromJSON v => FromJSON (M.Map Int32 v) where
-    parseJSON o = M.mapKeys read <$> parseJSON o
+-- instance FromJSON v => FromJSON (M.Map Int32 v) where
+--     parseJSON o = M.mapKeys read <$> parseJSON o

@@ -36,10 +36,12 @@ checkedAssert ROk _          = checkedAssert (RErr 500 "Unknown error") False
 data ReffitError = RErr Int T.Text
                  | ROk
 
+instance Semigroup ReffitError where
+  ROk <> r = r
+  r   <> _ = r
+
 instance Monoid ReffitError where
     mempty = ROk
-    ROk `mappend` r   = r
-    r   `mappend` _   = r
 
 
 runReffitErrorT :: MonadSnap m => ExceptT ReffitError m a -> m a
