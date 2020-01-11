@@ -72,7 +72,7 @@ crossRef cr doi = do
           now <- getCurrentTime
           tOk <- readIORef (crRateLimitNextOkTime cr)
           threadDelay . floor $ 1000000 * realToFrac (min 1 $ max 0 $ diffUTCTime tOk now)
-          v <- runClientM (client api doi) (ClientEnv (crManager cr) apiBase)
+          v <- runClientM (client api doi) (ClientEnv (crManager cr) apiBase Nothing)
           case v of
               Left e    -> error (show e)
               Right (Headers cref hs) -> do

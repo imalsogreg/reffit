@@ -1,6 +1,7 @@
 module Reffit.Filter where
 
 import Reffit.Types
+import Reffit.Document
 import Reffit.FieldTag
 
 import qualified Data.Map as Map
